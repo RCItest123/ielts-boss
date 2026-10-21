@@ -1,0 +1,29 @@
+{
+ "name": "霸總教你背單字",
+ "short_name": "霸總背單字",
+ "description": "看短篇霸總小說，不知不覺背雅思單字",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#FBF8F7",
+ "theme_color": "#9A2B4A",
+ "lang": "zh-Hant-TW",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
