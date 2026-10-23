@@ -289,6 +289,15 @@ a.btn{text-decoration:none}
 .bobacute:active{transform:scale(.98)}
 @keyframes bcwiggle{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-12deg)}84%{transform:rotate(10deg)}92%{transform:rotate(-5deg)}}
 @media (prefers-reduced-motion: reduce){.bobacute .bc-cup{animation:none}}
+.ttspill{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:999px;background:var(--wine);color:var(--wine-ink);font-weight:700;font-size:13.5px;flex:none}
+.ttspill .icon{width:17px;height:17px}.ttspill .icon:last-child:not(:first-child){width:13px;height:13px;opacity:.85}
+.ttspromo{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:16px;background:var(--soft);border:1.5px solid var(--mark);color:var(--ink)}
+.ttspromo>.icon{width:30px;height:30px;padding:6px;box-sizing:content-box;border-radius:50%;background:var(--wine);color:var(--wine-ink);flex:none}
+.ttspromo span{display:flex;flex-direction:column;line-height:1.35}.ttspromo b{font-size:14.5px}.ttspromo small{font-size:12px;color:var(--muted)}
+.ttshero{margin:0 auto;width:64px;height:64px;border-radius:50%;background:var(--mark);color:var(--wine);display:grid;place-items:center;animation:ttspulse 1.8s ease-in-out infinite}
+.ttshero .icon{width:30px;height:30px}
+@keyframes ttspulse{0%,100%{box-shadow:0 0 0 0 var(--mark)}50%{box-shadow:0 0 0 12px transparent}}
+@media (prefers-reduced-motion: reduce){.ttshero{animation:none}}
 /* Modal */
 .modal{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:24px max(20px,env(safe-area-inset-right,0px)) 24px max(20px,env(safe-area-inset-left,0px));background:rgba(20,8,14,.5);opacity:0;transition:opacity .2s}
 .modal.on{opacity:1}
@@ -570,7 +579,12 @@ function openTypePicker(first){
    ${first?'':'<div class="acts"><button class="btn ghost" data-close>取消</button></div>'}`);
 }
 function openModal(html,burst){modalBox.innerHTML=(burst?`<div class="burst" aria-hidden="true">${Array.from({length:26},(_,i)=>`<i style="left:${(i*37)%100}%;animation-delay:${(i%9)*.07}s"></i>`).join('')}</div>`:'')+html;modal.hidden=false;requestAnimationFrame(()=>modal.classList.add('on'));const b=modalBox.querySelector('.btn');if(b)b.focus({preventScroll:true})}
-function closeModal(){modal.classList.remove('on');setTimeout(()=>{if(!modal.classList.contains('on'))modal.hidden=true},220)}
+let pendingPromo=false;
+function openTtsPromo(){openModal(`<div class="ttshero" aria-hidden="true">${ICON.speak}</div><span class="kicker">完整版功能</span><h2>想要朗讀功能嗎？</h2>
+   <p>通勤、睡前閉上眼睛也能背單字。霸總故事一句一句念給你聽，英文單字用標準美式發音，學習版還會連中文意思一起念。</p>
+   <ul class="paylist"><li>中文劇情＋英文單字自動切換語音</li><li>可調 0.8x～1.2x 速度，正在念的段落會反白</li><li>同一組解鎖碼，還能讀 BL 雅思版、壞壞隱藏版</li></ul>
+   <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
+function closeModal(){if(pendingPromo){pendingPromo=false;setTimeout(openTtsPromo,320)}modal.classList.remove('on');setTimeout(()=>{if(!modal.classList.contains('on'))modal.hidden=true},220)}
 modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('[data-close]'))closeModal()});
 const CHEERS=[
  ['女人，妳成功引起了我的注意。','今天的單字，一個都別想逃。'],
@@ -701,10 +715,11 @@ function renderRead(){
    <div class="readbar">
      <button class="iconbtn" data-go-intro="${s.id}" aria-label="回到故事簡介">${ICON.back}</button>
      <span class="t">${esc(s.title)}</span>
-     <button class="iconbtn ttsbtn" data-tts aria-label="語音朗讀全文">${ICON.speak}</button>
+     <button class="ttspill" data-tts aria-label="語音朗讀全文">${ICON.speak}<span>朗讀</span>${unlocked?'':ICON.lock}</button>
      <div class="seg" role="group" aria-label="版本"><button data-mode="learn" aria-pressed="${mode==='learn'}">學習版</button><button data-mode="review" aria-pressed="${mode==='review'}">複習版</button></div>
      <div class="progress"><i id="prog"></i></div>
    </div>
+   ${unlocked?'':`<button class="ttspromo" data-ttspromo>${ICON.speak}<span><b>懶得自己看？讓霸總念給你聽</b><small>語音朗讀全文・完整版功能</small></span></button>`}
    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
      <span class="muted" style="font-size:13px">${mode==='learn'?'Step 1・在語境中背單字':'Step 2・看單字回憶詞義，點灰框看答案'}</span>
      <div class="fontctl"><button class="iconbtn" data-font="-1" aria-label="縮小字體" style="font-size:14px">A-</button><button class="iconbtn" data-font="1" aria-label="放大字體" style="font-size:18px">A+</button></div>
@@ -774,6 +789,7 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-unlock-submit')){submitCode();return}
   if(t.hasAttribute('data-buyinfo')){openBuyInfo();return}
   if(t.hasAttribute('data-paywall')){setTimeout(()=>openPaywall(),260);return}
+  if(t.hasAttribute('data-ttspromo')){openTtsPromo();return}
   if(t.hasAttribute('data-tts')){tts.on?ttsPause():ttsStart();return}
   if(t.hasAttribute('data-tts-toggle')){tts.on?ttsPause():ttsStart();return}
   if(t.hasAttribute('data-tts-stop')){ttsStop();return}
@@ -795,7 +811,9 @@ document.addEventListener('click',e=>{
     readSet[id]=Date.now();store.set('read',readSet);
     days[k]=days[k]||[];if(!days[k].includes(track+':'+id))days[k].push(track+':'+id);rawStore.set('days',days);
     const back=state.from==='plan'||state.from==='stats'?state.from:(id===plan.assign[k]?'plan':'list');
-    go(back);if(firstToday)celebrate(id);else toast('已標記為已讀，今天已讀 '+days[k].length+' 篇');return}
+    const total=TORDER.reduce((a,t)=>a+trackRead(t),0);let promo=false;
+    if(!unlocked){const n=rawStore.get('ttsPromo',0);if((total>=1&&n===0)||(total>=5&&n===1)){promo=true;rawStore.set('ttsPromo',n+1)}}
+    go(back);if(firstToday){celebrate(id);if(promo)pendingPromo=true}else if(promo)openTtsPromo();else toast('已標記為已讀，今天已讀 '+days[k].length+' 篇');return}
   if(t.hasAttribute('data-reveal')){t.classList.toggle('show');return}
   if(t.dataset.k){const pi=t.dataset.p,ii=t.dataset.i;let ctx=null;
     if(state.view==='read'&&pi!==undefined&&+pi>=0)ctx={s:byId[state.id],pi:+pi,i:+ii};
