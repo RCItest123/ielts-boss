@@ -82,9 +82,20 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3
 .author .av{width:42px;height:42px;border-radius:50%;background:var(--wine);color:var(--wine-ink);display:grid;place-items:center;font-family:var(--f-en);font-weight:600;font-size:20px;flex:none}
 .author .who b{font-family:var(--f-display);font-size:16px;display:block}
 .author .who span{font-size:12.5px;color:var(--muted)}
+.author .who .av{color:var(--wine-ink);font-size:20px}
 .author p{margin:0}
 .author .fb{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:999px;background:var(--card);color:var(--wine);font-weight:700;text-decoration:none;box-shadow:inset 0 0 0 1.5px var(--wine)}
 .author .note{font-size:12.5px}
+.author .support.boba{border-top:0;background:var(--card);border-radius:16px;padding:16px;box-shadow:inset 0 0 0 2px var(--mark)}
+.author .boba p{color:var(--ink);font-weight:500}
+.bobabtn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;border-radius:999px;background:var(--wine);color:var(--wine-ink);font-weight:700;font-size:17px;text-decoration:none;box-shadow:0 6px 16px rgba(154,43,74,.28)}
+.bobabtn:active{transform:scale(.98)}
+.bobaemoji{font-size:26px;line-height:1}
+.minilinks{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 14px;padding-top:14px;border-top:1px dashed var(--line);font-size:12.5px}
+.minilinks a{color:var(--muted);text-decoration:none;padding:4px 2px}
+.minilinks a.ml-boba{color:var(--wine);font-weight:700;background:var(--soft);padding:5px 12px;border-radius:999px}
+.author .links{display:flex;flex-direction:column;gap:8px}
+.author .support{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:12px}
 
 /* Story list */
 .search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 14px;min-height:46px}
@@ -413,9 +424,20 @@ function renderHome(){
   <p class="tip">小提醒：用手機瀏覽器的「加入主畫面」，就能像 App 一樣一鍵打開。閱讀進度與生字本只存在你這支手機的瀏覽器裡。</p>
   <footer class="author" aria-label="作者">
     <div class="who"><span class="av">H</span><div><b>作者 Han</b><span>霸總教你背單字</span></div></div>
-    <p>此為免費資源，如果 App 對你有幫助，請幫我的粉專按個讚。</p>
-    <a class="fb" href="https://www.facebook.com/HansWanderlust0212/" target="_blank" rel="noopener">前往粉專按讚</a>
-    <p class="note">短篇小說取自網路，如有版權問題請透過粉專聯絡我。</p>
+    <p>此為免費資源，如果 App 對你有幫助，歡迎追蹤我的 IG 和 FB。</p>
+    <div class="links">
+      <a class="fb" href="https://www.instagram.com/han_s_wanderlust" target="_blank" rel="noopener">追蹤我的 Instagram</a>
+      <a class="fb" href="https://www.facebook.com/HansWanderlust0212/" target="_blank" rel="noopener">追蹤我的FB</a>
+    </div>
+    <div class="support boba">
+      <p>如果你覺得對你有幫助，歡迎請我喝杯<span style="white-space:nowrap">珍奶唷～</span></p>
+      <a class="bobabtn" href="https://han.bobaboba.me" target="_blank" rel="noopener"><span class="bobaemoji" aria-hidden="true">🧋</span>請 Han 喝杯珍奶</a>
+    </div>
+    <div class="support">
+      <p>有在買蝦皮的，也歡迎點我的分潤連結～放心！不會害你變貴的，但我可以拿到小小分潤。</p>
+      <a class="fb" href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">逛蝦皮（分潤連結）</a>
+    </div>
+    <p class="note">雅思版短篇小說取自網路，如有版權問題請透過粉專聯絡我。多益版與 BL 版為原創故事。</p>
   </footer>
   </div>`;
 }
@@ -435,6 +457,7 @@ function renderPlan(){
    <div class="plan">${up.map((u,i)=>{const s=byId[u.id];return `<button class="prow" data-go-intro="${u.id}" data-from="plan"><span class="when"><b>${i===0?'明天':i===1?'後天':fmtMD(u.date)}</b>週${WK[u.date.getDay()]}</span><div><strong>${esc(s.title)}</strong><small>No.${String(s.id).padStart(2,'0')}・${storyWords(s).length} 個單字</small></div><span class="muted">${ICON.back.replace('m15 18-6-6 6-6','m9 18 6-6-6-6')}</span></button>`}).join('')}</div></section>`:''}
    <p class="muted" style="font-size:13.5px;margin:0">課表會依序排出還沒讀過的故事。提前讀完也沒關係，之後的課會自動往後遞補。每天打開 App 會跳出今日課程提醒。</p>
    <div id="resetArea"><button class="linkbtn" data-reset>重新開始課表</button></div>
+   ${miniLinks()}
   </div>`;
 }
 function renderStats(){
@@ -465,10 +488,11 @@ function renderStats(){
    <section class="blk"><div class="section-h"><h3 style="font-size:17px">讀過的文章</h3><span class="muted" style="font-size:13px">${nRead} 篇</span></div>
    ${hist.length?`<div class="hist">${hist.map(([id,t])=>{const s=byId[id];if(!s)return '';const d=new Date(t);return `<button data-go-intro="${id}" data-from="stats"><span class="no">${String(id).padStart(2,'0')}</span><strong>${esc(s.title)}</strong><time>${fmtMD(d)}</time></button>`}).join('')}</div>`
      :`<p class="empty" style="padding:16px 0">還沒有讀完的文章。讀完一篇按「標記為已讀」就會記在這裡。</p>`}
-   </section></div>`;
+   </section>${miniLinks()}</div>`;
 }
 /* ---------- modal ---------- */
 const modal=document.getElementById('modal'),modalBox=document.getElementById('modalBox');
+function miniLinks(){return `<nav class="minilinks" aria-label="作者連結"><a href="https://han.bobaboba.me" target="_blank" rel="noopener" class="ml-boba">🧋 請我喝珍奶</a><a href="https://www.instagram.com/han_s_wanderlust" target="_blank" rel="noopener">IG</a><a href="https://www.facebook.com/HansWanderlust0212/" target="_blank" rel="noopener">FB</a><a href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">蝦皮分潤</a></nav>`}
 function typeBtn(){return `<button class="typebtn" data-typepick aria-label="切換小說類型"><span>類型</span><b>${TRACKS[track].short}</b><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>`}
 function trackRead(t){return Object.keys(rawStore.get(t==='ielts'?'read':t+'.read',{})).length}
 function openTypePicker(first){
@@ -517,7 +541,7 @@ function renderList(){
      <button class="chip" data-f="unread" aria-pressed="${filter==='unread'}">未讀</button>
      <button class="chip" data-f="read" aria-pressed="${filter==='read'}">已讀</button>
    </div>
-   <div class="list" id="list"></div></div>`;
+   <div class="list" id="list"></div>${miniLinks()}</div>`;
   const q=document.getElementById('q');q.addEventListener('input',()=>{query=q.value;fillList()});
   fillList();
 }
