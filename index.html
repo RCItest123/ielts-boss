@@ -414,6 +414,12 @@ body.gm-mode{--paper:#17121C;--card:#221A28;--ink:#F1E9F0;--muted:#A99BAA;--line
 .gm-row{display:flex;gap:8px;flex-wrap:wrap}.gm-row .btn{flex:1}
 .gm-hud{display:flex;gap:6px;flex-wrap:wrap}.gm-hud span{background:var(--soft);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .gm-say{margin:0}
+.lc-bar{display:flex;flex-direction:column;gap:2px;width:100%;padding:10px 12px;border-radius:12px;background:#fff4dc;color:#8a4b00;box-shadow:inset 0 0 0 1.5px #f0c060;text-align:center;font-size:12px;line-height:1.5}.lc-bar b{font-size:14px;color:#b4361f}
+.lc-tb{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lc-tb div{border-radius:14px;padding:10px 6px;background:var(--soft);display:flex;flex-direction:column;align-items:center}.lc-tb .hl{box-shadow:inset 0 0 0 2px var(--wine)}.lc-tb small{font-size:12px;opacity:.75}.lc-tb b{font-size:28px;color:var(--wine);line-height:1.2}.lc-tb s{font-size:13px;opacity:.55}
+.gn-phone{margin:2px auto 4px;width:100%;max-width:270px;border-radius:26px;padding:20px 14px 16px;background:linear-gradient(180deg,#1a1022,#2b1530 65%,#120a16);color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 10px 26px rgba(26,16,34,.35)}
+.gn-phone .call-av{width:84px;height:84px;animation:cring 1.4s ease-in-out infinite}.gn-phone b{font-size:20px;margin-top:6px}.gn-phone>span{font-size:12px;opacity:.75}
+.gn-bub{margin:8px 0 2px;padding:9px 12px;border-radius:14px;border-bottom-left-radius:4px;background:rgba(255,255,255,.12);font-size:13px;line-height:1.55;text-align:left;align-self:stretch}
+.gn-btns{display:flex;gap:56px;margin-top:10px}.gn-btns i{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px}.gn-btns .no{background:#e0424b}.gn-btns .yes{background:#2fbf5b;animation:cbounce 1s infinite}
 .cram-note{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:13px;line-height:1.6;text-align:left}
 .cram-ban{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;margin:0 0 12px;padding:12px 14px;border-radius:14px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--gold,#c9a45c);text-align:left;color:var(--ink)}.cram-ban>span:first-child{font-size:22px}.cram-ban b{display:block;font-size:15px}.cram-ban small{opacity:.7;font-size:12px}
 .cram-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.cram-kpi div{background:var(--card);border-radius:14px;padding:12px 6px;text-align:center;box-shadow:inset 0 0 0 1px var(--line)}.cram-kpi b{display:block;font-size:24px}.cram-kpi span{font-size:12px;opacity:.7}
@@ -1104,6 +1110,29 @@ function announce(){if(dkey()>ANN_UNTIL||rawStore.get('annIelts2',0))return fals
    <ul class="annl" style="text-align:left;margin:6px 0 10px;padding-left:20px;line-height:1.8"><li><b>免費版</b>：可閱讀前 10 篇</li><li><b>付費版</b>：100 篇無限暢讀（已購買者完全不受影響）</li><li>已讀紀錄與生字本都會保留</li></ul>
    <p class="muted">造成不便請見諒，謝謝支持原創！</p>
    <div class="acts"><button class="btn" data-close data-settrack="ielts">看全新雅思版</button>${unlocked?'':`<button class="btn ghost" data-unlock>解鎖付費版（NT$${PRICE()} 永久）</button>`}<button class="btn ghost" data-close>知道了</button></div>`);return true}
+/* ---------- 遊戲間更新通知：每人最多 3 天、每天第一次開啟跳一次（到 GN_UNTIL 為止） ---------- */
+const GN_UNTIL='2026-11-14';
+/* 早鳥最後機會：11/4、11/5 未解鎖者每天一次（若當天已跳遊戲更新，就併在裡面） */
+const lcOn=()=>!unlocked&&!gamePass&&isEarly()&&dkey()>='2026-11-04';
+const lcTxt=()=>dkey()===EARLY_END?'今天早鳥特價就結束了！':'明天早鳥特價就結束了！';
+function lcBar(){if(!lcOn())return '';rawStore.set('lcDay',dkey());return `<button class="lc-bar" data-close data-plans><b>⏰ ${lcTxt()}</b><span>小說 99 → 149・小說＋遊戲 188 → 249　看方案 ›</span></button>`}
+function lastChance(){if(!lcOn()||rawStore.get('lcDay','')===dkey())return false;rawStore.set('lcDay',dkey());
+  openModal(`${bossPic([genderize(dkey()===EARLY_END?'最後一天。錯過了，別來求我。':'明天之後就漲價了。女人，妳還在等什麼？'),'早鳥價倒數'])}<span class="kicker">漲價前最後機會</span><h2>${lcTxt()}</h2>
+   <div class="lc-tb"><div><small>小說付費版</small><b>99</b><s>149</s></div><div class="hl"><small>小說＋遊戲</small><b>188</b><s>249</s></div></div>
+   <p style="margin:0">11/6 起恢復原價。一次買斷、永久有效，之後新增的故事和遊戲也包含。</p>
+   <div class="acts">${buyBtn(true)}<button class="linkbtn" data-close style="align-self:center">我再想想</button></div>`);return true}
+function gameNews(){const k=dkey();if(k>GN_UNTIL)return false;const d=rawStore.get('gnDays',[])||[];if(d.length>=3||d.includes(k))return false;rawStore.set('gnDays',d.concat(k));
+  const full=(typeof CB_BOSSES!=='undefined'&&CB_BOSSES.length)?CB_BOSSES[Math.floor(Math.random()*CB_BOSSES.length)]:'傅寒州';
+  openModal(`<span class="kicker">霸總遊戲間・今天更新了</span>
+   <div class="gn-phone" aria-hidden="true"><img class="call-av" src="${nextBossImg()}" alt=""><b>${esc(full)}</b><span>來電中…</span>
+    <p class="gn-bub">${esc(genderize('「妳敢不接我電話？三題單字，答對才准掛。」'))}</p>
+    <div class="gn-btns"><i class="no">✕</i><i class="yes">✆</i></div></div>
+   ${lcBar()}<h2>霸總打電話來考妳了</h2>
+   <ul class="annl" style="text-align:left;margin:0 0 6px;padding-left:20px;line-height:1.8">
+    <li><b>☎ 霸總來電</b>：用對話考單字，答錯會被罵，<b>每天免費接 1 通</b></li>
+    <li><b>📒 錯字補習班</b>：答錯的字自動收集，隔 1、3、7 天複習到畢業</li></ul>
+   <div class="acts"><button class="btn" data-close data-gncall>接聽試玩</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`);gm.gnName=full;return true}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-gncall]');if(!t)return;setTimeout(()=>{go('games');callStart()},120)});
 function dailyQuote(){const k=dkey();if(rawStore.get('quoteDay','')===k)return false;rawStore.set('quoteDay',k);
   qIdx=Math.abs(dayIdx())%BOSS_QUOTES.length;const q=curQuote();const tid=todayLesson();const s=tid!=null&&!readSet[tid]&&!isLocked(byId[tid])?byId[tid]:null;if(s)store.set('prompted',k);
   openModal(`<div class="bosspic dq"><img src="${nextBossImg()}" alt="霸總"><div class="bubble"><span class="dq-k">今日霸總金句</span>${esc(q[0])}<small>「${esc(q[1])}」</small></div></div>
@@ -1572,16 +1601,22 @@ function cramStart(){const Q=gshuf(cramDue()).slice(0,10);if(!Q.length){cramHome
 const CALL_FREE=1;
 function callLeft(){if(gamePass)return 99;const r=rawStore.get('callDay',{})||{};return r.d===dkey()?Math.max(0,CALL_FREE-r.n):CALL_FREE}
 function callUse(){if(gamePass)return;const r=rawStore.get('callDay',{})||{},td=dkey();rawStore.set('callDay',{d:td,n:(r.d===td?r.n:0)+1})}
+/* 來電出題：生字本／已讀最多 3 個，其餘從等級字庫隨機；最近 60 個問過的字先避開 */
+function callWords(lv){const rc=new Set(rawStore.get('callSeen',[])||[]),p=gmPersonal(lv),zs=new Set(),ws=new Set(),out=[];
+  const add=(x,cap)=>{if(out.length>=cap||ws.has(x[0])||zs.has(x[1]))return;ws.add(x[0]);zs.add(x[1]);out.push(x)};
+  const per=gshuf(p.saved.concat(p.read)),pool=gshuf(gmPool(lv));
+  per.filter(x=>!rc.has(x[0])).forEach(x=>add(x,3));pool.filter(x=>!rc.has(x[0])).forEach(x=>add(x,12));pool.forEach(x=>add(x,12));
+  const W=gshuf(out);rawStore.set('callSeen',(rawStore.get('callSeen',[])||[]).concat(W.slice(0,6).map(x=>x[0])).slice(-60));return W}
 function callStart(){
   if(!callLeft()){openModal(`<span class="kicker">霸總來電</span><h2>今天的電話接過了</h2><p>免費版每天可以接 1 通霸總來電。開通遊戲通行證，霸總隨時打給妳，所有遊戲無限玩。</p><div class="acts">${passBuy()}<button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`);return}
-  gmStopAll();gm.cur='call';const full=(typeof CB_BOSSES!=='undefined'&&CB_BOSSES.length)?CB_BOSSES[Math.floor(Math.random()*CB_BOSSES.length)]:'傅寒州';const sur=full.length>3?full.slice(0,2):full[0];
+  gmStopAll();gm.cur='call';const full=gm.gnName||((typeof CB_BOSSES!=='undefined'&&CB_BOSSES.length)?CB_BOSSES[Math.floor(Math.random()*CB_BOSSES.length)]:'傅寒州');gm.gnName=null;const sur=full.length>3?full.slice(0,2):full[0];
   const img=nextBossImg();let rejects=0;
   const ring=(sub)=>{app.innerHTML=`<div class="view call-v"><div class="call-scr ring"><img class="call-av" src="${img}" alt=""><b class="call-nm">${esc(full)}</b><span class="call-st">${sub||'來電中…'}</span>
     <div class="call-btns"><button class="call-no" id="cno" aria-label="拒接">✕<small>拒接</small></button><button class="call-yes" id="cyes" aria-label="接聽">✆<small>接聽</small></button></div></div></div>`;window.scrollTo(0,0);
     try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
     document.getElementById('cyes').onclick=talk;
     document.getElementById('cno').onclick=()=>{rejects++;if(rejects===1)ring(genderize('「妳敢掛我電話？」<br>再次來電中…'));else if(rejects===2)ring(genderize('「第二次了。我數到三。」<br>再次來電中…'));else talk()}};
-  function talk(){callUse();const lv=gmLevel(),P=gmPool(lv),W=gmWords(lv).slice(0,12);let qi=0,ok=0,wrong=[],t0=Date.now(),busy=false;
+  function talk(){callUse();const lv=gmLevel(),P=gmPool(lv),W=callWords(lv);let qi=0,ok=0,wrong=[],t0=Date.now(),busy=false;
     app.innerHTML=`<div class="view call-v"><div class="call-scr talk"><div class="call-hd"><img src="${img}" alt=""><span><b>${esc(full)}</b><small id="ctm">00:00</small></span><button class="call-end" id="cend" aria-label="掛斷">✕</button></div>
       <div class="call-log" id="clog" aria-live="polite"></div><div class="call-opts" id="copt"></div></div></div>`;window.scrollTo(0,0);
     const tm=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000),el=document.getElementById('ctm');if(el)el.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')},500);gm.stop.push(()=>clearInterval(tm));
@@ -2063,7 +2098,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
 (async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
   if(hasSbHint())syncAccount();
-  setTimeout(()=>{if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!dailyQuote())dailyPrompt()},500)})();
+  setTimeout(()=>{if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 </script>
 
