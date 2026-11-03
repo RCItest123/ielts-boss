@@ -414,6 +414,24 @@ body.gm-mode{--paper:#17121C;--card:#221A28;--ink:#F1E9F0;--muted:#A99BAA;--line
 .gm-row{display:flex;gap:8px;flex-wrap:wrap}.gm-row .btn{flex:1}
 .gm-hud{display:flex;gap:6px;flex-wrap:wrap}.gm-hud span{background:var(--soft);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .gm-say{margin:0}
+.cram-note{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:13px;line-height:1.6;text-align:left}
+.cram-ban{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;margin:0 0 12px;padding:12px 14px;border-radius:14px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--gold,#c9a45c);text-align:left;color:var(--ink)}.cram-ban>span:first-child{font-size:22px}.cram-ban b{display:block;font-size:15px}.cram-ban small{opacity:.7;font-size:12px}
+.cram-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.cram-kpi div{background:var(--card);border-radius:14px;padding:12px 6px;text-align:center;box-shadow:inset 0 0 0 1px var(--line)}.cram-kpi b{display:block;font-size:24px}.cram-kpi span{font-size:12px;opacity:.7}
+.cram-list{margin-top:14px}.cram-row{display:grid;grid-template-columns:1fr auto auto;grid-template-areas:"en b d" "zh b d";column-gap:10px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line)}.cram-row .en{grid-area:en;font-family:var(--f-en);font-weight:600;font-size:17px}.cram-row .zh{grid-area:zh;font-size:13px;opacity:.75}.cram-row small{grid-area:d;font-size:12px;opacity:.7;min-width:34px;text-align:right}
+.cram-b{grid-area:b;display:flex;gap:3px}.cram-b i{width:8px;height:8px;border-radius:50%;background:var(--line)}.cram-b i.on{background:var(--gold,#c9a45c)}
+.cram-q{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}.cram-q small{opacity:.7}.cram-q b{font-size:28px}.cram-q b.en{font-family:var(--f-en)}.gm-opt.en,.call-o.en{font-family:var(--f-en)}
+.call-v{padding:0!important;max-width:none!important}.call-scr{min-height:calc(100dvh - 70px);background:linear-gradient(180deg,#1a1022,#2b1530 60%,#120a16);color:#fff;display:flex;flex-direction:column;align-items:center;padding:56px 20px 30px}
+.call-av{width:132px;height:132px;border-radius:50%;object-fit:cover;object-position:top;box-shadow:0 0 0 4px rgba(255,255,255,.15)}.ring .call-av{animation:cring 1.4s ease-in-out infinite}
+@keyframes cring{0%,100%{box-shadow:0 0 0 4px rgba(255,255,255,.15)}50%{box-shadow:0 0 0 16px rgba(201,164,92,.25)}}
+.call-nm{margin-top:18px;font-size:28px;letter-spacing:.04em}.call-st{margin-top:6px;opacity:.75;text-align:center;line-height:1.6;min-height:3.2em}
+.call-btns{margin-top:auto;display:flex;gap:70px;padding-top:60px}.call-btns button{width:70px;height:70px;border-radius:50%;color:#fff;font-size:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}.call-btns small{position:absolute;bottom:-24px;font-size:12px;opacity:.8;white-space:nowrap}
+.call-no{background:#e0424b}.call-yes{background:#2fbf5b;animation:cbounce 1s infinite}@keyframes cbounce{0%,100%{transform:none}50%{transform:translateY(-5px)}}
+.talk{padding:16px 14px 20px;align-items:stretch}.call-hd{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.12)}.call-hd img{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:top}.call-hd span{flex:1;display:flex;flex-direction:column}.call-hd small{opacity:.7;font-variant-numeric:tabular-nums}
+.call-end{width:42px;height:42px;border-radius:50%;background:#e0424b;color:#fff;font-size:18px}
+.call-log{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:14px 2px;max-height:52dvh}.cb{margin:0;max-width:82%;padding:10px 13px;border-radius:16px;line-height:1.6;font-size:15px;animation:cin .25s ease-out}.cb.boss{align-self:flex-start;background:rgba(255,255,255,.1);border-bottom-left-radius:4px}.cb.me{align-self:flex-end;background:#c9a45c;color:#1a1022;border-bottom-right-radius:4px}
+@keyframes cin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.call-opts{display:grid;gap:8px;padding-top:8px}.call-o{padding:13px 14px;border-radius:14px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);color:#fff;font-weight:700;font-size:16px;text-align:left}
+
 .gm-link{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:28px}
 .gm-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}.gm-lines line{stroke:var(--ok);stroke-width:3;stroke-linecap:round}
 .gm-col{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1}
@@ -750,11 +768,11 @@ function renderQuiz(){
 let _bimg=null,_bimgQ=-1;function nextBossImgCached(){if(_bimgQ!==qz.i){_bimg=nextBossImg();_bimgQ=qz.i}return _bimg}
 function qzVerdict(sc){return genderize(sc>=10?'滿分。很好，女人，妳已經成功引起我的注意。':sc>=8?'差一點完美。明天，我要看到滿分。':sc>=5?'勉強及格。今晚加班背單字，我陪妳。':'這種成績？從今天起，妳的單字我親自盯。')}
 function renderQuizEnd(){
-  const sc=qz.score,rec=store.get('quiz',{});const k=dkey();if(!qz.saved){rec[k]=Math.max(rec[k]||0,sc);store.set('quiz',rec);qz.saved=1;gmAddXP('quiz',sc*15);}
+  const sc=qz.score,rec=store.get('quiz',{});const k=dkey();if(!qz.saved){rec[k]=Math.max(rec[k]||0,sc);store.set('quiz',rec);qz.saved=1;gmAddXP('quiz',sc*15);qz.cn=cramAdd(qz.wrong.map(w=>[w.w,w.z]));}
   const v=qzVerdict(sc);
   app.innerHTML=`<div class="view quiz">
    ${bossPic([v,`今日單字挑戰 ${sc} / ${qz.qs.length}`])}
-   <div class="qscore"><b>${sc}</b><span>/ ${qz.qs.length}</span></div><p class="muted" style="text-align:center;margin:0">遊戲積分 +${sc*15}</p>
+   <div class="qscore"><b>${sc}</b><span>/ ${qz.qs.length}</span></div><p class="muted" style="text-align:center;margin:0">遊戲積分 +${sc*15}</p>${cramNote(qz.cn)}
    ${qz.wrong.length?`<section class="blk"><h3 style="font-size:16px">答錯的字</h3><ul class="qwrong">${qz.wrong.map(w=>`<li><b>${esc(w.w)}</b>${esc(w.z)}</li>`).join('')}</ul><button class="btn ghost shsm" data-qsave>全部加入生字本</button></section>`:''}
    <div class="acts"><button class="btn" data-qsharescore>分享成績圖卡</button>${unlocked?'<button class="btn ghost" data-qstart>再挑戰一次</button>':''}<button class="linkbtn" data-tab-go="games" style="align-self:center">回遊戲間</button></div>
   </div>`}
@@ -1311,10 +1329,12 @@ function gmFinish(game,score,line,review,again){
   return `<div class="gm-panel">${gmSay(line)}<div class="gm-big">+${add}<small> 分</small></div>
    ${up?`<div class="gm-up">升級！Lv.${after.lv}「${after.title}」</div>`:''}
    ${review&&review.length?`<div class="gm-review">${review.map(w=>`<span><b>${esc(w[0])}</b>${esc(w[1])}</span>`).join('')}</div>`:''}
-   <div class="gm-row">${gmCanPlay()?`<button class="btn" data-gstart="${again}">${gamePass?'再玩一局':`再玩一局（試玩剩 ${gmLeft()} 次）`}</button>`:''}<button class="btn ghost" data-ghome>回遊戲間</button></div>
-   ${gamePass?'':`<p class="pricenote">${gmCanPlay()?`試玩還剩 ${gmLeft()} 次。`:'免費試玩次數用完了。'}開通遊戲通行證，所有遊戲無限玩。</p>${passBuy()}`}</div>`}
+   <div class="gm-row">${game==='cram'?(again==='cram'?`<button class="btn" data-gstart="cram">繼續複習</button>`:`<button class="btn" data-gopen="cram">回補習班</button>`):game==='call'?(callLeft()?`<button class="btn" data-gstart="call">再接一通</button>`:''):gmCanPlay()?`<button class="btn" data-gstart="${again}">${gamePass?'再玩一局':`再玩一局（試玩剩 ${gmLeft()} 次）`}</button>`:''}<button class="btn ghost" data-ghome>回遊戲間</button></div>
+   ${gamePass?'':game==='call'?`<p class="pricenote">免費版每天可以接 1 通。開通遊戲通行證，霸總隨時打給妳，所有遊戲無限玩。</p>${passBuy()}`:`<p class="pricenote">${gmCanPlay()?`試玩還剩 ${gmLeft()} 次。`:'免費試玩次數用完了。'}開通遊戲通行證，所有遊戲無限玩。</p>${passBuy()}`}</div>`}
 const GM_GAMES=[
  {id:'custom',ic:'♥',name:'訂製霸總情人',desc:'填入你或朋友的名字，成為壞霸總小說的主角，還能匯出圖卡',teaser:1},
+ {id:'call',ic:'☎',name:'霸總來電',desc:'霸總打電話來考妳單字，答對 3 題才准掛電話・每天免費接 1 通',nw:1},
+ {id:'cram',ic:'✎',name:'錯字補習班',desc:'遊戲裡答錯的字自動收進來，隔 1、3、7 天複習，答對 4 次就畢業',teaser:1},
  {id:'scene',ic:'找',name:'情境找物品',desc:'在總裁的辦公室、廚房、客廳、浴室、臥室、公司門口找出指定物品',lv:0,hot:1},
  {id:'quiz',ic:'⚡',name:'霸總每日單字挑戰',desc:'從讀過的故事出 10 題，答錯霸總會罵人',lv:0},
  {id:'link',ic:'連',name:'中英連連看',desc:'左邊英文、右邊中文，點一點把它們連起來',lv:1,soon:1},
@@ -1329,18 +1349,21 @@ function renderGames(){
    <div class="section-h"><h1 style="font-size:26px">霸總遊戲間${gamePass?'<span class="gm-hot">通行證 ✓</span>':''}</h1></div>
    ${gamePass?`<div class="gm-pass"><b>✓ 已開通遊戲通行證</b>・所有遊戲無限玩，之後的新遊戲也能玩</div>`:''}
    ${gmRankCard()}
+   ${cramBanner()}
    ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>${GM_TRIAL}</b> 次，先玩玩看':'免費試玩已用完'}<small>通行證 <s>139</s> 早鳥 <b>89 元</b>・永久無限玩</small></div>
      <div class="gt-r">${GAME_URL?`<a class="gt-buy" href="${GAME_URL}" target="_blank" rel="noopener">購買</a>`:`<button class="gt-buy" data-buyinfo>購買</button>`}<button class="gt-code" data-unlock>輸入序號</button></div></div>
      <button class="linkbtn pl-link" data-plans style="margin:-4px auto 12px">看方案比較 ›</button>`}
    <div class="gm-list">${GM_GAMES.map(g=>{
      if(g.soon&&!gamePass){si++;return `<button class="gm-g gm-soon" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${ICON.lock}</span><span class="gm-tx"><b>神秘遊戲 ${si}</b><small>遊戲通行證限定</small></span></button>`}
      const tz=g.teaser&&!gamePass;const b=rawStore.get('gmBest.'+g.id,0);
-     return `<button class="gm-g${g.hot?' hot':''}${tz?' teaser':''}" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${g.ic}</span><span class="gm-tx"><b>${g.name}${g.hot?'<span class="gm-hot">推薦</span>':''}${g.teaser?`<span class="gm-hot gm-new">${gamePass?'NEW':'通行證限定'}</span>`:''}</b><small>${g.desc}</small>${b?`<em>最高 +${b} 分</em>`:''}</span>${tz?`<span aria-hidden="true" class="gm-go">${ICON.lock}</span>`:'<span aria-hidden="true" class="gm-go">›</span>'}</button>`}).join('')}</div>
+     return `<button class="gm-g${g.hot?' hot':''}${tz?' teaser':''}" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${g.ic}</span><span class="gm-tx"><b>${g.name}${g.hot?'<span class="gm-hot">推薦</span>':''}${g.nw?'<span class="gm-hot gm-new">NEW</span>':''}${g.teaser?`<span class="gm-hot gm-new">${gamePass?'NEW':'通行證限定'}</span>`:''}${g.id==='cram'&&cramDue().length?`<span class="gm-hot">今天 ${cramDue().length} 個</span>`:''}</b><small>${g.desc}</small>${b?`<em>最高 +${b} 分</em>`:''}</span>${tz?`<span aria-hidden="true" class="gm-go">${ICON.lock}</span>`:'<span aria-hidden="true" class="gm-go">›</span>'}</button>`}).join('')}</div>
    <section class="gm-why" style="margin-top:16px"><h3>遊戲間怎麼幫你記單字？</h3>
     <p>讀故事是「第一次認識」單字，遊戲是「再見幾次面」。學過的單字在幾天內反覆<b>主動回想</b>，最能從短期記憶搬進長期記憶。</p>
     <ul><li><b>情境找物品</b>：把單字和畫面連在一起，用圖像記憶</li>
      <li><b>單字挑戰</b>：從你讀過的故事出題，答錯的字一鍵存進生字本</li>
      <li><b>中英連連看、掉落打字、聽力測驗</b>：從配對、拼字、聽音不同角度加深印象</li>
+     <li><b>霸總來電</b>：霸總打電話來考妳，答對 3 題才准掛</li>
+     <li><b>錯字補習班</b>：答錯的字自動收集，照記憶曲線隔 1、3、7 天複習</li>
      <li><b>訂製霸總情人</b>：用你的名字生成霸總小說，邊玩邊學新單字</li></ul>
     <p class="muted" style="margin:0">建議用法：每天讀完一篇故事，再來玩一局，把今天的單字鎖進腦子裡。</p></section>
    ${miniLinks()}</div>`;
@@ -1371,6 +1394,9 @@ function gmTeaser(id){
    <div class="acts">${passBuy()}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`);
 }
 function gmStart(id){
+  if(id==='cram'){gamePass?cramStart():cramTeaser();return}
+  if(id==='cramhome'){gamePass?cramHome():cramTeaser();return}
+  if(id==='call'){callStart();return}
   const g=GM_GAMES.find(x=>x.id===id);if(!g){renderGames();return}
   if((g.soon||g.teaser)&&!gamePass){gmTeaser(id);return}
   if(g.teaser){cbOpen();return}
@@ -1379,6 +1405,8 @@ function gmStart(id){
   gmStopAll();gm.cur=id;if(id==='quiz'){qzStart();return}({link:gmLink,fall:gmFall,listen:gmListen,scene:gmScene})[id]()}
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.gopen==='cram'){gamePass?cramHome():cramTeaser();return}
+  if(t.dataset.gopen==='call'){callStart();return}
   if(t.dataset.gopen){const g=GM_GAMES.find(x=>x.id===t.dataset.gopen);if(g&&(g.soon||g.teaser)&&!gamePass){gmTeaser(g.id);return}if(g&&g.teaser){cbOpen();return}gmIntro(t.dataset.gopen);return}
   if(t.hasAttribute('data-cbgo')){cbBuild();return}
   if(t.hasAttribute('data-cbdice')){const i=document.getElementById('cbBs');if(i)i.value=CB_BOSSES[Math.floor(Math.random()*CB_BOSSES.length)];return}
@@ -1393,7 +1421,7 @@ document.addEventListener('click',e=>{
 const gmLvName=()=>GM_LV.find(x=>x[0]===gmLevel())[1];
 /* --- 1. 中英連連看 --- */
 function gmLink(){
-  const pool=gmWords(gmLevel()).slice(0,15);let round=0,mistakes=0,t0=Date.now(),sel=null,done=0,all=[];
+  const pool=gmWords(gmLevel()).slice(0,15);const lw=new Set();let round=0,mistakes=0,t0=Date.now(),sel=null,done=0,all=[];
   const timer=setInterval(()=>{const el=document.getElementById('glt');if(el)el.textContent=((Date.now()-t0)/1000).toFixed(0)+' 秒'},500);gm.stop.push(()=>clearInterval(timer));
   function draw(){
     const words=pool.slice(round*5,round*5+5);all.push(...words);const right=gshuf(words);sel=null;done=0;
@@ -1408,12 +1436,12 @@ function gmLink(){
       if(!sel){b.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:180});return}
       if(sel.dataset.gw===b.dataset.gw){sel.classList.remove('sel');sel.classList.add('ok');b.classList.add('ok');line(sel,b);sel=null;done++;
         if(done===5){round++;if(round<3)setTimeout(draw,550);else setTimeout(end,550)}}
-      else{mistakes++;document.getElementById('glm').textContent=mistakes;[sel,b].forEach(x=>{x.classList.add('ng');setTimeout(()=>x.classList.remove('ng'),450)})}}}
+      else{mistakes++;lw.add(sel.dataset.gw);document.getElementById('glm').textContent=mistakes;[sel,b].forEach(x=>{x.classList.add('ng');setTimeout(()=>x.classList.remove('ng'),450)})}}}
   function line(a,b){const box=document.getElementById('glk').getBoundingClientRect(),r1=a.getBoundingClientRect(),r2=b.getBoundingClientRect();
     const s=document.getElementById('gls');s.insertAdjacentHTML('beforeend',`<line x1="${r1.right-box.left}" y1="${r1.top+r1.height/2-box.top}" x2="${r2.left-box.left}" y2="${r2.top+r2.height/2-box.top}"/>`)}
   function end(){clearInterval(timer);const sec=(Date.now()-t0)/1000;const score=150+Math.max(0,120-sec)-mistakes*5;
     const line=sec<45&&mistakes<=1?'很好，女人，妳已經成功引起我的注意。':sec<80?'還行。明天，我要看到更快。':'這麼慢？再給我連三遍。';
-    gmScreen('中英連連看',`<div class="hud gm-hud"><span>${sec.toFixed(0)} 秒</span><span>錯 ${mistakes} 次</span></div>`+gmFinish('link',score,line,all,'link'))}
+    const cn=cramAdd(all.filter(w=>lw.has(w[0])));gmScreen('中英連連看',`<div class="hud gm-hud"><span>${sec.toFixed(0)} 秒</span><span>錯 ${mistakes} 次</span></div>`+cramNote(cn)+gmFinish('link',score,line,all,'link'))}
   draw();
 }
 /* --- 2. 掉落打字 --- */
@@ -1436,7 +1464,7 @@ function gmFall(){
     raf=requestAnimationFrame(loop)}
   function end(){run=false;cancelAnimationFrame(raf);drops.forEach(d=>d.el.remove());
     const line=score>=200?'打字比我的秘書還快。不錯。':score>=80?'及格。明天，我要更多。':'就這樣？女人，妳在考驗我的耐心。';
-    gmScreen('掉落打字',`<div class="hud gm-hud"><span>${score} 分</span></div>`+gmFinish('fall',score,line,missed.slice(-8),'fall'))}
+    const cn=cramAdd(missed);gmScreen('掉落打字',`<div class="hud gm-hud"><span>${score} 分</span></div>`+cramNote(cn)+gmFinish('fall',score,line,missed.slice(-8),'fall'))}
   document.getElementById('gfform').onsubmit=e=>{e.preventDefault();chk(true)};inp.addEventListener('input',()=>chk(false));
   function chk(force){const v=inp.value.trim().toLowerCase();if(!v||!run)return;const d=drops.find(x=>x.w[0]===v);
     if(d){combo++;score+=10+Math.min(combo-1,10)*2;d.el.classList.add('hit');drops=drops.filter(x=>x!==d);setTimeout(()=>d.el.remove(),350);inp.value='';hud();speak(d.w[0],1)}
@@ -1461,12 +1489,12 @@ function gmListen(){
       document.getElementById('gln').innerHTML=`${gmSay(ok?['耳朵不錯，下一題。','很好，繼續。','答對了，別得意。'][i%3]:['聽清楚了嗎？再背三遍。','這都聽不出來？今晚別想睡。'][i%2])}<button class="btn" id="glgo" style="width:100%;margin-top:10px">${i+1<N?'下一題':'看成績'}</button>`;
       document.getElementById('glgo').onclick=()=>{i++;i<N?q():end()}}}
   function end(){const line=score>=9?'這種耳朵，配得上我。':score>=6?'還可以。明天我要聽到滿分。':'耳朵借我，我親自教妳。';
-    gmScreen('聽力測驗',`<div class="hud gm-hud"><span>答對 ${score} / ${N}</span></div>`+gmFinish('listen',score*15,line,wrong,'listen'))}
+    const cn=cramAdd(wrong);gmScreen('聽力測驗',`<div class="hud gm-hud"><span>答對 ${score} / ${N}</span></div>`+cramNote(cn)+gmFinish('listen',score*15,line,wrong,'listen'))}
   q();
 }
 /* --- 4. 情境找物品 --- */
 function gmScene(){
-  const S=GM_SCENES[Math.floor(Math.random()*GM_SCENES.length)];const targets=gshuf(S.hs).slice(0,8);let ti=0,score=0,tries=0,zoom=false;
+  const S=GM_SCENES[Math.floor(Math.random()*GM_SCENES.length)];const targets=gshuf(S.hs).slice(0,8);const sw=[];let ti=0,score=0,tries=0,zoom=false;
   gmScreen('情境找物品',`<div class="hud gm-hud"><span id="gsp">第 1 / 8 個</span><span id="gss">0 分</span><span>${S.name}</span></div>
    <div class="gm-ask"><span><small>找出這個東西，點一下</small><b id="gsw"></b></span><button id="gssay" aria-label="念出單字">♪</button></div>
    <div class="gm-scwrap" id="gsw2"><div class="gm-sc" id="gsc"><img src="${S.img}" alt="${S.name}" draggable="false"></div></div>
@@ -1481,13 +1509,107 @@ function gmScene(){
   function next(){ti++;if(ti<8)setTimeout(ask,400);else setTimeout(end,500)}
   document.getElementById('gssay').onclick=()=>targets[ti]&&speak(targets[ti][0],.85);
   document.getElementById('gzoom').onclick=ev=>{zoom=!zoom;sc.classList.toggle('z',zoom);ev.target.textContent=zoom?'縮小照片':'放大照片'};
-  document.getElementById('gskip').onclick=()=>{if(ti>=8)return;mark(targets[ti],'skip',targets[ti][0]+' '+targets[ti][1]);next()};
+  document.getElementById('gskip').onclick=()=>{if(ti>=8)return;sw.push([targets[ti][0],targets[ti][1]]);mark(targets[ti],'skip',targets[ti][0]+' '+targets[ti][1]);next()};
   sc.onclick=ev=>{if(ti>=8)return;const r=sc.getBoundingClientRect();const x=(ev.clientX-r.left)/r.width*1536,y=(ev.clientY-r.top)/r.height*1024;const t=targets[ti];const h=t&&t[2].some(r=>inR(r,x,y))?t:hit(x,y);
-    if(h===t){score+=tries?5:10;const ri=t[2].findIndex(r=>x>=r[0]&&x<=r[2]&&y>=r[1]&&y<=r[3]);mark(t,'ok',t[0]+' '+t[1],ri<0?0:ri);speak(t[0],.9);document.getElementById('gss').textContent=score+' 分';next()}
+    if(h===t){score+=tries?5:10;if(tries)sw.push([t[0],t[1]]);const ri=t[2].findIndex(r=>x>=r[0]&&x<=r[2]&&y>=r[1]&&y<=r[3]);mark(t,'ok',t[0]+' '+t[1],ri<0?0:ri);speak(t[0],.9);document.getElementById('gss').textContent=score+' 分';next()}
     else{tries++;const tip=document.createElement('span');tip.className='gm-tap';tip.style.left=(x/1536*100)+'%';tip.style.top=(y/1024*100)+'%';tip.innerHTML=`<em>${h?esc(h[0]):'不是這裡'}</em>`;sc.appendChild(tip);setTimeout(()=>tip.remove(),1100)}};
   ask();
   function end(){const line=score>=70?'眼力不錯。這間'+S.name.replace('總裁的','')+'，歸妳管了。':score>=40?'還行，但我的東西妳要記清楚。':'東西就在眼前都找不到？再來。';
-    document.getElementById('gsend').innerHTML=gmFinish('scene',score,line,targets.map(t=>[t[0],t[1]]),'scene');document.getElementById('gsend').scrollIntoView({behavior:'smooth',block:'start'})}
+    const cn=cramAdd(sw);document.getElementById('gsend').innerHTML=cramNote(cn)+gmFinish('scene',score,line,targets.map(t=>[t[0],t[1]]),'scene');document.getElementById('gsend').scrollIntoView({behavior:'smooth',block:'start'})}
+}
+
+/* ---------- 錯字補習班（遊戲通行證）：遊戲答錯的字自動收集，照記憶曲線複習 ---------- */
+const CRAM_GAP=[0,1,3,7];/* 第 n 盒答對後，隔幾天再複習；第 4 盒再答對就畢業 */
+const dplus=n=>dkey(new Date(Date.now()+n*864e5));
+function cramGet(){return rawStore.get('cram',{})||{}}
+function cramAdd(list){if(!list||!list.length)return 0;const C=cramGet(),td=dkey();let n=0;
+  list.forEach(x=>{const w=Array.isArray(x)?x[0]:x.w,z=Array.isArray(x)?x[1]:x.z;if(!w||!z)return;const k=norm(w);
+    if(C[k]){C[k].b=0;C[k].d=td;C[k].n=(C[k].n||1)+1}else{C[k]={w:String(w).toLowerCase(),z,b:0,d:td,n:1,t:Date.now()};n++}});
+  rawStore.set('cram',C);return n}
+function cramDue(){const C=cramGet(),td=dkey();return Object.values(C).filter(x=>x.d<=td).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(b.n||1)-(a.n||1))}
+function cramNote(n){if(!n)return '';return `<p class="cram-note">📒 答錯的 <b>${n}</b> 個字已收進「錯字補習班」${gamePass?'，明天記得來複習':'・<b>通行證</b>可以照記憶曲線複習'}</p>`}
+function cramBanner(){const C=cramGet(),all=Object.keys(C).length;if(!all)return '';const due=cramDue().length;
+  return `<button class="cram-ban" data-gopen="cram"><span>📒</span><span><b>${due?`今天有 ${due} 個錯字該複習`:'今天的錯字都複習完了'}</b><small>錯字補習班・共 ${all} 個${gamePass?'':'・通行證限定'}</small></span><span aria-hidden="true">${gamePass?'›':ICON.lock}</span></button>`}
+function cramTeaser(){const all=Object.keys(cramGet()).length,due=cramDue().length;
+  openModal(`<span class="kicker">遊戲通行證限定</span><h2>錯字補習班</h2>
+   <p>${all?`你已經累積 <b>${all}</b> 個錯字，今天有 <b>${due}</b> 個該複習。`:'在遊戲裡答錯的字，會自動收進這裡。'}</p>
+   <ul class="annl" style="text-align:left;margin:4px 0 10px;padding-left:20px;line-height:1.8">
+    <li>所有遊戲<b>答錯的字自動收集</b>，不用自己抄</li>
+    <li>照<b>記憶曲線</b>安排：隔 1 天、3 天、7 天再考一次</li>
+    <li>連續答對 4 次就<b>畢業</b>，真的背起來了</li>
+    <li>答錯就重新排回明天，霸總親自盯妳</li></ul>
+   <div class="acts">${passBuy()}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
+function cramHome(){gmStopAll();gm.cur='cram';const C=cramGet(),L=Object.values(C).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0),due=cramDue().length,grad=rawStore.get('cramGrad',0)||0,td=dkey();
+  const when=d=>d<=td?'今天':d===dplus(1)?'明天':d.slice(5).replace('-','/');
+  gmScreen('錯字補習班',`<div class="cram-kpi"><div><b>${due}</b><span>今天要複習</span></div><div><b>${L.length}</b><span>還在補習</span></div><div><b>${grad}</b><span>已畢業</span></div></div>
+   <div class="gm-panel">${gmSay(due?'今天的錯字，一個都不准漏。':L.length?'今天的份做完了。明天準時報到。':'還沒有錯字？那就去玩一局，我等著抓妳的錯。')}
+    ${due?`<button class="btn" data-gstart="cram">開始複習 ${Math.min(due,10)} 個字</button>`:`<button class="btn ghost" data-ghome>回遊戲間</button>`}
+    <p class="muted" style="margin:0;font-size:13px">每個字要在不同天答對 4 次才畢業（隔 1、3、7 天）。答錯會重新排到明天。</p></div>
+   ${L.length?`<div class="cram-list">${L.map(x=>`<div class="cram-row"><span class="en">${esc(x.w)}</span><span class="zh">${esc(x.z)}</span><span class="cram-b" aria-label="進度 ${x.b}/4">${[0,1,2,3].map(i=>`<i${i<x.b?' class="on"':''}></i>`).join('')}</span><small>${when(x.d)}</small></div>`).join('')}</div>`:''}`)}
+function cramStart(){const Q=gshuf(cramDue()).slice(0,10);if(!Q.length){cramHome();return}gmStopAll();gm.cur='cram';
+  const P=gmPool(gmLevel()),others=Object.values(cramGet());let i=0,score=0,wrong=[];
+  function q(){const it=Q[i],zh2en=i%2===0;
+    const pool=gshuf(others.filter(x=>x.w!==it.w&&x.z!==it.z).map(x=>[x.w,x.z]).concat(gshuf(P).slice(0,12))).filter(x=>x[0]!==it.w&&x[1]!==it.z);
+    const seen=new Set([zh2en?it.w:it.z]),ds=[];for(const x of pool){const v=zh2en?x[0]:x[1];if(!seen.has(v)){seen.add(v);ds.push(x)}if(ds.length>=3)break}
+    const opts=gshuf([[it.w,it.z],...ds]);
+    gmScreen('錯字補習班',`<div class="hud gm-hud"><span>第 ${i+1} / ${Q.length} 題</span><span>答對 ${score}</span><span>進度 ${it.b}/4</span></div>
+     <div class="gm-panel cram-q"><small>${zh2en?'這個中文，英文是？':'這個字是什麼意思？'}</small><b class="${zh2en?'':'en'}">${esc(zh2en?it.z:it.w)}</b>${zh2en?'':`<button class="iconbtn" id="crs" aria-label="朗讀">${ICON.speak}</button>`}</div>
+     <div class="gm-opts">${opts.map((o,k)=>`<button class="gm-opt${zh2en?' en':''}" data-go="${k}">${esc(zh2en?o[0]:o[1])}</button>`).join('')}</div><div id="crn"></div>`);
+    const sp=document.getElementById('crs');if(sp)sp.onclick=()=>speak(it.w,.85);
+    let ans=false;document.querySelector('.gm-opts').onclick=ev=>{const b=ev.target.closest('.gm-opt');if(!b||ans)return;ans=true;const ok=opts[+b.dataset.go][0]===it.w;
+      const C=cramGet(),c=C[norm(it.w)];let msg;
+      if(ok){score++;if(c){c.b++;if(c.b>=4){delete C[norm(it.w)];rawStore.set('cramGrad',(rawStore.get('cramGrad',0)||0)+1);msg='畢業了。這個字，妳終於記住了。'}else{c.d=dplus(CRAM_GAP[c.b]);msg=['很好，'+CRAM_GAP[c.b]+' 天後我再考妳。','記住了？'+CRAM_GAP[c.b]+' 天後見真章。'][i%2]}}}
+      else{b.classList.add('ng');wrong.push([it.w,it.z]);if(c){c.b=0;c.d=dplus(1);c.n=(c.n||1)+1}msg=['又錯？明天再來，直到妳記住為止。','同一個字錯兩次，妳在挑戰我的耐心。'][i%2]}
+      rawStore.set('cram',C);speak(it.w,.9);
+      document.querySelectorAll('.gm-opt').forEach((x,k)=>{if(opts[k][0]===it.w)x.classList.add('ok');x.disabled=true});
+      document.getElementById('crn').innerHTML=`${gmSay(msg)}<button class="btn" id="crgo" style="width:100%;margin-top:10px">${i+1<Q.length?'下一題':'看成績'}</button>`;
+      document.getElementById('crgo').onclick=()=>{i++;i<Q.length?q():end()}}}
+  function end(){const left=cramDue().length,line=score===Q.length?'全對。今天的補習，准妳下課。':score>=Q.length/2?'還有幾個不熟，明天繼續盯妳。':'錯這麼多？明天提早到。';
+    gmScreen('錯字補習班',`<div class="hud gm-hud"><span>答對 ${score} / ${Q.length}</span>${left?`<span>還有 ${left} 個待複習</span>`:''}</div>`+gmFinish('cram',score*12,line,wrong,left?'cram':'cramhome'))}
+  q()}
+
+/* ---------- 霸總來電：不用語音，用對話考單字；答對 3 題才准掛電話 ---------- */
+const CALL_FREE=1;
+function callLeft(){if(gamePass)return 99;const r=rawStore.get('callDay',{})||{};return r.d===dkey()?Math.max(0,CALL_FREE-r.n):CALL_FREE}
+function callUse(){if(gamePass)return;const r=rawStore.get('callDay',{})||{},td=dkey();rawStore.set('callDay',{d:td,n:(r.d===td?r.n:0)+1})}
+function callStart(){
+  if(!callLeft()){openModal(`<span class="kicker">霸總來電</span><h2>今天的電話接過了</h2><p>免費版每天可以接 1 通霸總來電。開通遊戲通行證，霸總隨時打給妳，所有遊戲無限玩。</p><div class="acts">${passBuy()}<button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`);return}
+  gmStopAll();gm.cur='call';const full=(typeof CB_BOSSES!=='undefined'&&CB_BOSSES.length)?CB_BOSSES[Math.floor(Math.random()*CB_BOSSES.length)]:'傅寒州';const sur=full.length>3?full.slice(0,2):full[0];
+  const img=nextBossImg();let rejects=0;
+  const ring=(sub)=>{app.innerHTML=`<div class="view call-v"><div class="call-scr ring"><img class="call-av" src="${img}" alt=""><b class="call-nm">${esc(full)}</b><span class="call-st">${sub||'來電中…'}</span>
+    <div class="call-btns"><button class="call-no" id="cno" aria-label="拒接">✕<small>拒接</small></button><button class="call-yes" id="cyes" aria-label="接聽">✆<small>接聽</small></button></div></div></div>`;window.scrollTo(0,0);
+    try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+    document.getElementById('cyes').onclick=talk;
+    document.getElementById('cno').onclick=()=>{rejects++;if(rejects===1)ring(genderize('「妳敢掛我電話？」<br>再次來電中…'));else if(rejects===2)ring(genderize('「第二次了。我數到三。」<br>再次來電中…'));else talk()}};
+  function talk(){callUse();const lv=gmLevel(),P=gmPool(lv),W=gmWords(lv).slice(0,12);let qi=0,ok=0,wrong=[],t0=Date.now(),busy=false;
+    app.innerHTML=`<div class="view call-v"><div class="call-scr talk"><div class="call-hd"><img src="${img}" alt=""><span><b>${esc(full)}</b><small id="ctm">00:00</small></span><button class="call-end" id="cend" aria-label="掛斷">✕</button></div>
+      <div class="call-log" id="clog" aria-live="polite"></div><div class="call-opts" id="copt"></div></div></div>`;window.scrollTo(0,0);
+    const tm=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000),el=document.getElementById('ctm');if(el)el.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')},500);gm.stop.push(()=>clearInterval(tm));
+    const log=document.getElementById('clog'),opt=document.getElementById('copt');
+    const say=(t,me)=>{log.insertAdjacentHTML('beforeend',`<p class="cb ${me?'me':'boss'}">${esc(me?t:genderize(t))}</p>`);log.scrollTop=log.scrollHeight};
+    const later=(f,ms)=>{const h=setTimeout(f,ms);gm.stop.push(()=>clearTimeout(h))};
+    document.getElementById('cend').onclick=()=>{if(ok>=3)return;say(['想掛我電話？答對三題再說。','我還沒說完，誰准妳掛的？'][qi%2])};
+    const OPEN=['在哪？……算了，先考妳單字。','我在開會，但我想聽妳的聲音。順便考考妳。','剛下飛機，第一通電話打給妳。別讓我失望。','聽說妳今天又在偷懶？三題，答對才准掛。'];
+    const GOOD=['……還算聰明。','嗯，這才是我的人。','答對了。別得意，下一題。','不錯，今晚准妳早點睡。'];
+    const BAD=['錯了。給我記清楚：','這都不會？我親自教妳：','妳是故意惹我生氣嗎？答案是：'];
+    say(OPEN[Math.floor(Math.random()*OPEN.length)]);later(ask,900);
+    function ask(){if(qi>=W.length||qi>=6){fin();return}const w=W[qi],zh2en=qi%2===0;
+      const seen=new Set([zh2en?w[0]:w[1]]),ds=[];for(const x of gshuf(P)){const v=zh2en?x[0]:x[1];if(!seen.has(v)){seen.add(v);ds.push(x)}if(ds.length>=2)break}
+      const opts=gshuf([w,...ds]);
+      say(zh2en?`「${w[1]}」，英文怎麼說？`:`我剛剛說「${w[0]}」，是什麼意思？`);
+      opt.innerHTML=opts.map((o,k)=>`<button class="call-o${zh2en?' en':''}" data-co="${k}">${esc(zh2en?o[0]:o[1])}</button>`).join('');busy=false;
+      opt.onclick=ev=>{const b=ev.target.closest('.call-o');if(!b||busy)return;busy=true;const pick=opts[+b.dataset.co];say(zh2en?pick[0]:pick[1],true);opt.innerHTML='';
+        const right=pick[0]===w[0];qi++;
+        if(right){ok++;later(()=>{say(GOOD[(ok+qi)%GOOD.length]+(ok<3?` 還差 ${3-ok} 題。`:''));later(ok>=3?fin:ask,900)},600)}
+        else{wrong.push(w);later(()=>{say(BAD[qi%BAD.length]+`${w[0]}＝${w[1]}。`+(qi<6?'再來一題。':''));later(ask,1100)},600)}}}
+    function fin(){clearInterval(tm);const s=Math.floor((Date.now()-t0)/1000),dur=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+      const END=ok>=3?['准妳掛電話了。……晚安。','今天表現不錯。明天這個時間，等我電話。','記住，下次我打來，不准讓我等。']:['今天先放過妳。明天，我要聽到全對。'];
+      say(END[Math.floor(Math.random()*END.length)]);const n=cramAdd(wrong);
+      later(()=>{const line=ok>=3&&!wrong.length?'一題都沒錯，這通電話我很滿意。':ok>=3?'答錯的字，我幫妳記下來了。':'下次再這樣，我就親自去找妳。';
+        app.innerHTML=`<div class="view gm"><div class="gm-top"><button class="gm-back" data-ghome aria-label="回遊戲間">‹</button><h2>霸總來電</h2></div>
+          <div class="hud gm-hud"><span>通話 ${dur}</span><span>答對 ${ok} 題</span><span>${esc(full)}</span></div>${cramNote(n)}${gmFinish('call',ok*20+(wrong.length?0:20),line,wrong,'call')}</div>`;window.scrollTo(0,0)},1400)}
+  }
+  ring();
 }
 
 /* ---------- 訂製霸總情人（遊戲通行證） ---------- */
