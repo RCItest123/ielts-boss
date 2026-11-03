@@ -1379,7 +1379,7 @@ function renderGames(){
    ${gamePass?`<div class="gm-pass"><b>✓ 已開通遊戲通行證</b>・所有遊戲無限玩，之後的新遊戲也能玩</div>`:''}
    ${gmRankCard()}
    ${cramBanner()}
-   ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>${GM_TRIAL}</b> 次，先玩玩看':'免費試玩已用完'}<small>通行證 <s>139</s> 早鳥 <b>89 元</b>・永久無限玩</small></div>
+   ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>'+GM_TRIAL+'</b> 次，先玩玩看':'免費試玩已用完'}<small>通行證 <s>139</s> 早鳥 <b>89 元</b>・永久無限玩</small></div>
      <div class="gt-r">${GAME_URL?`<a class="gt-buy" href="${GAME_URL}" target="_blank" rel="noopener">購買</a>`:`<button class="gt-buy" data-buyinfo>購買</button>`}<button class="gt-code" data-unlock>輸入序號</button></div></div>
      <button class="linkbtn pl-link" data-plans style="margin:-4px auto 12px">看方案比較 ›</button>`}
    <div class="gm-list">${GM_GAMES.map(g=>{
