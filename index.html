@@ -1008,8 +1008,8 @@ const modal=document.getElementById('modal'),modalBox=document.getElementById('m
 function miniLinks(){return `<nav class="minilinks" aria-label="其他連結"><a href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">蝦皮分潤</a></nav>`}
 function typeBtn(){return `<button class="typebtn" data-typepick aria-label="切換小說類型"><span>類型</span><b>${TRACKS[track].short}</b><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>`}
 function trackRead(t){return Object.keys(rawStore.get(t==='ielts'?'read':t+'.read',{})).length}
-const COMBO={boss:{toeic:'toeic',ielts:'ielts',gre:'gre'},bl:{toeic:'bl',ielts:'blielts',gre:'blgre'},bad:{toeic:'bad',ielts:'badielts',gre:'badgre'},ph:{toeic:'phtoeic',ielts:'phielts',gre:'phgre'}};
-const STYLES=[['boss','霸總'],['bl','霸總<small>BL版</small>'],['bad','霸總<small>壞壞隱藏版</small>'],['ph','霸總<small>片語版・11/5</small>']];
+const COMBO={boss:{toeic:'toeic',ielts:'ielts',gre:'gre'},bl:{toeic:'bl',ielts:'blielts',gre:'blgre'},bad:{toeic:'bad',ielts:'badielts',gre:'badgre'},ph:{toeic:'phtoeic',ielts:'phielts',gre:'phgre'},serial:{}};
+const STYLES=[['boss','霸總'],['bl','霸總<small>BL版</small>'],['bad','霸總<small>壞壞隱藏版</small>'],['ph','霸總<small>片語版・11/5</small>'],['serial','霸總<small>長篇連載・即將上線</small>']];
 const lockTag=()=>unlocked?'':`<span class="pklock">${ICON.lock}</span>`;
 const EXAMS=[['toeic','多益<small>7000字</small>'],['ielts','雅思<small>7000字</small>'],['gre','GRE<small>中高難度</small>']];
 let pk={first:false,st:'boss',ex:'toeic'};
@@ -1017,14 +1017,17 @@ function comboOf(t){for(const st in COMBO)for(const ex in COMBO[st])if(COMBO[st]
 function openTypePicker(first){const c=comboOf(track);pk={first,st:c.st,ex:c.ex};renderPicker()}
 function renderPicker(){
   const t=COMBO[pk.st][pk.ex];const T=t&&TRACKS[t];
-  const seg=(list,cur,attr,avail)=>`<div class="pkseg">${list.map(([k,l])=>{const ok=avail?avail(k):true;return `<button class="pkbtn${k===cur?' on':''}" ${attr}="${k}"${ok?'':' disabled'}>${k==='bad'||k==='ph'?lockTag():''}${ok?l:l.replace(/<small>.*<\/small>/,'')+'<small>即將推出</small>'}</button>`}).join('')}</div>`;
+  const seg=(list,cur,attr,avail)=>`<div class="pkseg">${list.map(([k,l])=>{const ok=avail?avail(k):true;return `<button class="pkbtn${k===cur?' on':''}" ${attr}="${k}"${ok?'':' disabled'}>${k==='bad'||k==='ph'?lockTag():k==='serial'?`<span class="pklock">${ICON.lock}</span>`:''}${ok?l:l.replace(/<small>.*<\/small>/,'')+'<small>即將推出</small>'}</button>`}).join('')}</div>`;
   let card='';
+  if(pk.st==='serial')card=`<div class="pkcard"><b>霸總虐戀全餐・長篇連載</b><small>多益單字・壞壞版・全 30 章</small>
+    <p>契約婚姻到期那晚，她遞上離婚協議，他撕掉協議：「妳以為妳逃得掉？」你追我逃、插翅難飛、帶球跑、雨夜拉扯、車禍、失憶、苦命上班救專案、復合到復婚——一次追完整套霸總虐戀全餐，邊追劇邊背多益單字。</p>
+    <p class="pricenote" style="margin:4px 0 0">🔒 即將上線，敬請期待</p><button class="btn" disabled style="opacity:.55">敬請期待</button></div>`;
   if(T){const n=T.stories.length,r=trackRead(t),free=T.stories.filter(x=>!x.locked).length;
     card=`<div class="pkcard"><b>${esc(T.name)}・${T.sub}</b><small>${n} 篇${free&&free<n?`・前 ${free} 篇免費`:free===0&&!unlocked?'・完整版限定':''}${r?`・已讀 ${r}`:''}</small><p>${T.intro}</p>
     ${PH_SET.has(t)&&!phLive()?`<p class="pricenote" style="margin:4px 0 0">🚧 建置中・<b>11/5 上線</b><br>多益、雅思、GRE 各 20 篇＋片語本 150 個片語，小說付費版可看</p><button class="btn" disabled style="opacity:.55">11/5 上線</button>`:`<button class="btn" data-settrack="${t}">${t===track?'繼續閱讀':'開始閱讀'}</button>`}</div>`}
   openModal(`<span class="kicker">${pk.first?'歡迎':'切換類型'}</span><h2>選擇小說類型</h2>
    <div class="pkstep"><span class="pklabel">1・選風格</span>${seg(STYLES,pk.st,'data-pkst')}</div>
-   <div class="pkstep"><span class="pklabel">2・選${pk.st==='ph'?'片語':'單字'}範圍</span>${seg(pk.st==='ph'?EXAMS.map(([k])=>[k,{toeic:'多益',ielts:'雅思',gre:'GRE'}[k]+'<small>150 片語</small>']):EXAMS,pk.ex,'data-pkex',k=>!!COMBO[pk.st][k])}</div>
+   ${pk.st==='serial'?'':`<div class="pkstep"><span class="pklabel">2・選${pk.st==='ph'?'片語':'單字'}範圍</span>${seg(pk.st==='ph'?EXAMS.map(([k])=>[k,{toeic:'多益',ielts:'雅思',gre:'GRE'}[k]+'<small>150 片語</small>']):EXAMS,pk.ex,'data-pkex',k=>!!COMBO[pk.st][k])}</div>`}
    ${card}
    <p style="font-size:13px">${unlocked?'已解鎖完整版 ✓':'<button class="linkbtn" data-unlock style="align-self:center">已購買？輸入解鎖碼</button>'}</p>
    ${pk.first?'':'<div class="acts"><button class="btn ghost" data-close>取消</button></div>'}`);
