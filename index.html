@@ -1126,11 +1126,11 @@ const GN_UNTIL='2026-11-14';
 /* 早鳥最後機會：11/4、11/5 未解鎖者每天一次（若當天已跳遊戲更新，就併在裡面） */
 const lcOn=()=>!unlocked&&!gamePass&&isEarly()&&dkey()>='2026-11-04';
 const lcTxt=()=>dkey()===EARLY_END?'今天早鳥特價就結束了！':'明天早鳥特價就結束了！';
-function lcBar(){if(!lcOn())return '';rawStore.set('lcDay',dkey());return `<button class="lc-bar" data-close data-plans><b>⏰ ${lcTxt()}</b><span>小說 99 → 149・小說＋遊戲 188 → 249　看方案 ›</span></button>`}
+function lcBar(){if(!lcOn())return '';rawStore.set('lcDay',dkey());return `<button class="lc-bar" data-close data-plans><b>⏰ ${lcTxt()}</b><span>小說 99 → 199・全功能 188 → 249　看方案 ›</span></button>`}
 function lastChance(){if(!lcOn()||rawStore.get('lcDay','')===dkey())return false;rawStore.set('lcDay',dkey());
   openModal(`${bossPic([genderize(dkey()===EARLY_END?'最後一天。錯過了，別來求我。':'明天之後就漲價了。女人，妳還在等什麼？'),'早鳥價倒數'])}<span class="kicker">漲價前最後機會</span><h2>${lcTxt()}</h2>
-   <div class="lc-tb"><div><small>小說付費版</small><b>99</b><s>149</s></div><div class="hl"><small>小說＋遊戲</small><b>188</b><s>249</s></div></div>
-   <p style="margin:0">11/6 起恢復原價。一次買斷、永久有效，之後新增的故事和遊戲也包含。</p>
+   <div class="lc-tb"><div><small>小說付費版</small><b>99</b><s>199</s></div><div class="hl"><small>全功能（小說＋遊戲）</small><b>188</b><s>249</s></div></div>
+   <p style="margin:0">11/6 起改為限時優惠價：小說 199、全功能 249（原價 288／399）。一次買斷、永久有效，之後新增的故事和遊戲也包含。</p>
    <div class="acts">${buyBtn(true)}<button class="linkbtn" data-close style="align-self:center">我再想想</button></div>`);return true}
 function gameNews(){const k=dkey();if(k>GN_UNTIL)return false;const d=rawStore.get('gnDays',[])||[];if(d.length>=3||d.includes(k))return false;rawStore.set('gnDays',d.concat(k));
   const full=(typeof CB_BOSSES!=='undefined'&&CB_BOSSES.length)?CB_BOSSES[Math.floor(Math.random()*CB_BOSSES.length)]:'傅寒州';
@@ -1230,8 +1230,8 @@ function openPlans(){
    ['之後新增的遊戲',N,N,Y,Y],
    ['綁定 Google 帳號<br>換手機也能用',N,Y,Y,Y]];
   openModal(`<span class="kicker">方案比較</span><h2>選一個適合你的方案</h2>
-   <div class="pl-wrap"><table class="pl"><thead><tr><th></th><th>免費版</th><th>小說<br>付費版</th><th>遊戲<br>通行證</th><th class="pl-hl"><span class="pl-rec">最推薦</span>小說＋<br>遊戲</th></tr>
-    <tr class="pl-price"><th>價格</th><td>0 元</td><td>${isEarly()?'<s>149</s><b>99</b>':'<b>149</b>'}</td><td><s>139</s><b>89</b></td><td class="pl-hl"><s>288</s><b>${BUNDLE()}</b></td></tr></thead>
+   <div class="pl-wrap"><table class="pl"><thead><tr><th></th><th>免費版</th><th>小說<br>付費版</th><th>遊戲<br>通行證</th><th class="pl-hl"><span class="pl-rec">最推薦</span>全功能<br><small style="font-weight:600;font-size:10px">小說＋遊戲</small></th></tr>
+    <tr class="pl-price"><th>價格</th><td>0 元</td><td><s>${ORIG.novel}</s><b>${PRICE()}</b></td><td><s>${ORIG.game}</s><b>${GPRICE()}</b></td><td class="pl-hl"><s>${ORIG.all}</s><b>${BUNDLE()}</b></td></tr></thead>
     <tbody>${rows.map(r=>`<tr><th>${r[0]}</th>${r.slice(1).map((c,i)=>`<td${i===3?' class="pl-hl"':''}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
    <p class="pricenote">所有方案都是<b>一次買斷、永久有效</b>，沒有月費。</p>
    <div class="acts">${unlocked?'':buyBtn().replace(/<button class="linkbtn pl-link"[^>]*>[^<]*<\/button>/,'')}${gamePass?'':`<button class="btn ghost" data-close data-tab-go="games">看看遊戲間</button>`}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`);
@@ -1239,7 +1239,7 @@ function openPlans(){
 }
 function earlyModal(){if(unlocked||!isEarly())return false;
   openModal(`<span class="kicker">⏰ 早鳥倒數</span><h2>早鳥價 99 元，只到 11/5</h2>
-   <p>原價 149。全部霸總小說＋語音朗讀，<b>一次購買永久有效</b>，新故事也免費看。</p>
+   <p>原價 288。全部霸總小說＋語音朗讀，<b>一次購買永久有效</b>，新故事也免費看。</p>
    <div class="acts">${buyBtn(true)}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="linkbtn" data-close style="align-self:center">先免費看前 10 篇</button></div>`);return true}
 function gamePassModal(){openModal(`<span class="kicker">開通成功</span><h2>遊戲通行證已開通</h2><div class="quote">${genderize('「遊戲間，從現在起整間都是妳的。」')}<small>已綁定帳號 ${esc(sbUser&&sbUser.email||'')}，換手機登入同一個帳號就能使用</small></div><div class="acts"><button class="btn" data-close data-tab-go="games">進入遊戲間</button><button class="btn ghost" data-close>稍後再玩</button></div>`,true);if(state.view==='games')renderGames()}
 function unlockedModal(){openModal(`<span class="kicker">解鎖成功</span><h2>${gamePass?'小說完整版＋遊戲通行證已開通':'完整版已開通'}</h2><div class="quote">${genderize('「從現在起，妳的每一篇故事，都歸我管。」')}<small>已綁定帳號 ${esc(sbUser&&sbUser.email||'')}，換手機登入同一個帳號就能使用</small></div><div class="acts"><button class="btn" data-close data-typepick>去選類型</button><button class="btn ghost" data-close>繼續閱讀</button></div>`,true)}
@@ -1359,10 +1359,10 @@ let gamePass=!!rawStore.get('gpass',0);
 const GAME_URL='https://portaly.cc/han_s/product/5id3GqVWozbj47fvwoEq';      // ← 遊戲通行證 Portaly 商品連結（89 元）
 const BUNDLE_URL='https://portaly.cc/han_s/product/6KM5P24S9XdnlRgNmM5L';    // ← 小說付費版＋遊戲通行證 188 元商品連結
 const BUNDLE=()=>isEarly()?188:249;
-function bundleBtn(){if(unlocked||gamePass)return '';const sv=288-BUNDLE();return `<div class="bundle"><span class="bd-tag">👑 最推薦・最划算</span><b class="bd-t">小說＋遊戲通行證</b><span class="bd-p"><s>原價 288</s>${isEarly()?' 早鳥':''} <b>${BUNDLE()} 元</b>・省 ${sv} 元</span><small>440 篇小說＋語音朗讀＋遊戲間全部遊戲，一組碼全開通</small>${BUNDLE_URL?`<a class="btn" href="${BUNDLE_URL}" target="_blank" rel="noopener">一起買・NT$${BUNDLE()}</a>`:`<button class="btn" data-buyinfo>一起買・NT$${BUNDLE()}</button>`}</div>`}
-function passBuy(){const url=GAME_URL;const label='購買遊戲通行證・NT$89';
+function bundleBtn(){if(unlocked||gamePass)return '';const sv=ORIG.all-BUNDLE();return `<div class="bundle"><span class="bd-tag">👑 最推薦・最划算</span><b class="bd-t">全功能（小說＋遊戲通行證）</b><span class="bd-p"><s>原價 ${ORIG.all}</s> ${PTAG()} <b>${BUNDLE()} 元</b>・省 ${sv} 元</span><small>440 篇小說＋語音朗讀＋遊戲間全部遊戲，一組碼全開通</small>${BUNDLE_URL?`<a class="btn" href="${BUNDLE_URL}" target="_blank" rel="noopener">一起買・NT$${BUNDLE()}</a>`:`<button class="btn" data-buyinfo>一起買・NT$${BUNDLE()}</button>`}</div>`}
+function passBuy(){const url=GAME_URL;const label='購買遊戲通行證・NT$'+GPRICE();
   const bd=bundleBtn();return bd+(bd?'<p class="buy-or">或只買遊戲通行證</p>':'')+(url?`<a class="btn${bd?' ghost':''}" href="${url}" target="_blank" rel="noopener">${label}</a>`:`<button class="btn${bd?' ghost':''}" data-buyinfo>${label}</button>`)+
-  `<p class="pricenote"><s>139</s> <span class="early">早鳥</span> <b>89 元</b>・永久無限玩・新遊戲也包含</p><button class="btn ghost" data-unlock>輸入通行證序號</button><button class="linkbtn pl-link" data-plans>看方案比較 ›</button>`}
+  `<p class="pricenote"><s>${ORIG.game}</s> <span class="early">${PTAG()}</span> <b>${GPRICE()} 元</b>・永久無限玩・新遊戲也包含</p><button class="btn ghost" data-unlock>輸入通行證序號</button><button class="linkbtn pl-link" data-plans>看方案比較 ›</button>`}
 function gmLeft(){return Math.max(0,GM_TRIAL-(+rawStore.get('gmTrial',0)||0))}
 function gmFreeUsed(){return gmLeft()<=0}
 function gmCanPlay(){return gamePass||gmLeft()>0}
@@ -1394,7 +1394,7 @@ function renderGames(){
    ${gamePass?`<div class="gm-pass"><b>✓ 已開通遊戲通行證</b>・所有遊戲無限玩，之後的新遊戲也能玩</div>`:''}
    ${gmRankCard()}
    ${cramBanner()}
-   ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>'+GM_TRIAL+'</b> 次，先玩玩看':'免費試玩已用完'}<small>通行證 <s>139</s> 早鳥 <b>89 元</b>・永久無限玩</small></div>
+   ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>'+GM_TRIAL+'</b> 次，先玩玩看':'免費試玩已用完'}<small>通行證 <s>${ORIG.game}</s> ${PTAG()} <b>${GPRICE()} 元</b>・永久無限玩</small></div>
      <div class="gt-r">${GAME_URL?`<a class="gt-buy" href="${GAME_URL}" target="_blank" rel="noopener">購買</a>`:`<button class="gt-buy" data-buyinfo>購買</button>`}<button class="gt-code" data-unlock>輸入序號</button></div></div>
      <button class="linkbtn pl-link" data-plans style="margin:-4px auto 12px">看方案比較 ›</button>`}
    <div class="gm-list">${GM_GAMES.map(g=>{
@@ -1920,7 +1920,7 @@ async function cbShare(){if(!cbCur||!cbCur.blob)return;const f=new File([cbCur.b
   if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:'我被霸總訂製了！搜尋：霸總教你背單字'})}catch(e){}}else cbDl()}
 
 function openUnlock(){const who=sbUser&&sbUser.email;
-  openModal(`${!unlocked&&isEarly()?`<div class="ebbar">⏰ 早鳥價 <b>99 元只到 11/5</b>（原價 149）${PURCHASE_URL?`<a href="${PURCHASE_URL}" target="_blank" rel="noopener">立即購買 ›</a>`:''}</div>`:''}<span class="kicker">解鎖</span><h2>輸入解鎖碼</h2><p>小說付費版（BOSS-…）、遊戲通行證（GAME-…）、兩者合購（ALL-…）都在這裡輸入。付款完成後，購買頁面和確認信上會顯示解鎖碼。解鎖後會綁定你的 Google 帳號，換手機只要登入同一個帳號就能使用。</p>${INAPP?'<p class="pricenote" style="color:var(--wine)">⚠️ 你正在 App 內建瀏覽器中，按下解鎖後會教你改用 Safari／Chrome 開啟。</p>':''}
+  openModal(`${!unlocked&&isEarly()?`<div class="ebbar">⏰ 早鳥價 <b>99 元只到 11/5</b>（原價 288）${PURCHASE_URL?`<a href="${PURCHASE_URL}" target="_blank" rel="noopener">立即購買 ›</a>`:''}</div>`:''}<span class="kicker">解鎖</span><h2>輸入解鎖碼</h2><p>小說付費版（BOSS-…）、遊戲通行證（GAME-…）、兩者合購（ALL-…）都在這裡輸入。付款完成後，購買頁面和確認信上會顯示解鎖碼。解鎖後會綁定你的 Google 帳號，換手機只要登入同一個帳號就能使用。</p>${INAPP?'<p class="pricenote" style="color:var(--wine)">⚠️ 你正在 App 內建瀏覽器中，按下解鎖後會教你改用 Safari／Chrome 開啟。</p>':''}
    <input id="codeInput" class="codeinput" placeholder="BOSS- / GAME- / ALL- 開頭的解鎖碼" autocomplete="off" autocapitalize="characters" spellcheck="false">
    <p id="codeMsg" class="codemsg" role="status"></p>
    <div class="acts"><button class="btn" data-unlock-submit>${who?'解鎖並綁定帳號':'用 Google 登入並解鎖'}</button>
@@ -1997,8 +1997,8 @@ function noteRead(id){if(unlocked)return;const k=track+':'+id,L=readsToday();if(
 function openLimit(){openModal(`${bossPic([genderize('今天的 2 篇已經讀完了。想要更多？'),genderize('不要考驗我的耐心，女人。')])}<span class="kicker">免費版每日上限</span><h2>今天的免費額度用完了</h2>
    <p>免費版每天可以讀 2 篇不同的故事（已讀過的可以重讀）。明天再來，或解鎖完整版無限暢讀。</p>
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="btn ghost" data-close data-quiz>先去做單字挑戰</button><button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`)}
-const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const PRICE=()=>isEarly()?99:149;
-function buyBtn(bare){const bd=bundleBtn();return bd+(bd?'<p class="buy-or">或只買小說</p>':'')+(PURCHASE_URL?`<a class="btn${bd?' ghost':''}" href="${PURCHASE_URL}" target="_blank" rel="noopener">小說付費版・NT$${PRICE()}</a>`:`<button class="btn${bd?' ghost':''}" data-buyinfo>小說付費版・NT$${PRICE()}</button>`)+(bare?'':`<p class="pricenote">${isEarly()?`<s>149</s> <span class="early">早鳥</span> <b>99 元</b>・到 11/5<br>`:''}永久有效・全部小說＋語音朗讀・新故事免費看</p>`)+`<button class="linkbtn pl-link" data-plans>看方案比較 ›</button>`}
+const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const PRICE=()=>isEarly()?99:199;const GPRICE=()=>89;const PTAG=()=>isEarly()?'早鳥':'限時優惠';const ORIG={novel:288,game:199,all:399};
+function buyBtn(bare){const bd=bundleBtn();return bd+(bd?'<p class="buy-or">或只買小說</p>':'')+(PURCHASE_URL?`<a class="btn${bd?' ghost':''}" href="${PURCHASE_URL}" target="_blank" rel="noopener">小說付費版・NT$${PRICE()}</a>`:`<button class="btn${bd?' ghost':''}" data-buyinfo>小說付費版・NT$${PRICE()}</button>`)+(bare?'':`<p class="pricenote"><s>${ORIG.novel}</s> <span class="early">${PTAG()}</span> <b>${PRICE()} 元</b>${isEarly()?'・到 11/5':''}<br>永久有效・全部小說＋語音朗讀・新故事免費看</p>`)+`<button class="linkbtn pl-link" data-plans>看方案比較 ›</button>`}
 function renderIntro(){
   const s=byId[state.id];
   if(isLocked(s)){app.innerHTML=`<div class="view">
