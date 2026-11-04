@@ -864,10 +864,12 @@ function toast(t){const el=document.getElementById('toast');el.textContent=t;el.
 
 /* ---------- speech ---------- */
 let voice=null;
-const MALE_EN=/(^|[^e])male\b|Daniel|Alex\b|Fred|Aaron|Arthur|Guy|Andrew|Christopher|Eric|Davis|Brian|Roger|Steffan|Tom\b|Oliver|Rishi|Gordon|Ralph/i;
+const MALE_EN=/(^|[^e])male\b|Daniel|Alex\b|Aaron|Arthur|Guy|Andrew|Christopher|Eric|Davis|Brian|Roger|Steffan|Tom\b|Oliver|Rishi|Gordon|Evan|Nathan|Noah/i;
+/* Apple 的趣味／機器人語音（Safari 會列出來），一律排除 */
+const NOVELTY_EN=/Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Fred|Good News|Hysterical|Jester|Junior|Kathy|Organ|Princess|Ralph|Superstar|Trinoids|Whisper|Wobble|Zarvox|Grandma|Grandpa|Rocko|Shelley|Eddy|Flo\b|Reed|Sandy|Pipe Organ/i;
 const MALE_ZH=/YunJhe|Yunjhe|Yunxi|Yunyang|Yunjian|Yunfeng|Yunhao|Yunze|Kangkang|Zhiwei|Li-?mu|Han\b|(^|[^e])male\b|男/i;
-function pickVoice(){try{const vs=speechSynthesis.getVoices();const en=vs.filter(v=>/^en[-_]/i.test(v.lang));
-  const good=v=>/Natural|Online|Google|Neural|Premium|Enhanced/i.test(v.name);
+function pickVoice(){try{const vs=speechSynthesis.getVoices();const en=vs.filter(v=>/^en[-_]/i.test(v.lang)&&!NOVELTY_EN.test(v.name));
+  const good=v=>/Natural|Online|Google|Neural|Premium|Enhanced|Siri/i.test(v.name);
   voice=en.find(v=>/en[-_]US/i.test(v.lang)&&MALE_EN.test(v.name)&&good(v))||en.find(v=>/en[-_]US/i.test(v.lang)&&MALE_EN.test(v.name))||en.find(v=>MALE_EN.test(v.name))||en.find(v=>/en[-_]US/i.test(v.lang)&&good(v))||en.find(v=>/en[-_]US/i.test(v.lang))||en[0]||null;if(voice)noEnWarned=true}catch(e){}}
 /* 裝置沒有英文語音時（例如日文、中文系統只裝了當地語音），英文會被念成當地口音：提示安裝英文語音，每台裝置提醒一次 */
 let noEnWarned=false;
