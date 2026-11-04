@@ -866,9 +866,16 @@ let voice=null;
 const MALE_EN=/(^|[^e])male\b|Daniel|Alex\b|Fred|Aaron|Arthur|Guy|Andrew|Christopher|Eric|Davis|Brian|Roger|Steffan|Tom\b|Oliver|Rishi|Gordon|Ralph/i;
 const MALE_ZH=/YunJhe|Yunjhe|Yunxi|Yunyang|Yunjian|Yunfeng|Yunhao|Yunze|Kangkang|Zhiwei|Li-?mu|Han\b|(^|[^e])male\b|男/i;
 function pickVoice(){try{const vs=speechSynthesis.getVoices();const en=vs.filter(v=>/^en[-_]/i.test(v.lang));
-  voice=en.find(v=>/en[-_]US/i.test(v.lang)&&MALE_EN.test(v.name))||en.find(v=>MALE_EN.test(v.name))||en.find(v=>/en[-_]US/i.test(v.lang))||en[0]||null}catch(e){}}
+  const good=v=>/Natural|Online|Google|Neural|Premium|Enhanced/i.test(v.name);
+  voice=en.find(v=>/en[-_]US/i.test(v.lang)&&MALE_EN.test(v.name)&&good(v))||en.find(v=>/en[-_]US/i.test(v.lang)&&MALE_EN.test(v.name))||en.find(v=>MALE_EN.test(v.name))||en.find(v=>/en[-_]US/i.test(v.lang)&&good(v))||en.find(v=>/en[-_]US/i.test(v.lang))||en[0]||null;if(voice)noEnWarned=true}catch(e){}}
+/* 裝置沒有英文語音時（例如日文、中文系統只裝了當地語音），英文會被念成當地口音：提示安裝英文語音，每台裝置提醒一次 */
+let noEnWarned=false;
+function noEnVoiceTip(){if(voice||noEnWarned)return;try{if(!speechSynthesis.getVoices().length)return}catch(e){return}noEnWarned=true;if(rawStore.get('noEnTip',0))return;rawStore.set('noEnTip',1);
+  const mac=/Mac/i.test(navigator.platform||navigator.userAgent),ios=/iPhone|iPad/i.test(navigator.userAgent),and=/Android/i.test(navigator.userAgent);
+  const how=ios?'設定 → 輔助使用 → 朗讀內容 → 聲音 → 英文 → 下載一個英文語音（例如 Samantha）':and?'設定 → 系統 → 語言 → 文字轉語音 → 安裝英文（美國）語音資料':mac?'系統設定 → 輔助使用 → 朗讀內容 → 系統語音 → 管理語音 → 勾選英文（美國）語音':'Windows 設定 → 時間與語言 → 語音 → 新增語音 → English (United States)；或改用 Chrome、Edge 瀏覽器（內建線上英文語音）';
+  openModal(`<span class="kicker">發音小提醒</span><h2>你的裝置沒有英文語音</h2><p>所以英文會被念成系統語言的口音。安裝英文語音後重新開啟 App，就會是標準英語發音：</p><p class="pricenote" style="text-align:left">${how}</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}
 try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
-function speak(t,rate){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';if(voice)u.voice=voice;u.rate=rate||.9;u.pitch=voice&&MALE_EN.test(voice.name)?.9:1;speechSynthesis.speak(u)}catch(e){toast('這個裝置不支援語音朗讀')}}
+function speak(t,rate){try{noEnVoiceTip();speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';if(voice)u.voice=voice;u.rate=rate||.9;u.pitch=voice&&MALE_EN.test(voice.name)?.9:1;speechSynthesis.speak(u)}catch(e){toast('這個裝置不支援語音朗讀')}}
 
 /* ---------- helpers ---------- */
 function plainPara(p){return p.map(x=>typeof x==='string'?x:x[0]+'（'+x[1]+'）').join('')}
@@ -1952,7 +1959,7 @@ function speakNext(){const g=tts.gen;if(!tts.on)return;if(tts.i>=tts.q.length){t
   const it=tts.q[tts.i];markPara(it.p);
   try{const u=new SpeechSynthesisUtterance(it.t);if(it.l==='en'){u.lang='en-US';if(voice)u.voice=voice;u.rate=tts.rate*.88;u.pitch=voice&&MALE_EN.test(voice.name)?.9:1}else{u.lang=zhVoice?zhVoice.lang:'zh-TW';if(zhVoice)u.voice=zhVoice;u.rate=tts.rate*.92;u.pitch=zhVoice&&MALE_ZH.test(zhVoice.name)?.9:1}
    u.onend=()=>{if(g!==tts.gen)return;tts.fail=0;tts.i++;ttsBar();speakNext()};u.onerror=(ev)=>{if(g!==tts.gen)return;if(ev&&/interrupt|cancel/.test(ev.error||''))return;tts.fail=(tts.fail||0)+1;if(tts.fail>2){ttsStop();toast('這個裝置無法播放語音，請確認系統語音設定');return}tts.i++;speakNext()};speechSynthesis.speak(u)}catch(e){toast('這個裝置不支援語音朗讀');ttsStop()}}
-function ttsStart(){if(!unlocked){openPaywall('語音朗讀全文是完整版功能。');return}
+function ttsStart(){if(!unlocked){openPaywall('語音朗讀全文是完整版功能。');return}noEnVoiceTip();
   if(!('speechSynthesis' in window)){toast('這個裝置不支援語音朗讀');return}
   if(!tts.q.length||tts.sid!==state.id+state.mode){tts.q=buildQueue();tts.i=0;tts.sid=state.id+state.mode;tts.cur=-1}
   tts.on=true;tts.gen++;speechSynthesis.cancel();ttsBar();speakNext()}
