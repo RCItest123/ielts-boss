@@ -414,6 +414,8 @@ body.gm-mode{--paper:#17121C;--card:#221A28;--ink:#F1E9F0;--muted:#A99BAA;--line
 .gm-row{display:flex;gap:8px;flex-wrap:wrap}.gm-row .btn{flex:1}
 .gm-hud{display:flex;gap:6px;flex-wrap:wrap}.gm-hud span{background:var(--soft);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .gm-say{margin:0}
+.vp-list h4{font-size:12px;margin:6px 0 0;opacity:.6;font-weight:700}.vp-note{font-size:12.5px;line-height:1.65;background:#fff4dc;color:#7a4a00;border-radius:10px;padding:8px 10px;margin:4px 0}
+.vptip{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:var(--ink);color:var(--paper);font-size:13px;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translateY(16px);opacity:0;transition:.3s}.vptip.on{transform:none;opacity:1}.vptip span{flex:1}.vptip button{flex:none;padding:6px 10px;border-radius:999px;background:var(--paper);color:var(--ink);font-weight:700;font-size:12.5px}.vptip .x{background:none;color:var(--paper);opacity:.7;padding:4px}
 .vp-list{max-height:48vh;overflow:auto;text-align:left;display:flex;flex-direction:column;gap:6px}.vp-list h3{font-size:14px;margin:8px 0 2px}.vp-row{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--soft)}.vp-row.on{box-shadow:inset 0 0 0 2px var(--wine)}.vp-row b{display:block;font-size:13.5px}.vp-row small{font-size:11.5px;opacity:.7}.vp-row .btn{min-height:34px;padding:0 10px;font-size:13px}
 .faq{display:flex;flex-direction:column;gap:6px;text-align:left;max-height:52vh;overflow:auto;margin:2px -4px;padding:0 4px}.faq details{border-radius:12px;background:var(--soft);padding:10px 12px}.faq summary{font-weight:700;font-size:14.5px;cursor:pointer;list-style:none}.faq summary::-webkit-details-marker{display:none}.faq summary::after{content:'＋';float:right;opacity:.5}.faq details[open] summary::after{content:'－'}.faq-a{font-size:13.5px;line-height:1.7;margin-top:6px}.faq-a ul{margin:4px 0;padding-left:18px}.faq-a p{margin:4px 0}.faq-a a{color:var(--wine);font-weight:700}
 .shoplogo{display:flex;justify-content:center;opacity:.8}.shoplogo a{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none}.shoplogo a:hover{text-decoration:underline}.shoplogo img{width:20px;height:20px;border-radius:5px}
@@ -883,7 +885,7 @@ function noEnVoiceTip(){if(voice||noEnWarned)return;try{if(!speechSynthesis.getV
   const how=ios?'設定 → 輔助使用 → 朗讀內容 → 聲音 → 英文 → 下載一個英文語音（例如 Samantha）':and?'設定 → 系統 → 語言 → 文字轉語音 → 安裝英文（美國）語音資料':mac?'系統設定 → 輔助使用 → 朗讀內容 → 系統語音 → 管理語音 → 勾選英文（美國）語音':'Windows 設定 → 時間與語言 → 語音 → 新增語音 → English (United States)；或改用 Chrome、Edge 瀏覽器（內建線上英文語音）';
   openModal(`<span class="kicker">發音小提醒</span><h2>你的裝置沒有英文語音</h2><p>所以英文會被念成系統語言的口音。安裝英文語音後重新開啟 App，就會是標準英語發音：</p><p class="pricenote" style="text-align:left">${how}</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}
 try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
-function speak(t,rate){try{noEnVoiceTip();speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';if(voice)u.voice=voice;u.rate=rate||.9;u.pitch=voice&&MALE_EN.test(voice.name)?.9:1;speechSynthesis.speak(u)}catch(e){toast('這個裝置不支援語音朗讀')}}
+function speak(t,rate){try{noEnVoiceTip();voiceTip();speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';if(voice)u.voice=voice;u.rate=rate||.9;u.pitch=voice&&MALE_EN.test(voice.name)?.9:1;speechSynthesis.speak(u)}catch(e){toast('這個裝置不支援語音朗讀')}}
 
 /* ---------- helpers ---------- */
 function plainPara(p){return p.map(x=>typeof x==='string'?x:x[0]+'（'+x[1]+'）').join('')}
@@ -1283,7 +1285,7 @@ function reportInfo(){const T=TRACKS[track];const s=state&&state.id!=null&&byId[
 /* ---------- 常見問題（問題回報先看 FAQ，解決不了才寄信） ---------- */
 const FAQ=[
  ['朗讀功能怎麼用？',`<ul><li><b>點單字</b>：解釋卡右上角的喇叭可以聽單字，例句旁的喇叭可以聽例句（免費版也能用）。</li><li><b>朗讀全文</b>：故事頁上方的「朗讀」鍵會把整篇故事唸出來，中文用中文語音、英文用英文語音（付費版功能）。</li><li>朗讀時可以按速度鍵切換 0.8～1.2 倍速。</li></ul>`],
- ['發音像機器人、有日式／中式腔調，怎麼調整？',`<p>App 使用的是<b>手機或電腦內建的語音</b>。如果裝置裡沒有英文語音，英文就會被系統語言的語音念出來，聽起來就有腔調。安裝英文語音後，<b>把 App 完全關掉再打開</b>就會改用標準英語：</p><ul><li><b>iPhone／iPad</b>：設定 → 輔助使用 → 朗讀內容 → 聲音 → 英文 → 下載 Samantha 或 Aaron（選「加強版」更自然）</li><li><b>Android</b>：設定 → 系統 → 語言 → 文字轉語音輸出 → 偏好的引擎選 Google → 安裝「英文（美國）」語音資料</li><li><b>Windows</b>：設定 → 時間與語言 → 語音 → 新增語音 → English (United States)</li><li><b>Mac</b>：系統設定 → 輔助使用 → 朗讀內容 → 系統語音 → 管理語音 → 勾選英文（美國）</li><li>電腦用 <b>Chrome 或 Edge</b> 開啟，內建線上自然語音，聲音最好聽。</li></ul><p>聲音聽起來黏在一起或不清楚，可以自己挑：</p><button class="btn ghost shsm" data-voicepick>選擇朗讀聲音</button>`],
+ ['發音像機器人、有日式／中式腔調，怎麼調整？',`<p>App 使用的是<b>手機或電腦內建的語音</b>。如果裝置裡沒有英文語音，英文就會被系統語言的語音念出來，聽起來就有腔調。安裝英文語音後，<b>把 App 完全關掉再打開</b>就會改用標準英語：</p><ul><li><b>iPhone／iPad</b>：設定 → 輔助使用 → 朗讀內容 → 聲音 → 英文 → 下載 Samantha 或 Aaron（選「加強版」更自然）</li><li><b>Android</b>：設定 → 系統 → 語言 → 文字轉語音輸出 → 偏好的引擎選 Google → 安裝「英文（美國）」語音資料</li><li><b>Windows</b>：設定 → 時間與語言 → 語音 → 新增語音 → English (United States)</li><li><b>Mac</b>：系統設定 → 輔助使用 → 朗讀內容 → 系統語音 → 管理語音 → 勾選英文（美國）</li><li>電腦用 <b>Chrome 或 Edge</b> 開啟，內建線上自然語音，聲音最好聽。</li></ul><p>想換成男聲或女聲，或聲音聽起來不清楚，可以自己挑：</p><button class="btn ghost shsm" data-voicepick>選擇朗讀聲音</button>`],
  ['按了朗讀沒有聲音？',`<ul><li>iPhone 請確認側邊的<b>靜音開關</b>已關閉、音量有開。</li><li>在 LINE、IG、FB 裡面直接開啟可能不支援語音，請點右上角「在瀏覽器中開啟」，改用 Safari 或 Chrome。</li><li>有接藍牙耳機的話，確認聲音有輸出到耳機。</li></ul>`],
  ['網站打不開、顯示「連線已重設」？',`<p>這通常是你目前的<b>網路擋住了 github.io</b>，不是 App 壞掉。請試試：</p><ul><li>手機關掉 Wi-Fi，改用<b>行動數據（4G／5G）</b>開啟。</li><li>暫時關閉 VPN、廣告阻擋、防毒軟體的網頁防護。</li><li>家裡網路：檢查分享器或電信的「家長監護」「上網安全」服務；公司、學校網路可能有防火牆。</li><li>把手機 DNS 改成 8.8.8.8／1.1.1.1（Android：設定 → 網路 → 私人 DNS → 輸入 dns.google）。</li><li>還是不行就用<b>備用網址</b>：<a href="https://ielts-boss.pages.dev" target="_blank" rel="noopener">ielts-boss.pages.dev</a>，用同一個 Google 帳號登入就能用。</li></ul>`],
  ['輸入解鎖碼後沒有解鎖？',`<ul><li>請用 <b>Safari 或 Chrome</b> 開啟，不要在 LINE、IG、FB 裡面直接開，那些內建瀏覽器不能用 Google 登入。</li><li>如果之前已經兌換過，直接點「<b>已綁定過？直接用 Google 登入</b>」，用同一個 Google 帳號登入就會自動解鎖，不用再輸入解鎖碼。</li><li>顯示「已綁定其他帳號」：請改用當初兌換時的 Google 帳號登入。</li></ul>`],
@@ -1987,24 +1989,33 @@ function speakNext(){const g=tts.gen;if(!tts.on)return;if(tts.i>=tts.q.length){t
   const it=tts.q[tts.i];markPara(it.p);
   try{const u=new SpeechSynthesisUtterance(it.t);if(it.l==='en'){u.lang='en-US';if(voice)u.voice=voice;u.rate=tts.rate*.82;u.pitch=voice&&MALE_EN.test(voice.name)?.9:1}else{u.lang=zhVoice?zhVoice.lang:'zh-TW';if(zhVoice)u.voice=zhVoice;u.rate=tts.rate*.9;u.pitch=zhVoice&&MALE_ZH.test(zhVoice.name)?.9:1}
    u.onend=()=>{if(g!==tts.gen)return;tts.fail=0;tts.i++;ttsBar();setTimeout(()=>{if(g===tts.gen)speakNext()},it.l==='en'?260:180)};u.onerror=(ev)=>{if(g!==tts.gen)return;if(ev&&/interrupt|cancel/.test(ev.error||''))return;tts.fail=(tts.fail||0)+1;if(tts.fail>2){ttsStop();toast('這個裝置無法播放語音，請確認系統語音設定');return}tts.i++;speakNext()};speechSynthesis.speak(u)}catch(e){toast('這個裝置不支援語音朗讀');ttsStop()}}
-/* ---------- 選擇語音：只列出裝置上的中文、英文語音，可試聽後選擇 ---------- */
+/* ---------- 選擇語音：男聲／女聲分組；趣味、機器人聲一律排除 ---------- */
+const FEMALE_EN=/Samantha|Karen|Moira|Tessa|Victoria|Allison|Ava\b|Susan|Zoe|Kate|Serena|Fiona|Veena|Martha|Catherine|Nicky|Zira|Aria|Jenny|Michelle|Libby|Sonia|Natasha|Clara|Emma|Ana\b|Joanna|Salli|Kimberly|Ivy|Kendra|Female|Google US English|Google UK English Female|female/i;
+const FEMALE_ZH=/Mei-?Jia|Ting-?Ting|Sin-?ji|Hanhan|HsiaoChen|HsiaoYu|Xiaoxiao|Xiaoyi|Xiaochen|Xiaohan|Xiaomo|Xiaoshuang|Huihui|Yaoyao|Tracy|Hiugaai|HiuMaan|Shan-?Shan|Lili|Yu-?shu|Female|female|女/i;
+const MALE_EN2=/David|Mark\b|Guy|Ryan|Christopher|Eric|Roger|Steffan|Brian|William|Google UK English Male/i;
+const vGender=(v,zh)=>zh?(MALE_ZH.test(v.name)?'m':FEMALE_ZH.test(v.name)?'f':'u'):((MALE_EN.test(v.name)||MALE_EN2.test(v.name))&&!FEMALE_EN.test(v.name)?'m':FEMALE_EN.test(v.name)?'f':'u');
+function vDevHow(zh){const ua=navigator.userAgent;return /iPhone|iPad/.test(ua)?(zh?'iPhone 目前沒有台灣中文男聲，可以到 設定 → 輔助使用 → 朗讀內容 → 聲音 → 中文（中國大陸）下載「李牧（Li-Mu）」':'設定 → 輔助使用 → 朗讀內容 → 聲音 → 英文 → 下載 Aaron 或 Evan（選「加強版」最自然）'):/Android/.test(ua)?'設定 → 系統 → 語言 → 文字轉語音輸出 → 偏好的引擎選 Google → 點齒輪 → 安裝語音資料 → 選語言後挑男聲（「語音 II／IV」等）':/Mac/.test(ua)?'系統設定 → 輔助使用 → 朗讀內容 → 系統語音 → 管理語音 → 勾選男聲（英文 Aaron、Evan）':'用 Microsoft Edge 開啟本站最方便，內建高音質男聲（中文「雲哲」、英文「Guy」）；或 Windows 設定 → 時間與語言 → 語音 → 新增語音'}
 function openVoicePicker(){let vs=[];try{vs=speechSynthesis.getVoices()}catch(e){}
   const good=v=>/Natural|Online|Google|Neural|Premium|Enhanced|Siri/i.test(v.name);
   const sortV=a=>a.sort((x,y)=>(good(y)-good(x))||x.name.localeCompare(y.name));
   const en=sortV(vs.filter(v=>/^en[-_]/i.test(v.lang)&&!NOVELTY_EN.test(v.name))),zh=sortV(vs.filter(v=>/^(zh|cmn)/i.test(v.lang)));
   const row=(v,kind,cur)=>`<div class="vp-row${cur?' on':''}"><span><b>${esc(v.name.replace(/\s*\(.*?\)\s*/g,' ').trim())}</b><small>${esc(v.lang)}${good(v)?'・高音質':''}</small></span><button class="btn ghost shsm" data-vptry="${kind}" data-vn="${esc(v.name)}">試聽</button><button class="btn shsm" data-vpuse="${kind}" data-vn="${esc(v.name)}">${cur?'使用中':'使用'}</button></div>`;
-  openModal(`<span class="kicker">朗讀設定</span><h2>選擇清楚的聲音</h2>
-   <p style="margin:0;font-size:13.5px">聲音來自你的手機或電腦內建語音。按「試聽」比較看看，選最清楚的那一個；標示「高音質」的通常最自然。</p>
-   <div class="vp-list"><h3>英文語音</h3>${en.length?en.map(v=>row(v,'en',voice&&v.name===voice.name)).join(''):'<p class="pricenote">這台裝置沒有英文語音，請看「常見問題」安裝。</p>'}
-   <h3>中文語音</h3>${zh.length?zh.map(v=>row(v,'zh',zhVoice&&v.name===zhVoice.name)).join(''):'<p class="pricenote">這台裝置沒有中文語音。</p>'}</div>
+  const sec=(list,kind,zh,title)=>{const cur=kind==='en'?voice:zhVoice;const g={m:[],f:[],u:[]};list.forEach(v=>g[vGender(v,zh)].push(v));
+    const grp=(k,label)=>g[k].length?`<h4>${label}</h4>${g[k].map(v=>row(v,kind,cur&&v.name===cur.name)).join('')}`:'';
+    return `<h3>${title}</h3>${list.length?grp('m','男聲')+grp('f','女聲')+grp('u','其他（看不出男女）'):''}${!g.m.length?`<p class="vp-note">這台裝置沒有${zh?'中文':'英文'}男聲，是裝置內建語音的限制，不是 App 的問題。想用男聲可以這樣下載：<br>${vDevHow(zh)}<br>下載完把 App 完全關掉再打開，就會出現在上面。</p>`:''}`};
+  openModal(`<span class="kicker">朗讀設定</span><h2>選擇朗讀聲音</h2>
+   <p style="margin:0;font-size:13.5px">聲音來自你的手機或電腦內建語音。按「試聽」比較看看，選你最喜歡、最清楚的那一個；標示「高音質」的通常最自然。</p>
+   <div class="vp-list">${sec(en,'en',false,'英文語音')}${sec(zh,'zh',true,'中文語音')}</div>
    <button class="linkbtn" data-vpreset style="align-self:center">恢復自動選擇</button><button class="btn" data-close>完成</button>`)}
+/* 第一次用到語音時，提醒一次哪裡可以選聲音 */
+function voiceTip(){if(rawStore.get('vpTip',0))return;rawStore.set('vpTip',1);setTimeout(()=>{if(document.getElementById('vptip'))return;const d=document.createElement('div');d.id='vptip';d.className='vptip';d.innerHTML=`<span>想換成男聲或女聲？可以在朗讀列的「聲音」或「常見問題」裡選擇</span><button data-voicepick>選擇聲音</button><button class="x" aria-label="關閉">✕</button>`;document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));const close=()=>{d.classList.remove('on');setTimeout(()=>d.remove(),300)};d.querySelector('.x').onclick=close;d.querySelector('[data-voicepick]').addEventListener('click',close);setTimeout(close,9000)},900)}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-voicepick],[data-vptry],[data-vpuse],[data-vpreset]');if(!t)return;
   if(t.hasAttribute('data-voicepick')){openVoicePicker();return}
   let vs=[];try{vs=speechSynthesis.getVoices()}catch(_){}const v=vs.find(x=>x.name===t.dataset.vn);
   if(t.dataset.vptry){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.dataset.vptry==='en'?'Nice to meet you. This contract is confidential.':'女人，妳已經成功引起我的注意。');if(v){u.voice=v;u.lang=v.lang}u.rate=t.dataset.vptry==='en'?.85:.9;speechSynthesis.speak(u)}catch(_){}return}
   if(t.dataset.vpuse){if(t.dataset.vpuse==='en'){rawStore.set('vEn',t.dataset.vn);if(v)voice=v}else{rawStore.set('vZh',t.dataset.vn);if(v)zhVoice=v}toast('已換成這個聲音');openVoicePicker();return}
   if(t.hasAttribute('data-vpreset')){rawStore.set('vEn','');rawStore.set('vZh','');pickVoice();pickZh();toast('已恢復自動選擇');openVoicePicker()}});
-function ttsStart(){if(!unlocked){openPaywall('語音朗讀全文是完整版功能。');return}noEnVoiceTip();
+function ttsStart(){if(!unlocked){openPaywall('語音朗讀全文是完整版功能。');return}noEnVoiceTip();voiceTip();
   if(!('speechSynthesis' in window)){toast('這個裝置不支援語音朗讀');return}
   if(!tts.q.length||tts.sid!==state.id+state.mode){tts.q=buildQueue();tts.i=0;tts.sid=state.id+state.mode;tts.cur=-1}
   tts.on=true;tts.gen++;speechSynthesis.cancel();ttsBar();speakNext()}
