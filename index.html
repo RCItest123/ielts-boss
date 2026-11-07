@@ -472,6 +472,7 @@ body.gm-mode{--paper:#17121C;--card:#221A28;--ink:#F1E9F0;--muted:#A99BAA;--line
 .gm-lq{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 12px;border-radius:20px;background:var(--soft)}
 .gm-play{width:92px;height:92px;border-radius:50%;background:var(--wine);color:var(--wine-ink);font-size:34px;display:grid;place-items:center}
 .gm-play.pulse{animation:gmpl 1s ease-in-out infinite}@keyframes gmpl{50%{transform:scale(1.07)}}
+.gm-winfo{font-family:var(--f-body,inherit);font-size:15px;font-weight:400;text-align:left;margin-top:10px;display:grid;gap:8px}.gm-winfo .pos{font-size:13px;color:var(--muted)}.gm-winfo .gw-r{display:grid;gap:4px}.gm-winfo .tag{font-size:14px;padding:3px 10px}.gm-winfo .ex .en{font-size:15px}
 .gm-reveal{font-family:var(--f-en);font-size:26px;font-weight:600;min-height:36px}.gm-reveal small{font-family:var(--f-ipa);font-size:14px;color:var(--muted);font-weight:400}
 .gm-opts{display:grid;gap:8px}.gm-opt{padding:14px 16px;border-radius:14px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line);font-weight:700;font-size:16px;text-align:left;color:var(--ink)}
 .gm-opt.ok{color:var(--ok);box-shadow:inset 0 0 0 2px var(--ok)}.gm-opt.ng{color:var(--wine);box-shadow:inset 0 0 0 2px var(--wine);background:var(--mark)}
@@ -684,10 +685,10 @@ const SHARE_BASE='「女人，你給我來背單字！」霸總教你背單字�
 async function nativeShare(){if(navigator.share){try{try{await navigator.clipboard.writeText(SHARE_TEXT+SHARE_URL)}catch(_){}await navigator.share({text:SHARE_TEXT+SHARE_URL});return}catch(e){if(e&&e.name==='AbortError')return}}copyShare()}
 let shareMode='text',cardImg=-1,cardURL=null;
 function shareApp(){go('share')}
-function cardImgSrc(){const all=[collSrc(2),collSrc(7)];if(cardImg<0)cardImg=Math.floor(Math.random()*all.length);return all[cardImg%all.length]}
+function cardImgSrc(){const all=COLL_IMGS.map((_,i)=>collSrc(i));if(cardImg<0)cardImg=Math.floor(Math.random()*all.length);return all[cardImg%all.length]}
 function renderShare(){
   const full=SHARE_TEXT+SHARE_URL;const enc=encodeURIComponent;const q=curQuote();
-  const textPane=`<div class="bosspic sharepic"><img src="img/share_boss.jpg?v=c6080e68" alt="霸總指著你"><div class="bubble">${genderize('「女人，你給我來背單字！」')}<small>把霸總推坑給朋友</small></div></div>
+  const textPane=`<div class="bosspic sharepic"><img src="${SHARE_IMGS[Math.floor(Math.random()*SHARE_IMGS.length)]}" alt="霸總指著你"><div class="bubble">${genderize('「女人，你給我來背單字！」')}<small>把霸總推坑給朋友</small></div></div>
    <div class="sharebox" id="shareText">${esc(full)}</div>
    ${navigator.share?'<button class="btn" data-nativeshare>分享到 LINE、IG、FB…</button>':''}
    <div class="sharegrid">
@@ -728,6 +729,8 @@ const BOSS_QUOTES=[
  ["Spend this million, or you're not going home tonight.",'這一百萬花不完，今晚不准回家。'],
  ["Well, woman, you've caught my attention.",'很好，女人，妳已經成功引起我的注意。'],
  ['Who said you could leave?','誰准妳走了？'],
+ ["Anyone who touches what's mine will regret being alive.",'敢動我的人，我要讓他後悔活在這個世界上！'],
+ ["Listen. You have my permission to like me.",'聽著，我允許妳喜歡我。'],
  ['No one touches what is mine.','我的人，誰敢動？'],
  ['Name your price.','開個價吧。'],
  ['From now on, you answer only to me.','從今天起，妳只聽我的。'],
@@ -799,7 +802,7 @@ function renderQuizEnd(){
   const v=qzVerdict(sc);
   app.innerHTML=`<div class="view quiz">
    ${bossPic([v,`今日單字挑戰 ${sc} / ${qz.qs.length}`])}
-   <div class="qscore"><b>${sc}</b><span>/ ${qz.qs.length}</span></div><p class="muted" style="text-align:center;margin:0">遊戲積分 +${sc*15}</p>${cramNote(qz.cn)}${(()=>{const n=gm.newCards||[];gm.newCards=[];return collNew(n)})()}
+   <div class="qscore"><b>${sc}</b><span>/ ${qz.qs.length}</span></div><p class="muted" style="text-align:center;margin:0">學習積分 +${sc*15}</p>${cramNote(qz.cn)}${(()=>{const n=gm.newCards||[];gm.newCards=[];return collNew(n)})()}
    ${qz.wrong.length?`<section class="blk"><h3 style="font-size:16px">答錯的字</h3><ul class="qwrong">${qz.wrong.map(w=>`<li><b>${esc(w.w)}</b>${esc(w.z)}</li>`).join('')}</ul><button class="btn ghost shsm" data-qsave>全部加入生字本</button></section>`:''}
    <div class="acts"><button class="btn" data-qsharescore>分享成績圖卡</button>${unlocked?'<button class="btn ghost" data-qstart>再挑戰一次</button>':''}<button class="linkbtn" data-tab-go="games" style="align-self:center">回遊戲間</button></div>
   </div>`}
@@ -1009,7 +1012,7 @@ function renderStats(){
      <div class="kpi"><b>${(days[dkey()]||[]).length}<small>篇</small></b><span>今天讀完</span></div>
    </div>
    ${collSection()}
-   <section class="blk"><div class="section-h"><h3 style="font-size:17px">遊戲積分與等級</h3><button class="linkbtn" data-tab-go="games">去遊戲間</button></div>${gmRankCard()}</section>
+   <section class="blk"><div class="section-h"><h3 style="font-size:17px">學習積分與等級</h3><button class="linkbtn" data-tab-go="games">去遊戲間</button></div>${gmRankCard()}</section>
    <section class="blk"><h3 style="font-size:17px">打卡日曆</h3>${calHead}<div class="cal" aria-label="本月學習紀錄">${cal}</div>
      <span class="muted" style="font-size:12.5px">有讀完至少一篇的日子會亮起。</span></section>
    <section class="blk"><div class="section-h"><h3 style="font-size:17px">讀過的文章</h3><span class="muted" style="font-size:13px">${nRead} 篇</span></div>
@@ -1104,6 +1107,7 @@ const CHEERS=[
 const genderize=t=>isBL()?t.replace(/女人，/g,'').replace(/妳/g,'你'):t;
 const dayIdx=()=>Math.floor(parseKey(dkey())/864e5);
 const BOSS_IMGS=["img/boss1.jpg?v=67c483c7", "img/boss2.jpg?v=1967e81f", "img/boss3.jpg?v=4fc40b47", "img/boss4.jpg?v=770d66ac", "img/boss5.jpg?v=bd83a6a4", "img/boss6.jpg?v=a0ee4f35", "img/boss7.jpg?v=7b09d15f", "img/boss8.jpg?v=7b16c109"];
+const SHARE_IMGS=["img/share_boss.jpg?v=c6080e68", "img/share2.jpg?v=ff5c2ee4", "img/share3.jpg?v=64f2a515", "img/share4.jpg?v=ba19db01"];
 function nextBossImg(){const n=rawStore.get('bossImg',-1)+1;rawStore.set('bossImg',n);return BOSS_IMGS[n%BOSS_IMGS.length]}
 function bossPic(c){return `<div class="bosspic"><img src="${nextBossImg()}" alt="霸總"><div class="bubble">「${esc(c[0])}」<small>${esc(c[1])}</small></div></div>`}
 function moreCheer(id,n){
@@ -1238,7 +1242,7 @@ function openPlans(){
   const rows=[
    ['小說閱讀<br><small>共 440 篇</small>','每類前 10 篇<br>每天限 2 篇<br><small>壞壞版、片語版除外</small>','全部<br>無限暢讀','同免費版','全部<br>無限暢讀'],
    ['壞壞隱藏版',N,Y,N,Y],
-   ['閱讀闖關・霸總收藏卡<br><small>閱讀＋遊戲積分・共 10 張</small>','前 3 張','全部','前 3 張','全部'],
+   ['霸總解鎖・收藏卡<br><small>閱讀＋學習積分・共 10 張</small>','前 3 張','全部','前 3 張','全部'],
    ['片語版 60 篇＋片語本<br><small>多益／雅思／GRE 各 150 片語</small>',N,Y,N,Y],
    ['語音朗讀全文',N,Y,N,Y],
    ['之後新增的故事',N,Y,N,Y],
@@ -1381,7 +1385,7 @@ const gshuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Mat
 function gmXP(){return rawStore.get('gmXP',0)||0}
 function gmRank(xp){let r=GM_RANK[0],nx=null;for(let i=0;i<GM_RANK.length;i++){if(xp>=GM_RANK[i][0]){r=GM_RANK[i];nx=GM_RANK[i+1]||null}}return {lv:GM_RANK.indexOf(r)+1,title:r[1],from:r[0],next:nx}}
 function gmRankCard(){const xp=gmXP(),r=gmRank(xp);const pct=r.next?Math.round((xp-r.from)/(r.next[0]-r.from)*100):100;
-  return `<div class="gm-rank"><div><span class="eyebrow">遊戲積分</span><b>${xp.toLocaleString()}<small> 分</small></b></div><div class="gm-rk"><span class="gm-lv">Lv.${r.lv}</span><strong>${r.title}</strong></div>
+  return `<div class="gm-rank"><div><span class="eyebrow">學習積分</span><b>${xp.toLocaleString()}<small> 分</small></b></div><div class="gm-rk"><span class="gm-lv">Lv.${r.lv}</span><strong>${r.title}</strong></div>
    <div class="bar" style="grid-column:1/-1"><i style="width:${pct}%"></i></div><small class="muted" style="grid-column:1/-1">${r.next?`再 ${(r.next[0]-xp).toLocaleString()} 分升到「${r.next[1]}」`:'已達最高等級'}</small>${unlocked?(sbUser?`<small class="gm-sync" style="grid-column:1/-1">☁ 已同步到帳號 ${esc(sbUser.email||'')}</small>`:`<button class="linkbtn" data-sblogin style="grid-column:1/-1;justify-self:start;font-size:13px">登入 Google 帳號，積分換手機也不會不見</button>`):''}</div>`}
 function gmAddXP(game,add){add=Math.max(0,Math.round(add||0));rawStore.set('gmXP',gmXP()+add);try{gm.newCards=(gm.newCards||[]).concat(collCheck())}catch(e){}const bk='gmBest.'+game;if((rawStore.get(bk,0)||0)<add)rawStore.set(bk,add);gmPush()}
 function gmBestAll(){const o={};GM_GAMES.forEach(g=>{const v=rawStore.get('gmBest.'+g.id,0);if(v)o[g.id]=v});return o}
@@ -1455,7 +1459,7 @@ function gmIntro(id){
   const g=GM_GAMES.find(x=>x.id===id);gmStopAll();gm.cur=id;
   const speed=id==='fall'?`<div class="gm-step"><span class="gm-lbl">速度</span><div class="gm-lvrow" role="group" aria-label="掉落速度">${[['slow','慢速'],['mid','標準'],['fast','快速']].map(([k,n])=>`<button data-gspd="${k}" aria-pressed="${(rawStore.get('gmSpd','slow'))===k}">${n}</button>`).join('')}</div></div>`:'';
   const rules={link:'每局 3 輪、每輪 5 組。先點左邊的英文，再點右邊對應的中文。越快、錯越少，分數越高。',
-    fall:'中文意思會往下掉，下面有字首和字母數提示。在下方輸入英文按送出，打對就消失；掉到底扣一條命，3 條命用完結束。',
+    fall:'中文意思會往下掉，下面有字首、字尾和字母數提示。在下方輸入英文按送出，打對就消失；掉到底扣一條命，3 條命用完結束。',
     listen:'共 10 題。按播放鍵聽英文，選出正確的中文。可以慢速再聽。',
     scene:'看著總裁的照片，找出上方指定的英文物品，點一下它。點錯會告訴你那是什麼。照片可以放大、左右滑動。',
     quiz:'從你讀過的故事（不夠的話從這個類型的故事）出 10 題：看英文選中文、看中文選英文。答錯霸總會罵人，答錯的字可以一鍵加入生字本。'}[id];
@@ -1533,7 +1537,7 @@ function gmFall(){
    <form class="gm-type" id="gfform" autocomplete="off"><input id="gfin" aria-label="輸入英文單字" placeholder="在這裡打英文…" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="btn" type="submit">送出</button></form>`);
   const ff=document.getElementById('gff'),inp=document.getElementById('gfin');
   let drops=[],score=0,combo=0,lives=3,raf=0,last=0,spawnT=0,el=0,run=true,missed=[],pool=gmWords(gmLevel()).filter(w=>w[0].length<=9&&/^[a-z]+$/.test(w[0])).slice(0,60).reverse();
-  const hint=w=>w[0]+' '+Array(w.length-1).fill('_').join(' ');
+  const hint=w=>w.length<=2?w[0]+' _':w[0]+' '+Array(w.length-2).fill('_').join(' ')+' '+w[w.length-1];
   function spawn(){const w=pool.pop()||gshuf(gmPool(gmLevel()))[0];const d=document.createElement('div');d.className='gm-drop';d.innerHTML=`<b>${esc(w[1])}</b><i>${esc(hint(w[0]))}</i>`;
     d.style.left=(16+Math.random()*68)+'%';ff.appendChild(d);drops.push({w,el:d,y:-46,v:SP.v+Math.min(el*SP.acc*.2,SP.v)+Math.random()*4})}
   function hud(){document.getElementById('gfs').textContent=score+' 分';document.getElementById('gfc').textContent='連擊 '+combo;document.getElementById('gfh').textContent='♥'.repeat(lives)+'♡'.repeat(3-lives)}
@@ -1554,6 +1558,12 @@ function gmFall(){
   document.addEventListener('visibilitychange',vis);gm.stop.push(()=>{run=false;cancelAnimationFrame(raf);document.removeEventListener('visibilitychange',vis)});
   spawn();spawnT=SP.gap*.6;inp.focus();raf=requestAnimationFrame(loop);
 }
+/* 單字講解（聽力測驗答題後顯示）：詞性、中文、同義、反義、例句 */
+function gmWordInfo(lv,w){const k=norm(w),Dd=lv==='toeic'?D2:lv==='ielts'?IELTS_D:D3,d=Dd[k]||D2[k]||IELTS_D[k]||D3[k];if(!d)return '';
+  const tg=(L,c)=>L&&L.length?`<div class="tags">${L.slice(0,4).map(x=>`<span class="tag ${c}">${esc(x)}</span>`).join('')}</div>`:'<span class="none">無常用字</span>';const ex=d.e&&d.e[0];
+  return `<div class="gm-winfo">${d.p?`<span class="pos">${esc(d.p)}</span> `:''}<b>${esc((d.z||[]).slice(0,3).join('、'))}</b>
+   <div class="gw-r"><span class="lbl">同義字</span>${tg(d.s,'')}</div><div class="gw-r"><span class="lbl">反義字</span>${tg(d.a,'ant')}</div>
+   ${ex?`<div class="gw-r"><span class="lbl">例句</span><div class="ex"><span class="en">${esc(ex[0])}</span><button class="mini" data-speak="${esc(ex[0])}" aria-label="朗讀例句">${ICON.speak}</button><span class="zh">${esc(ex[1])}</span></div></div>`:''}</div>`}
 /* --- 3. 聽力測驗 --- */
 function gmListen(){
   const N=10,lv=gmLevel(),P=gmPool(lv),qs=gshuf(gmWords(lv).slice(0,N));let i=0,score=0,wrong=[];
@@ -1566,7 +1576,7 @@ function gmListen(){
     let ans=false;document.querySelector('.gm-opts').onclick=ev=>{const b=ev.target.closest('.gm-opt');if(!b||ans)return;ans=true;const ok=opts[+b.dataset.go][0]===w[0];
       if(ok)score++;else{b.classList.add('ng');wrong.push(w)}
       document.querySelectorAll('.gm-opt').forEach((x,k)=>{if(opts[k][0]===w[0])x.classList.add('ok');x.disabled=true});
-      document.getElementById('glr').innerHTML=`${esc(w[0])} <small>${esc(w[2])}</small>`;
+      document.getElementById('glr').innerHTML=`${esc(w[0])} <small>${esc(w[2])}</small>`+gmWordInfo(lv,w[0]);
       document.getElementById('gln').innerHTML=`${gmSay(ok?['耳朵不錯，下一題。','很好，繼續。','答對了，別得意。'][i%3]:['聽清楚了嗎？再背三遍。','這都聽不出來？今晚別想睡。'][i%2])}<button class="btn" id="glgo" style="width:100%;margin-top:10px">${i+1<N?'下一題':'看成績'}</button>`;
       document.getElementById('glgo').onclick=()=>{i++;i<N?q():end()}}}
   function end(){const line=score>=9?'這種耳朵，配得上我。':score>=6?'還可以。明天我要聽到滿分。':'耳朵借我，我親自教妳。';
@@ -1622,20 +1632,20 @@ function collCheck(){const o=collOwned(),n=collReads(),xp=gmXP(),nu=[];COLL.forE
 /* 免費版讀到付費卡門檻時，第一次提示 */
 function collTease(){if(unlocked)return null;const n=collReads(),seen=rawStore.get('collTease',[])||[];const xp=gmXP();const i=COLL.findIndex((c,k)=>k>=COLL_FREE&&collMet(c,n,xp)&&!seen.includes(k));if(i<0)return null;rawStore.set('collTease',seen.concat(i));return i}
 function collNext(){const n=collReads(),xp=gmXP(),o=collOwned();const i=COLL.findIndex((c,k)=>!o.includes(k));if(i<0)return null;const nr=Math.max(0,COLL[i].x-n),np=Math.max(0,COLL[i].p-xp);return {i,nr,np,need:nr+np,lock:!collCan(i)}}
-function collNeedTxt(nx){return [nx.nr?`再讀 ${nx.nr} 篇`:'',nx.np?`遊戲積分再 ${nx.np} 分`:''].filter(Boolean).join('＋')}
+function collNeedTxt(nx){return [nx.nr?`再讀 ${nx.nr} 篇`:'',nx.np?`學習積分再 ${nx.np} 分`:''].filter(Boolean).join('＋')}
 function collNew(list){if(!list||!list.length)return '';return `<div class="coll-new">${list.map(i=>`<button class="coll-newc" data-coll="${i}"><img src="${collSrc(i)}" alt=""><span><small>闖關成功！解鎖霸總收藏卡</small><b>${esc(COLL[i].n)}</b><em>${COLL[i].r}・${esc(COLL[i].t)}</em></span><i aria-hidden="true">›</i></button>`).join('')}<button class="linkbtn" data-collgo style="align-self:center">到進度區看闖關進度 ›</button></div>`}
 function collSection(){collCheck();const o=collOwned(),nx=collNext(),n=collReads();
   const xp=gmXP(),pr=(v,k,key)=>{const a=k?COLL[k-1][key]:0,b=COLL[k][key];return Math.max(0,Math.min(100,Math.round((v-a)/Math.max(1,b-a)*100)))};
-  return `<section class="blk coll-sec"><div class="section-h"><h3 style="font-size:17px">🃏 閱讀闖關・霸總收藏卡</h3><span class="muted" style="font-size:13px">${o.length} / ${COLL.length} 張</span></div>
-   <p class="muted" style="margin:0;font-size:13.5px;line-height:1.6">每一關要同時達到<b>閱讀篇數</b>（所有類型合計，目前 <b>${n}</b> 篇）和<b>遊戲積分</b>（目前 <b>${xp}</b> 分），才能收下一位霸總。</p>
+  return `<section class="blk coll-sec"><div class="section-h"><h3 style="font-size:17px">🃏 霸總解鎖・收藏卡</h3><span class="muted" style="font-size:13px">${o.length} / ${COLL.length} 張</span></div>
+   <p class="muted" style="margin:0;font-size:13.5px;line-height:1.6">每一關要同時達到<b>閱讀篇數</b>（所有類型合計，目前 <b>${n}</b> 篇）和<b>學習積分</b>（目前 <b>${xp}</b> 分），才能收下一位霸總。</p>
    ${nx?`<div class="barrow" style="margin-top:4px"><span>第 ${nx.i+1} 關・${esc(COLL[nx.i].r)}・📖 閱讀 ${Math.min(n,COLL[nx.i].x)} / ${COLL[nx.i].x} 篇</span><span>${nx.nr?`還差 ${nx.nr} 篇`:'✓'}</span></div><div class="bar"><i style="width:${pr(n,nx.i,'x')}%"></i></div>
-   <div class="barrow"><span>🎮 遊戲積分 ${Math.min(xp,COLL[nx.i].p)} / ${COLL[nx.i].p} 分</span><span>${nx.np?`還差 ${nx.np} 分`:'✓'}</span></div><div class="bar"><i style="width:${pr(xp,nx.i,'p')}%"></i></div>
+   <div class="barrow"><span>⭐ 學習積分 ${Math.min(xp,COLL[nx.i].p)} / ${COLL[nx.i].p} 分</span><span>${nx.np?`還差 ${nx.np} 分`:'✓'}</span></div><div class="bar"><i style="width:${pr(xp,nx.i,'p')}%"></i></div>
    ${!nx.need&&nx.lock?'<p style="margin:0;font-weight:700;color:var(--wine);font-size:14px">條件達成！開通小說付費版就能收下</p>':''}${nx.np?'<button class="linkbtn" data-tab-go="games" style="align-self:flex-start">去遊戲間賺積分 ›</button>':''}`:'<p style="margin:0;font-weight:700;color:var(--wine)">全部霸總都收進卡冊了！</p>'}
    <div class="coll-grid sm">${COLL.map((c,i)=>{const own=o.includes(i);return `<button class="coll-c${own?'':' lk'} r-${c.r}" data-coll="${i}"><img src="${collSrc(i)}" alt="${own?esc(c.n):'未解鎖'}" loading="lazy"><span class="rr">${c.r}</span>${own?`<span class="nm"><b>${esc(c.n)}</b></span>`:`<span class="lkx">${ICON.lock}<small>${collCan(i)?`${c.x} 篇＋${c.p} 分`:'付費版'}</small></span>`}</button>`}).join('')}</div>
    ${unlocked?'':`<p class="pricenote" style="margin:4px 0 0">免費版可以收集前 ${COLL_FREE} 張。<b>小說付費版</b>全部 440 篇無限暢讀，10 位霸總都能收進卡冊。</p>${buyBtn(true)}`}</section>`}
 function collView(i){const c=COLL[i],own=collOwned().includes(i);
-  if(!own){if(!collCan(i)){openModal(`<span class="kicker">小說付費版限定</span><h2>${c.r} 霸總・第 ${i+1} 關</h2><div class="coll-big lk"><img src="${collSrc(i)}" alt=""></div><p>讀完 ${c.x} 篇故事、遊戲積分達到 ${c.p} 分，就能收下這位霸總。免費版只能收集前 ${COLL_FREE} 張，付費版全部 440 篇無限暢讀。</p><div class="acts">${buyBtn(true)}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`);return}
-    toast([c.x>collReads()?`再讀 ${c.x-collReads()} 篇`:'',c.p>gmXP()?`遊戲積分再 ${c.p-gmXP()} 分`:''].filter(Boolean).join('、')+'就能解鎖');return}
+  if(!own){if(!collCan(i)){openModal(`<span class="kicker">小說付費版限定</span><h2>${c.r} 霸總・第 ${i+1} 關</h2><div class="coll-big lk"><img src="${collSrc(i)}" alt=""></div><p>讀完 ${c.x} 篇故事、學習積分達到 ${c.p} 分，就能收下這位霸總。免費版只能收集前 ${COLL_FREE} 張，付費版全部 440 篇無限暢讀。</p><div class="acts">${buyBtn(true)}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`);return}
+    toast([c.x>collReads()?`再讀 ${c.x-collReads()} 篇`:'',c.p>gmXP()?`學習積分再 ${c.p-gmXP()} 分`:''].filter(Boolean).join('、')+'就能解鎖');return}
   openModal(`<span class="kicker">${c.r}・霸總收藏卡 No.${i+1}</span><div class="coll-big"><img src="${collSrc(i)}" alt="${esc(c.n)}"></div>
    <h2 style="margin:0">${esc(c.n)}<small style="display:block;font-size:13px;font-weight:600;opacity:.65;margin-top:2px">${esc(c.t)}</small></h2>
    <div class="quote" style="margin:0">${esc(genderize('「'+c.l+'」'))}</div>
@@ -1649,7 +1659,7 @@ function collAfterRead(){const nu=collCheck();if(nu.length){const i=nu[nu.length
      <div class="acts"><button class="btn" data-collshare="${i}">📸 存成圖卡分享</button><button class="btn ghost" data-close data-collgo>到進度區看闖關進度</button><button class="linkbtn" data-close style="align-self:center">繼續讀</button></div>`,true);return true}
   const t=collTease();if(t!=null){const c=COLL[t];
     openModal(`<span class="kicker">第 ${t+1} 關・${c.r} 霸總</span><h2>${genderize('這位霸總在等妳')}</h2><div class="coll-big lk"><img src="${collSrc(t)}" alt=""></div>
-     <p>${genderize(`妳已經讀完 ${collReads()} 篇、遊戲積分 ${gmXP()} 分，達到第 ${t+1} 關了！但免費版只能收集前 ${COLL_FREE} 張，開通小說付費版就能把他收進卡冊。`)}</p>
+     <p>${genderize(`妳已經讀完 ${collReads()} 篇、學習積分 ${gmXP()} 分，達到第 ${t+1} 關了！但免費版只能收集前 ${COLL_FREE} 張，開通小說付費版就能把他收進卡冊。`)}</p>
      <div class="acts">${buyBtn(true)}<button class="linkbtn" data-close data-collgo style="align-self:center">到進度區看闖關進度</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`);return true}
   return false}
 document.addEventListener('click',e=>{if(!e.target.closest('[data-collgo]'))return;setTimeout(()=>{go('stats');const el=document.querySelector('.coll-sec');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},60)},true);
@@ -1746,7 +1756,7 @@ function callStart(){
       say(zh2en?`「${w[1]}」，英文怎麼說？`:`我剛剛說「${w[0]}」，是什麼意思？`);
       opt.innerHTML=opts.map((o,k)=>`<button class="call-o${zh2en?' en':''}" data-co="${k}">${esc(zh2en?o[0]:o[1])}</button>`).join('');busy=false;
       opt.onclick=ev=>{const b=ev.target.closest('.call-o');if(!b||busy)return;busy=true;const pick=opts[+b.dataset.co];say(zh2en?pick[0]:pick[1],true);opt.innerHTML='';
-        const right=pick[0]===w[0];qi++;
+        const right=pick[0]===w[0];qi++;try{speak(w[0],.85)}catch(e){}
         if(right){ok++;later(()=>{say(GOOD[(ok+qi)%GOOD.length]+(ok<3?` 還差 ${3-ok} 題。`:''));later(ok>=3?fin:ask,900)},600)}
         else{wrong.push(w);later(()=>{say(BAD[qi%BAD.length]+`${w[0]}＝${w[1]}。`+(qi<6?'再來一題。':''));later(ask,1100)},600)}}}
     function fin(){clearInterval(tm);const s=Math.floor((Date.now()-t0)/1000),dur=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
@@ -2123,7 +2133,8 @@ function renderBook(){
 }
 /* 片語本：該等級全部 150 個片語（付費版完整，免費版預覽前 10 個） */
 function phList(){const L=(PHL[TRACKS[track].ph]||[]).filter(k=>D[k]);const n=unlocked?L.length:10;
-  return `<div class="section-h" style="margin-top:22px"><h2 style="font-size:20px">${TRACKS[track].exam}片語 ${L.length} 個</h2><span class="muted">點片語看例句</span></div>
+  return `<div class="section-h" style="margin-top:22px"><h2 style="font-size:20px">${TRACKS[track].exam}片語總表・${L.length} 個</h2><span class="muted">點片語看例句</span></div>
+  <p class="muted" style="margin:-6px 0 6px;font-size:13px">這是${TRACKS[track].exam}範圍的全部片語，方便查閱，不是收藏清單。收藏的片語會顯示在上方，並標示「已收藏」。</p>
   <div>${L.slice(0,n).map(k=>{const d=D[k];return `<div class="wb-row"><button class="main" data-k="${esc(k)}"><span class="en">${esc(k)}</span><span class="zh">${esc((d.z||[]).slice(0,2).join('、'))}</span><span class="from">${esc(d.p||'')}${saved[k]?'・已收藏':''}</span></button><button class="iconbtn" data-speak="${esc(k)}" aria-label="朗讀">${ICON.speak}</button></div>`}).join('')}</div>
   ${unlocked?'':`<div class="empty" style="margin-top:12px"><p style="margin:0 0 10px">${ICON.lock} 還有 ${L.length-n} 個片語、片語版 ${TRACKS[track].stories.length} 篇故事，小說付費版完整解鎖</p>${buyBtn(true)}<button class="linkbtn" data-unlock>已購買？輸入解鎖碼</button></div>`}`}
 
