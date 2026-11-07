@@ -1227,7 +1227,7 @@ function openInAppHint(code){
 async function sbLogin(){if(INAPP){openInAppHint(rawStore.get('pendingCode',null));return}try{await sbInit();await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}})}catch(e){toast('無法連線登入服務，請稍後再試')}}
 async function sbLogout(){try{await sbInit();await sb.auth.signOut()}catch(e){}sbUser=null;toast('已登出帳號');closeModal()}
 async function applyKey(k){await openVault(b64(k));rawStore.set('unlock',k);loadTrack(track);render()}
-const RD_ERR={expired:'這組解鎖碼已過期。請確認購買頁面上的最新解鎖碼，或寄信到 a22881912@gmail.com。',full:'這組解鎖碼的使用人數已滿，請寄信到 a22881912@gmail.com 協助開通。',invalid:'解鎖碼不正確，請確認後再試一次。',used:'這組解鎖碼已綁定其他帳號。如果是你本人，請用當初綁定的 Google 帳號登入。',login:'請先登入。'};
+const RD_ERR={expired:'這組解鎖碼已過期。請確認購買頁面上的最新解鎖碼，或寄信到 bazonglearn@outlook.com。',full:'這組解鎖碼的使用人數已滿，請寄信到 bazonglearn@outlook.com 協助開通。',invalid:'解鎖碼不正確，請確認後再試一次。',used:'這組解鎖碼已綁定其他帳號。如果是你本人，請用當初綁定的 Google 帳號登入。',login:'請先登入。'};
 async function redeemCode(code){
   if(INAPP&&!hasSbHint()){rawStore.set('pendingCode',code);openInAppHint(code);return {wait:1}}
   await sbInit();if(!sbUser){rawStore.set('pendingCode',code);await sbLogin();return {wait:1}}
@@ -1280,7 +1280,7 @@ async function syncAccount(){
   gmPull();if(state.view==='games'||state.view==='stats')render()
 }
 /* ---------- 付費用戶：問題回報 ---------- */
-const REPORT_EMAIL='a22881912@gmail.com';
+const REPORT_EMAIL='bazonglearn@outlook.com';
 function ensureReport(){if(!unlocked)return;const v=app.querySelector('.view');if(!v||v.querySelector('.reportbar,[data-report]'))return;
   const ml=v.querySelector('.minilinks');if(ml){if(!ml.querySelector('[data-report]'))ml.insertAdjacentHTML('beforeend','<button class="ml-report" data-report>🛠 問題回報</button>');return}
   v.insertAdjacentHTML('beforeend','<div class="reportbar"><button class="reportbtn" data-report>🛠 問題回報</button></div>')}
