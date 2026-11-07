@@ -107,6 +107,12 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3
 .minilinks a{color:var(--muted);text-decoration:none;padding:4px 2px}
 .orline{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:2px 0}.orline:before,.orline:after{content:'';flex:1;border-top:1px solid var(--line)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.tour{position:fixed;inset:0;z-index:90}
+.tour-hole{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(20,8,14,.62);transition:all .25s;pointer-events:none}
+.tour-card{position:fixed;left:16px;right:16px;max-width:420px;margin:0 auto;background:var(--paper);color:var(--ink);border-radius:18px;padding:16px 18px;box-shadow:0 14px 34px rgba(0,0,0,.3);display:grid;gap:6px;transition:top .25s}
+.tour-card b{font-size:18px}.tour-card p{margin:0;font-size:14.5px;line-height:1.65}.tour-card p b{font-size:inherit;color:var(--wine)}
+.tour-n{font-size:12px;color:var(--muted);letter-spacing:.1em}
+.tour-acts{display:flex;justify-content:space-between;align-items:center;margin-top:6px}.tour-acts span{display:flex;gap:8px}.tour-acts .btn.sm{padding:8px 16px;font-size:14px;min-height:0;width:auto}
 .brandacts{display:flex;align-items:center;gap:8px}.loginbtn{font:inherit;font-size:13px;font-weight:700;color:var(--wine);background:var(--soft);border:0;border-radius:999px;padding:7px 12px;cursor:pointer}
 .ml-shop{margin:2px 0 0;text-align:center;font-size:12px}.ml-shop a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px}.ml-shop img{border-radius:4px}
 .minilinks a.ml-boba{color:var(--wine);font-weight:700;background:var(--soft);padding:5px 12px;border-radius:999px}
@@ -929,7 +935,7 @@ function renderHome(){
   const cont=last&&byId[last.id]&&last.id!==tid&&!readSet[last.id]?`<button class="continue" data-go-intro="${last.id}"><span class="no">${String(last.id).padStart(2,'0')}</span><div><span class="eyebrow">繼續閱讀</span><strong>${esc(byId[last.id].title)}</strong></div></button>`:'';
   app.innerHTML=`<div class="view">
   <section class="hero">
-    <div class="brandrow"><div class="brand">${ICON.heart}${esc(TRACKS[track].name)}</div><div class="brandacts">${!unlocked&&!hasSbHint()?'<button class="loginbtn" data-loginwhy>登入</button>':''}${typeBtn()}</div></div>
+    <div class="brandrow"><div class="brand">${ICON.heart}${esc(TRACKS[track].name)}</div><div class="brandacts">${hasSbHint()?'<button class="loginbtn" data-account>帳號</button>':'<button class="loginbtn" data-loginwhy>登入</button>'}${typeBtn()}</div></div>
     <h1 class="bossline">${Q().hi1}</h1>
     <p class="bossline2">${Q().hi2}</p>
     <p>看霸道總裁短篇小說，把單字無痛放到腦子裡。每天一篇，零碎時間讀一段，單字自然記住。</p>
@@ -961,6 +967,7 @@ function renderHome(){
   ${IS_STANDALONE?'':`<button class="a2hs" data-a2hs><span class="ic">📲</span><span><b>把 App 加到手機桌面</b><small>像 App 一樣一鍵打開，不用再找網址</small></span><span class="go" aria-hidden="true">›</span></button>`}
   <footer class="author mini" aria-label="其他">
     <div class="duo two"><a class="fb" href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">逛蝦皮（分潤連結）</a>${unlocked?'<button class="fb" data-report>🛠 問題回報</button>':'<button class="fb" data-report>🛠 問題回報</button>'}</div>
+    <p class="note"><button class="linkbtn" data-tour style="font-size:13px">📖 使用教學</button></p>
     <p class="note">本 App 所有故事皆為原創作品，未經授權請勿轉載或重製。</p>
     <p class="note">本站使用 GoatCounter 匿名統計造訪人數，不使用 cookie。</p>
     <p class="note shoplogo"><a href="https://xiaodian.pages.dev/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="小店上線交給我" width="20" height="20">APP製作｜小店上線交給我</a></p>
@@ -1057,6 +1064,30 @@ function openTtsPromo(){openModal(`<div class="ttshero" aria-hidden="true">${ICO
    <p>通勤、睡前閉上眼睛也能背單字。霸總故事一句一句念給你聽，英文單字用標準美式發音，學習版還會連中文意思一起念。</p>
    <ul class="paylist"><li>中文劇情＋英文單字自動切換語音</li><li>可調 0.8x～1.2x 速度，正在念的段落會反白</li><li>同一組解鎖碼，還能讀 BL 雅思版、壞壞隱藏版</li></ul>
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
+/* ---------- 首次使用教學（5 步，聚光燈指向實際按鈕） ---------- */
+const TOUR=[
+ {sel:'.typebtn',t:'切換小說類型',d:'右上角的「類型」可以隨時切換：<b>霸總、BL、壞壞版、片語版、長篇連載</b>，以及<b>多益、雅思、GRE</b> 三種單字範圍。'},
+ {sel:'[data-tab=list]',t:'讀故事・點單字',d:'在「故事」挑一篇來讀。點<b>畫線的英文字</b>就能看中文、發音、同義字和例句。<b>學習版</b>有中文提示，<b>複習版</b>會把中文遮起來考你。'},
+ {sel:'[data-tab=plan]',t:'每日課表',d:'不知道讀哪篇？「課表」每天幫你排好一篇。讀完按<b>「標記為已讀」</b>，累積學習天數和連續天數。'},
+ {sel:'[data-tab=book]',t:'生字本',d:'記不住的字，在解釋卡右上角按<b>書籤</b>就會收進「生字本」，之後集中複習。'},
+ {sel:'[data-tab=games]',t:'遊戲間・霸總解鎖',d:'讀完到「遊戲間」用遊戲複習單字、賺<b>學習積分</b>。到「進度」看收藏卡，讀越多、積分越高，就能解鎖更多霸總。'}];
+let tourEl=null,tourI=0,tourThen=0;
+function tourEnd(){rawStore.set('tour1',1);rawStore.set('coachType',1);if(tourEl){tourEl.remove();tourEl=null}window.removeEventListener('resize',tourPos);if(tourThen){tourThen=0;setTimeout(()=>{if(!rawStore.get('ebSeen',0)&&!unlocked&&isEarly()){rawStore.set('ebSeen',1);earlyModal()}else dailyPrompt()},350)}}
+function tourStart(i){tourI=i||0;if(!tourEl){tourEl=document.createElement('div');tourEl.className='tour';document.body.appendChild(tourEl);window.addEventListener('resize',tourPos)}tourShow()}
+function tourShow(){const st=TOUR[tourI],last=tourI===TOUR.length-1;
+  tourEl.innerHTML=`<div class="tour-hole"></div><div class="tour-card" role="dialog" aria-label="使用教學"><span class="tour-n">${tourI+1} / ${TOUR.length}</span><b>${st.t}</b><p>${st.d}</p>
+   <div class="tour-acts"><button class="linkbtn" data-tourskip>${last?'':'略過'}</button><span>${tourI?'<button class="btn ghost sm" data-tourprev>上一步</button>':''}<button class="btn sm" data-tournext>${last?'開始使用':'下一步'}</button></span></div></div>`;
+  tourPos()}
+function tourPos(){if(!tourEl)return;const st=TOUR[tourI],el=document.querySelector(st.sel),hole=tourEl.querySelector('.tour-hole'),card=tourEl.querySelector('.tour-card');
+  if(!el){hole.style.display='none';card.style.top='30%';return}
+  if(st.sel==='.typebtn')window.scrollTo(0,0);
+  const r=el.getBoundingClientRect(),p=6;hole.style.display='';hole.style.left=(r.left-p)+'px';hole.style.top=(r.top-p)+'px';hole.style.width=(r.width+p*2)+'px';hole.style.height=(r.height+p*2)+'px';
+  const vh=window.innerHeight,ch=card.offsetHeight;card.style.top=(r.top>vh/2?Math.max(12,r.top-p-ch-14):Math.min(vh-ch-12,r.bottom+p+14))+'px'}
+document.addEventListener('click',e=>{if(!tourEl||!tourEl.contains(e.target))return;const t=e.target.closest('button');e.stopPropagation();if(!t)return;
+  if(t.hasAttribute('data-tournext')){if(tourI<TOUR.length-1){tourI++;tourShow()}else tourEnd()}
+  else if(t.hasAttribute('data-tourprev')){tourI--;tourShow()}
+  else if(t.hasAttribute('data-tourskip'))tourEnd()},true);
+function tourWait(tries=0){if(rawStore.get('tour1',0))return;setTimeout(()=>{const busy=!modal.hidden;if(busy||state.view!=='home'||!document.querySelector('.typebtn')){if(tries<60)tourWait(tries+1);return}tourStart(0)},tries?700:600)}
 /* ---------- 首次使用：指向「類型」按鈕的小泡泡（每台裝置一次） ---------- */
 let coachTimer=null;
 function coachTypeWait(tries=0){if(rawStore.get('coachType',0))return;
@@ -1233,7 +1264,12 @@ function openInAppHint(code){
    <button class="btn ghost shsm" data-copytxt="${esc(siteURL())}">複製網址，貼到瀏覽器</button>
    <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
 async function sbLogin(){if(INAPP){openInAppHint(rawStore.get('pendingCode',null));return}try{await sbInit();await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}})}catch(e){toast('無法連線登入服務，請稍後再試')}}
-async function sbLogout(){try{await sbInit();await sb.auth.signOut()}catch(e){}sbUser=null;toast('已登出帳號');closeModal()}
+async function sbLogout(){try{await sbInit();await sb.auth.signOut()}catch(e){}sbUser=null;try{localStorage.removeItem(SB_LS)}catch(e){}toast('已登出帳號');closeModal();if(state.view==='home')render()}
+async function openAccount(){let em='';try{await sbInit();em=sbUser&&sbUser.email||''}catch(e){}
+  if(!sbUser){openLoginWhy();return}
+  openModal(`<span class="kicker">Google 帳號</span><h2>已登入</h2><p style="margin:0">${esc(em)}</p>
+   <p class="pricenote" style="margin:0">${unlocked||gamePass?'付費內容已綁定這個帳號，換手機登入同一個帳號就能恢復。':'購買後輸入解鎖碼，就會綁定這個帳號。'}<br>登出後，這台裝置上已解鎖的內容和閱讀進度不會消失。</p>
+   <div class="acts"><button class="btn ghost" data-sblogout>登出</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`)}
 async function applyKey(k){await openVault(b64(k));rawStore.set('unlock',k);loadTrack(track);render()}
 const RD_ERR={expired:'這組解鎖碼已過期。請確認購買頁面上的最新解鎖碼，或寄信到 bazonglearn@outlook.com。',full:'這組解鎖碼的使用人數已滿，請寄信到 bazonglearn@outlook.com 協助開通。',invalid:'解鎖碼不正確，請確認後再試一次。',used:'這組解鎖碼已綁定其他帳號。如果是你本人，請用當初綁定的 Google 帳號登入。',login:'請先登入。'};
 async function redeemCode(code){
@@ -1307,6 +1343,7 @@ const FAQ=[
  ['怎麼加到手機桌面？',`<ul><li><b>iPhone</b>：用 Safari 開啟 → 下方「分享」鍵 → 加入主畫面。</li><li><b>Android</b>：用 Chrome 開啟 → 右上角 ⋮ → 加到主畫面／安裝應用程式。</li></ul>`]];
 function openFaq(){openModal(`<span class="kicker">問題回報</span><h2>遇到問題了嗎？</h2>
    <p style="margin:0;font-size:14px">先看看下面有沒有答案，點題目就會展開。</p>
+   <button class="btn ghost shsm" data-tour>📖 看使用教學（5 步）</button>
    <div class="faq">${FAQ.map(([q,a])=>`<details><summary>${q}</summary><div class="faq-a">${a}</div></details>`).join('')}</div>
    ${unlocked?'<button class="btn" data-reportmail>還是解決不了？寫信給我們</button>':`<p class="pricenote" style="margin:0">免費版不提供個別客服，請先參考上面的常見問題。開通付費版後，可以直接寫信回報問題。</p><div class="acts">${buyBtn(true)}<button class="btn ghost" data-unlock>已購買？輸入解鎖碼</button></div>`}
    <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
@@ -2218,6 +2255,8 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-reportmail')){openReport();return}
   if(t.dataset.copytxt){const v=t.dataset.copytxt;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('已複製')).catch(()=>toast('請長按選取文字後複製'));return}
   if(t.hasAttribute('data-loginwhy')){openLoginWhy();return}
+  if(t.hasAttribute('data-account')){openAccount();return}
+  if(t.hasAttribute('data-tour')){closeModal();setTimeout(()=>{go('home');setTimeout(()=>tourStart(0),350)},250);return}
   if(t.hasAttribute('data-sblogin')){const o=t.textContent;t.textContent='前往 Google 登入…';t.disabled=true;sbLogin();setTimeout(()=>{if(document.visibilityState==='visible'&&t.isConnected){t.textContent=o;t.disabled=false;toast('沒有跳到 Google 登入頁？請確認網路，或改用 Chrome／Safari 開啟後再試一次')}},8000);return}
   if(t.hasAttribute('data-sblogout')){sbLogout();return}
   if(t.hasAttribute('data-buyinfo')){openBuyInfo();return}
@@ -2227,7 +2266,7 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-tts-toggle')){tts.on?ttsPause():ttsStart();return}
   if(t.hasAttribute('data-tts-stop')){ttsStop();return}
   if(t.hasAttribute('data-tts-rate')){tts.rate=tts.rate>=1.2?0.8:+(tts.rate+0.2).toFixed(1);if(tts.on){tts.gen++;speechSynthesis.cancel();tts.on=true;speakNext()}ttsBar();return}
-  if(t.dataset.settrack){const nt=t.dataset.settrack;const changed=nt!==track;const wasFirst=pk&&pk.first;loadTrack(nt);closeModal();go(state.view==='intro'||state.view==='read'?'home':state.view);if(changed)toast('已切換到 '+TRACKS[nt].name+'・'+TRACKS[nt].sub);if(wasFirst){pk.first=false;coachTypeWait();if(!rawStore.get('ebSeen',0)&&!unlocked&&isEarly()){rawStore.set('ebSeen',1);setTimeout(earlyModal,450);return}}setTimeout(dailyPrompt,350);return}
+  if(t.dataset.settrack){const nt=t.dataset.settrack;const changed=nt!==track;const wasFirst=pk&&pk.first;loadTrack(nt);closeModal();go(state.view==='intro'||state.view==='read'?'home':state.view);if(changed)toast('已切換到 '+TRACKS[nt].name+'・'+TRACKS[nt].sub);if(wasFirst){pk.first=false;if(!rawStore.get('tour1',0)){tourThen=1;tourWait();return}if(!rawStore.get('ebSeen',0)&&!unlocked&&isEarly()){rawStore.set('ebSeen',1);setTimeout(earlyModal,450);return}}setTimeout(dailyPrompt,350);return}
   if(t.dataset.tab){if(t.dataset.tab==='share')SHARE_TEXT=SHARE_BASE;go(t.dataset.tab);return}
   if(t.dataset.tabGo&&!t.dataset.goIntro){if(t.hasAttribute('data-close'))closeModal();go(t.dataset.tabGo);return}
   if(t.hasAttribute('data-close')&&!t.dataset.goIntro){closeModal();return}
