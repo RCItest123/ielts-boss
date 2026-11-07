@@ -1268,7 +1268,7 @@ function hasSbHint(){try{return !!localStorage.getItem(SB_LS)||/access_token=/.t
 const UA=navigator.userAgent||'';
 /* ---------- 網址搬家（舊網址 → en.bazonglearn.com） ---------- */
 const MV_OLD=['rcitest123.github.io','ielts-boss.pages.dev'],MV_NEW='https://en.bazonglearn.com/';
-const MIGRATE_MODE=0; /* 0=關閉 1=顯示搬家提示 2=自動帶進度轉址 */
+const MIGRATE_MODE=1; /* 0=關閉 1=顯示搬家提示 2=自動帶進度轉址 */
 const IS_OLD=MV_OLD.indexOf(location.hostname)>=0,MV_FORCE=/[?&]migrate=1/.test(location.search);
 function mvShow(){return IS_OLD&&(MIGRATE_MODE>=1||MV_FORCE)}
 async function mvURL(){const D={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k||k.indexOf('dqs.')!==0)continue;const s=k.slice(4);if(['unlock','gpass','pendingCode','movedTo','mvDone','mvSeen'].indexOf(s)>=0)continue;D[s]=localStorage.getItem(k)}
@@ -1277,7 +1277,7 @@ async function mvURL(){const D={};for(let i=0;i<localStorage.length;i++){const k
   let bin='';for(let i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
   return MV_NEW+'#'+tag+'='+btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 async function mvGo(){toast('打包進度中，馬上帶你過去…');let u=MV_NEW;try{u=await mvURL()}catch(e){}rawStore.set('movedTo',Date.now());location.href=u}
-function mvModal(){openModal(`<span class="kicker">我們搬家了</span><h2>${genderize('霸總搬新家了，妳也跟上')}</h2><p style="margin:0">新網址：<b>en.bazonglearn.com</b></p>
+function mvModal(){openModal(`<span class="kicker">我們搬家了</span><h2>霸總搬新家了，你也跟上</h2><p style="margin:0">新網址：<b>en.bazonglearn.com</b></p>
    <ul class="paylist"><li>按下面的按鈕，<b>生字本、閱讀進度、打卡、收藏卡、學習積分</b>會一起帶過去</li><li>付費會員到新網址後，用<b>同一個 Google 帳號登入</b>，付費內容就會恢復</li><li>有把 App 加到手機桌面的，到新網址後請重新加一次</li></ul>
    <p class="pricenote" style="margin:0">請在常用的那台手機、那個瀏覽器按，進度才帶得過去。</p>
    <div class="acts"><button class="btn" data-mvgo>帶著進度搬家</button><button class="linkbtn" data-close style="align-self:center">下次再說</button></div>`)}
@@ -1290,7 +1290,10 @@ function mvStartup(){
     const needLogin=(m.paid&&!unlocked)||(m.game&&!gamePass);
     openModal(`<span class="kicker">搬家完成</span><h2>${genderize('歡迎回家')}</h2><p>生字本、閱讀進度、打卡、收藏卡和學習積分都帶過來了。以後請用 <b>en.bazonglearn.com</b> 打開。</p>
      ${needLogin?`<p style="margin:0"><b>付費會員</b>請用原本的 Google 帳號登入，付費內容就會恢復。</p><div class="acts"><button class="btn" data-sblogin>用 Google 登入恢復付費內容</button><button class="linkbtn" data-close style="align-self:center">稍後再說</button></div>`:'<div class="acts"><button class="btn" data-close>開始使用</button></div>'}
-     ${IS_STANDALONE?'':'<p class="pricenote" style="margin:0">之前有把 App 加到手機桌面的，記得用新網址重新加一次。</p>'}`,true);return true}
+     ${IS_STANDALONE?'':'<p class="pricenote" style="margin:0">之前有把 App 加到手機桌面的，記得用新網址重新加一次。</p>'}`,true);if(!IS_STANDALONE)rawStore.set('a2hsNew',1);return true}
+  if(!IS_OLD&&!IS_STANDALONE&&!firstVisit&&!rawStore.get('a2hsNew',0)){rawStore.set('a2hsNew',1);
+    openModal(`<span class="kicker">小提醒</span><h2>新網址記得加到主畫面唷</h2><p style="margin:0">App 搬到新網址 <b>en.bazonglearn.com</b> 了。之前加到手機主畫面的圖示還是舊網址，請用新網址重新加一次，以後一鍵打開。</p>
+     <div class="acts"><button class="btn" data-a2hs>教我怎麼加</button><button class="linkbtn" data-close style="align-self:center">知道了</button></div>`);return true}
   return false}
 const INAPP=/\bLine\/|Instagram|FBAN|FBAV|FB_IAB|Messenger|MicroMessenger|KAKAOTALK|Threads|Barcelona/i.test(UA);
 const IS_LINE=/\bLine\//i.test(UA),IS_ANDROID=/Android/i.test(UA);
