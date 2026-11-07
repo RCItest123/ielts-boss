@@ -105,6 +105,8 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3
 .bobaemoji{font-size:26px;line-height:1}
 .minilinks{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 14px;padding-top:14px;border-top:1px dashed var(--line);font-size:12.5px}
 .minilinks a{color:var(--muted);text-decoration:none;padding:4px 2px}
+.brandacts{display:flex;align-items:center;gap:8px}.loginbtn{font:inherit;font-size:13px;font-weight:700;color:var(--wine);background:var(--soft);border:0;border-radius:999px;padding:7px 12px;cursor:pointer}
+.ml-shop{margin:2px 0 0;text-align:center;font-size:12px}.ml-shop a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px}.ml-shop img{border-radius:4px}
 .minilinks a.ml-boba{color:var(--wine);font-weight:700;background:var(--soft);padding:5px 12px;border-radius:999px}
 .author .links{display:flex;flex-direction:column;gap:8px}
 .author .support{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:12px}
@@ -925,7 +927,7 @@ function renderHome(){
   const cont=last&&byId[last.id]&&last.id!==tid&&!readSet[last.id]?`<button class="continue" data-go-intro="${last.id}"><span class="no">${String(last.id).padStart(2,'0')}</span><div><span class="eyebrow">繼續閱讀</span><strong>${esc(byId[last.id].title)}</strong></div></button>`:'';
   app.innerHTML=`<div class="view">
   <section class="hero">
-    <div class="brandrow"><div class="brand">${ICON.heart}${esc(TRACKS[track].name)}</div>${typeBtn()}</div>
+    <div class="brandrow"><div class="brand">${ICON.heart}${esc(TRACKS[track].name)}</div><div class="brandacts">${!unlocked&&!hasSbHint()?'<button class="loginbtn" data-loginwhy>登入</button>':''}${typeBtn()}</div></div>
     <h1 class="bossline">${Q().hi1}</h1>
     <p class="bossline2">${Q().hi2}</p>
     <p>看霸道總裁短篇小說，把單字無痛放到腦子裡。每天一篇，零碎時間讀一段，單字自然記住。</p>
@@ -956,7 +958,7 @@ function renderHome(){
   <button class="btn block" data-tab-go="${tid&&!isDoneToday()?'plan':'list'}">${tid&&!isDoneToday()?'看今日課表':'開始讀故事'}</button>
   ${IS_STANDALONE?'':`<button class="a2hs" data-a2hs><span class="ic">📲</span><span><b>把 App 加到手機桌面</b><small>像 App 一樣一鍵打開，不用再找網址</small></span><span class="go" aria-hidden="true">›</span></button>`}
   <footer class="author mini" aria-label="其他">
-    <div class="duo two"><a class="fb" href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">逛蝦皮（分潤連結）</a>${unlocked?'<button class="fb" data-report>🛠 問題回報</button>':'<button class="fb" data-report>常見問題</button>'}</div>
+    <div class="duo two"><a class="fb" href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">逛蝦皮（分潤連結）</a>${unlocked?'<button class="fb" data-report>🛠 問題回報</button>':'<button class="fb" data-report>🛠 問題回報</button>'}</div>
     <p class="note">本 App 所有故事皆為原創作品，未經授權請勿轉載或重製。</p>
     <p class="note">本站使用 GoatCounter 匿名統計造訪人數，不使用 cookie。</p>
     <p class="note shoplogo"><a href="https://xiaodian.pages.dev/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="小店上線交給我" width="20" height="20">APP製作｜小店上線交給我</a></p>
@@ -1022,7 +1024,7 @@ function renderStats(){
 }
 /* ---------- modal ---------- */
 const modal=document.getElementById('modal'),modalBox=document.getElementById('modalBox');
-function miniLinks(){return `<nav class="minilinks" aria-label="其他連結"><a href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">蝦皮分潤</a></nav>`}
+function miniLinks(){return `<nav class="minilinks" aria-label="其他連結"><a href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">蝦皮分潤</a></nav><p class="ml-shop"><a href="https://xiaodian.pages.dev/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="" width="16" height="16">APP製作｜小店上線交給我</a></p>`}
 function typeBtn(){return `<button class="typebtn" data-typepick aria-label="切換小說類型"><span>類型</span><b>${TRACKS[track].short}</b><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>`}
 function trackRead(t){return Object.keys(rawStore.get(t==='ielts'?'read':t+'.read',{})).length}
 const COMBO={boss:{toeic:'toeic',ielts:'ielts',gre:'gre'},bl:{toeic:'bl',ielts:'blielts',gre:'blgre'},bad:{toeic:'bad',ielts:'badielts',gre:'badgre'},ph:{toeic:'phtoeic',ielts:'phielts',gre:'phgre'},serial:{toeic:'serial',ielts:'serialielts'}};
@@ -1194,6 +1196,10 @@ function loadScript(src){return new Promise((ok,no)=>{const s=document.createEle
 async function sbInit(){if(sb)return sb;await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true}});
   const {data}=await sb.auth.getSession();sbUser=data&&data.session?data.session.user:null;return sb}
+function openLoginWhy(){openModal(`<span class="kicker">Google 帳號</span><h2>登入有什麼好處？</h2>
+   <ul class="paylist"><li><b>買了直接開通</b>：購買後輸入解鎖碼，就會綁定這個帳號，不怕解鎖碼弄丟</li><li><b>換手機也能用</b>：在新手機或新瀏覽器登入同一個帳號，付費內容和遊戲通行證自動恢復</li><li><b>網址搬家不怕</b>：App 之後換新網址、上架手機 App 時，用同一個帳號登入，購買紀錄都會跟著你</li></ul>
+   <p class="pricenote" style="margin:0">只會取得你的 Email 用來綁定解鎖碼，不會發文或讀取其他資料。<br>LINE、IG、FB 內建瀏覽器無法 Google 登入，請用 Safari 或 Chrome 開啟。</p>
+   <div class="acts"><button class="btn" data-sblogin>用 Google 登入</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
 function hasSbHint(){try{return !!localStorage.getItem(SB_LS)||/access_token=/.test(location.hash)}catch(e){return false}}
 
 /* ---------- App 內建瀏覽器（LINE/IG/FB）無法 Google 登入的提示 ---------- */
@@ -1281,7 +1287,7 @@ async function syncAccount(){
 }
 /* ---------- 付費用戶：問題回報 ---------- */
 const REPORT_EMAIL='bazonglearn@outlook.com';
-function ensureReport(){if(!unlocked)return;const v=app.querySelector('.view');if(!v||v.querySelector('.reportbar,[data-report]'))return;
+function ensureReport(){const v=app.querySelector('.view');if(!v||v.querySelector('.reportbar,[data-report]'))return;
   const ml=v.querySelector('.minilinks');if(ml){if(!ml.querySelector('[data-report]'))ml.insertAdjacentHTML('beforeend','<button class="ml-report" data-report>🛠 問題回報</button>');return}
   v.insertAdjacentHTML('beforeend','<div class="reportbar"><button class="reportbtn" data-report>🛠 問題回報</button></div>')}
 new MutationObserver(()=>ensureReport()).observe(app,{childList:true});
@@ -1297,10 +1303,10 @@ const FAQ=[
  ['換手機或換瀏覽器，付費會不會不見？',`<ul><li>不會。付費綁定在你的 <b>Google 帳號</b>，換手機只要用同一個帳號登入就會自動解鎖。</li><li>閱讀進度、生字本、收藏卡是存在<b>目前這個瀏覽器</b>裡，換手機或換瀏覽器不會跟著過去。</li></ul>`],
  ['免費版可以看多少？',`<ul><li>一般版、BL 版每類可以看前 10 篇，每天最多讀 2 篇不同的故事（讀過的可以重讀）。</li><li>壞壞隱藏版、片語版、語音朗讀全文是付費版功能。</li></ul>`],
  ['怎麼加到手機桌面？',`<ul><li><b>iPhone</b>：用 Safari 開啟 → 下方「分享」鍵 → 加入主畫面。</li><li><b>Android</b>：用 Chrome 開啟 → 右上角 ⋮ → 加到主畫面／安裝應用程式。</li></ul>`]];
-function openFaq(){openModal(`<span class="kicker">常見問題</span><h2>遇到問題了嗎？</h2>
+function openFaq(){openModal(`<span class="kicker">問題回報</span><h2>遇到問題了嗎？</h2>
    <p style="margin:0;font-size:14px">先看看下面有沒有答案，點題目就會展開。</p>
    <div class="faq">${FAQ.map(([q,a])=>`<details><summary>${q}</summary><div class="faq-a">${a}</div></details>`).join('')}</div>
-   ${unlocked?'<button class="btn" data-reportmail>還是解決不了？寫信給我們</button>':`<p class="pricenote" style="margin:0">還是解決不了？請寄信到 <b>${REPORT_EMAIL}</b>，附上截圖和問題描述。</p>`}
+   ${unlocked?'<button class="btn" data-reportmail>還是解決不了？寫信給我們</button>':`<p class="pricenote" style="margin:0">免費版不提供個別客服，請先參考上面的常見問題。開通付費版後，可以直接寫信回報問題。</p><div class="acts">${buyBtn(true)}<button class="btn ghost" data-unlock>已購買？輸入解鎖碼</button></div>`}
    <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
 function openReport(){const info=reportInfo();
   openModal(`<span class="kicker">付費會員專屬</span><h2>問題回報</h2>
@@ -2119,7 +2125,7 @@ function renderRead(){
      ${mode==='learn'?`<h3>讀完了！</h3><p>把中文遮起來再讀一次，測試自己記住了多少。</p><div class="acts"><button class="btn" data-mode="review">挑戰複習版</button><button class="btn ghost" data-done>標記為已讀</button></div>${qzNudge()}`
        :`<h3>複習完成</h3><p>還有不熟的字，回學習版再看一次，或點單字收進生字本。</p><div class="acts"><button class="btn" data-done>標記為已讀</button><button class="btn ghost" data-mode="learn">回到學習版</button>${byId[s.id+1]?`<button class="btn ghost" data-go-intro="${s.id+1}">下一篇：${esc(byId[s.id+1].title)}</button>`:''}</div>`}
      ${unlocked?'':`<p class="supnote">如果你覺得 App 對你有幫助，歡迎購買 ${PRICE()} 元付費版支持${isEarly()?'（早鳥價到 11/5）':''}・<a href="${PURCHASE_URL}" target="_blank" rel="noopener" class="supbtn">支持一下</a></p>`}
-   </div></div>`;
+   </div>${miniLinks()}</div>`;
   onScroll();
 }
 function renderBook(){
@@ -2129,6 +2135,7 @@ function renderBook(){
     ${keys.length?`<div>${keys.map(k=>{const d=D[k]||{};const st=byId[saved[k].s];return `<div class="wb-row"><button class="main" data-k="${esc(k)}"><span class="en">${esc(saved[k].w||k)}</span><span class="zh">${esc((d.z||[]).join('、'))}</span><span class="from">${d.i?esc(d.i)+'・':''}${st?'出自〈'+esc(st.title)+'〉':''}</span></button><button class="iconbtn" data-speak="${esc(saved[k].w||k)}" aria-label="朗讀">${ICON.speak}</button></div>`}).join('')}</div>`
     :`<div class="empty"><p class="bossline" style="margin:0 0 8px;font-family:var(--f-display);font-weight:900;font-size:20px;color:var(--ink)">${genderize(isPh()?'「妳的片語本空空的，是在挑戰我的耐心？」':'「妳的生字本空空的，是在挑戰我的耐心？」')}</p><p style="margin:0">讀故事時點任何畫線的英文字，在解釋卡右上角按書籤就會收進這裡。</p></div><button class="btn block" data-tab-go="list">去讀故事</button>`}
     ${isPh()?phList():''}
+    ${miniLinks()}
   </div>`;
 }
 /* 片語本：該等級全部 150 個片語（付費版完整，免費版預覽前 10 個） */
@@ -2207,6 +2214,7 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-report')){openFaq();return}
   if(t.hasAttribute('data-reportmail')){openReport();return}
   if(t.dataset.copytxt){const v=t.dataset.copytxt;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('已複製')).catch(()=>toast('請長按選取文字後複製'));return}
+  if(t.hasAttribute('data-loginwhy')){openLoginWhy();return}
   if(t.hasAttribute('data-sblogin')){t.textContent='前往 Google 登入…';sbLogin();return}
   if(t.hasAttribute('data-sblogout')){sbLogout();return}
   if(t.hasAttribute('data-buyinfo')){openBuyInfo();return}
