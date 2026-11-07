@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="看短篇霸總小說，不知不覺背單字。雅思版、多益版、多益 BL 版，點單字看音標、同義字、反義字與例句。">
+<meta name="description" content="用原創霸道總裁小說背多益、雅思、GRE 單字。英文單字寫進劇情裡，點單字看音標、發音、同義字與例句。霸總、BL、壞壞版、片語版、長篇連載，還有單字遊戲幫你複習。">
 <meta name="theme-color" content="#9A2B4A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -15,13 +15,14 @@
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://en.bazonglearn.com/">
 <link rel="canonical" href="https://en.bazonglearn.com/">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "霸總教你背單字", "url": "https://en.bazonglearn.com/", "applicationCategory": "EducationalApplication", "operatingSystem": "Web", "inLanguage": "zh-Hant-TW", "description": "用原創霸道總裁小說背多益、雅思、GRE 單字。英文單字寫進劇情裡，點單字看音標、發音、同義字與例句。霸總、BL、壞壞版、片語版、長篇連載，還有單字遊戲幫你複習。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "TWD"}}</script>
 <meta name="twitter:card" content="summary_large_image">
 <script data-goatcounter="https://hans.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
-<title>霸總教你背單字</title>
+<title>霸總教你背單字｜用霸總小說背多益・雅思・GRE 單字</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap">
@@ -856,6 +857,8 @@ const Q=()=>isBL()?{hi1:'「很好，你已經成功引起我的注意。」',hi
   :{hi1:'「很好，女人，妳已經成功引起我的注意。」',hi2:'「3分鐘之內，我要這個女人背10個單字！」',plan:'「女人，妳現在就給我背單字。」'};
 const wcount=st=>st.paras?storyWords(st).length:(st.nw||0);
 const rawStore={get(k,d){try{const v=localStorage.getItem('dqs.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('dqs.'+k,JSON.stringify(v))}catch(e){}}};
+const DL=(()=>{try{const q=new URLSearchParams(location.search),t=q.get('t'),s=+q.get('s');return t&&TRACKS[t]?{t,s}:null}catch(e){return null}})();
+if(DL)rawStore.set('track',DL.t);
 let track=rawStore.get('track',null);const firstVisit=!track;
 if(PH_SET.has(track)&&!phLive())track='toeic';
 if(!TRACKS[track])track=(rawStore.get('read',null)||rawStore.get('saved',null))?'ielts':'toeic';
@@ -2366,7 +2369,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
 (async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
   if(hasSbHint())syncAccount();
-  setTimeout(()=>{if(window.__mvWait)return;if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
+  setTimeout(()=>{if(window.__mvWait)return;if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s])go('intro',{id:DL.s,from:'list'});if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 </script>
 
