@@ -105,6 +105,8 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3
 .bobaemoji{font-size:26px;line-height:1}
 .minilinks{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 14px;padding-top:14px;border-top:1px dashed var(--line);font-size:12.5px}
 .minilinks a{color:var(--muted);text-decoration:none;padding:4px 2px}
+.orline{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:2px 0}.orline:before,.orline:after{content:'';flex:1;border-top:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 .brandacts{display:flex;align-items:center;gap:8px}.loginbtn{font:inherit;font-size:13px;font-weight:700;color:var(--wine);background:var(--soft);border:0;border-radius:999px;padding:7px 12px;cursor:pointer}
 .ml-shop{margin:2px 0 0;text-align:center;font-size:12px}.ml-shop a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px}.ml-shop img{border-radius:4px}
 .minilinks a.ml-boba{color:var(--wine);font-weight:700;background:var(--soft);padding:5px 12px;border-radius:999px}
@@ -1976,15 +1978,16 @@ function openUnlock(){const who=sbUser&&sbUser.email;
   openModal(`${!unlocked&&isEarly()?`<div class="ebbar">⏰ 早鳥價 <b>99 元只到 11/5</b>（原價 288）${PURCHASE_URL?`<a href="${PURCHASE_URL}" target="_blank" rel="noopener">立即購買 ›</a>`:''}</div>`:''}<span class="kicker">解鎖</span><h2>輸入解鎖碼</h2><p>小說付費版（BOSS-…）、遊戲通行證（GAME-…）、兩者合購（ALL-…）都在這裡輸入。付款完成後，購買頁面和確認信上會顯示解鎖碼。解鎖後會綁定你的 Google 帳號，換手機只要登入同一個帳號就能使用。</p>${INAPP?'<p class="pricenote" style="color:var(--wine)">⚠️ 你正在 App 內建瀏覽器中，按下解鎖後會教你改用 Safari／Chrome 開啟。</p>':''}
    <input id="codeInput" class="codeinput" placeholder="BOSS- / GAME- / ALL- 開頭的解鎖碼" autocomplete="off" autocapitalize="characters" spellcheck="false">
    <p id="codeMsg" class="codemsg" role="status"></p>
-   <div class="acts"><button class="btn" data-unlock-submit>${who?'解鎖並綁定帳號':'用 Google 登入並解鎖'}</button>
-   ${who?`<p class="pricenote">已登入：${esc(who)}・<button class="linkbtn" data-sblogout>登出</button></p>`:`<button class="btn ghost" data-sblogin>已綁定過？直接用 Google 登入</button>`}
-   <button class="linkbtn" data-close style="align-self:center">取消</button></div>`);
-   setTimeout(()=>{const i=document.getElementById('codeInput');if(i){i.focus();i.addEventListener('keydown',e=>{if(e.key==='Enter')submitCode()})}},80)}
+   <div class="acts"><button class="btn" id="codeGo" data-unlock-submit disabled>解鎖</button>
+   <p class="pricenote" style="margin:0">${who?`已登入：${esc(who)}，解鎖碼會綁定這個帳號・<button class="linkbtn" data-sblogout>登出</button>`:'輸入解鎖碼後按「解鎖」，下一步會請你用 Google 帳號登入，解鎖碼就綁定在這個帳號。'}</p>
+   ${who?'':`<div class="orline"><span>或</span></div><button class="linkbtn" data-sblogin style="align-self:center">已經解鎖過、換手機？直接用 Google 登入恢復</button>`}
+   <button class="linkbtn" data-close style="align-self:center;opacity:.7">取消</button></div>`);
+   setTimeout(()=>{const i=document.getElementById('codeInput');if(i){i.focus();const g=document.getElementById('codeGo'),upd=()=>{if(g)g.disabled=!i.value.trim()};i.addEventListener('input',upd);i.addEventListener('keydown',e=>{if(e.key==='Enter')submitCode()})}},80)}
 async function submitCode(){const i=document.getElementById('codeInput'),m=document.getElementById('codeMsg');if(!i)return;
   const code=i.value.trim();if(!code){m.textContent='請輸入解鎖碼。';m.className='codemsg err';return}
   m.textContent=sbUser?'驗證中…':'前往 Google 登入…';m.className='codemsg';
   let r;try{r=await redeemCode(code)}catch(e){r={ok:false,msg:'連線失敗，請稍後再試。'}}
-  if(r.wait)return;
+  if(r.wait){setTimeout(()=>{if(document.visibilityState==='visible'&&m.isConnected&&/前往/.test(m.textContent)){m.textContent='沒有跳到 Google 登入頁？請確認網路，或改用 Chrome／Safari 開啟後再按一次「解鎖」。';m.className='codemsg err'}},8000);return}
   if(!r.ok){m.textContent=r.msg;m.className='codemsg err';return}
   if(r.kind==='game')gamePassModal();else unlockedModal()}
 function openBuyInfo(){openModal(`<span class="kicker">購買解鎖碼</span><h2>購買頁面準備中</h2><p>想先購買的話，請私訊 Han 的 IG 或 FB，會盡快回覆你。</p>
@@ -2215,7 +2218,7 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-reportmail')){openReport();return}
   if(t.dataset.copytxt){const v=t.dataset.copytxt;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('已複製')).catch(()=>toast('請長按選取文字後複製'));return}
   if(t.hasAttribute('data-loginwhy')){openLoginWhy();return}
-  if(t.hasAttribute('data-sblogin')){t.textContent='前往 Google 登入…';sbLogin();return}
+  if(t.hasAttribute('data-sblogin')){const o=t.textContent;t.textContent='前往 Google 登入…';t.disabled=true;sbLogin();setTimeout(()=>{if(document.visibilityState==='visible'&&t.isConnected){t.textContent=o;t.disabled=false;toast('沒有跳到 Google 登入頁？請確認網路，或改用 Chrome／Safari 開啟後再試一次')}},8000);return}
   if(t.hasAttribute('data-sblogout')){sbLogout();return}
   if(t.hasAttribute('data-buyinfo')){openBuyInfo();return}
   if(t.hasAttribute('data-paywall')){setTimeout(()=>openPaywall(),260);return}
