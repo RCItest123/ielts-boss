@@ -1002,7 +1002,7 @@ function renderHome(){
     <p class="note"><button class="linkbtn" data-tour style="font-size:13px">📖 使用教學</button></p>
     <p class="note">本 App 所有故事皆為原創作品，未經授權請勿轉載或重製。</p>
     <p class="note">本站使用 GoatCounter 匿名統計造訪人數，不使用 cookie。</p>
-    <p class="note shoplogo"><a href="https://xiaodian.pages.dev/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="小店上線交給我" width="20" height="20">APP製作｜小店上線交給我</a></p>
+    <p class="note shoplogo"><a href="https://xiaodianup.com/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="小店上線交給我" width="20" height="20">APP製作｜小店上線交給我</a></p>
   </footer>
   </div>`;
 }
@@ -1065,7 +1065,7 @@ function renderStats(){
 }
 /* ---------- modal ---------- */
 const modal=document.getElementById('modal'),modalBox=document.getElementById('modalBox');
-function miniLinks(){return `<nav class="minilinks" aria-label="其他連結"><a href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">蝦皮分潤</a></nav><p class="ml-shop"><a href="https://xiaodian.pages.dev/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="" width="16" height="16">APP製作｜小店上線交給我</a></p>`}
+function miniLinks(){return `<nav class="minilinks" aria-label="其他連結"><a href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">蝦皮分潤</a></nav><p class="ml-shop"><a href="https://xiaodianup.com/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="" width="16" height="16">APP製作｜小店上線交給我</a></p>`}
 function typeBtn(){return `<button class="typebtn" data-typepick aria-label="切換小說類型"><span>類型</span><b>${TRACKS[track].short}</b><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>`}
 function trackRead(t){return Object.keys(rawStore.get(t==='ielts'?'read':t+'.read',{})).length}
 const COMBO={boss:{toeic:'toeic',ielts:'ielts',gre:'gre'},bl:{toeic:'bl',ielts:'blielts',gre:'blgre'},bad:{toeic:'bad',ielts:'badielts',gre:'badgre'},ph:{toeic:'phtoeic',ielts:'phielts',gre:'phgre'},serial:{toeic:'serial',ielts:'serialielts'},rebirth:{ielts:'rebirth'}};
