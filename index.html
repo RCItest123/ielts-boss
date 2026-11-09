@@ -897,10 +897,14 @@ let days=rawStore.get('days',null);
 if(!days){days={};for(const [id,t] of Object.entries(rawStore.get('read',{}))){const k=dkey(new Date(t));(days[k]=days[k]||[]).push('ielts:'+id)}}
 for(const k in days)days[k]=days[k].map(x=>typeof x==='number'?'ielts:'+x:x);
 rawStore.set('days',days);
+/* 生字本依考試共用：同一考試（多益／雅思／GRE）的各類型共用一本；片語版各自獨立 */
+function svTracks(t){const T=TRACKS[t];if(!T||T.ph)return [t];return Object.keys(TRACKS).filter(x=>!TRACKS[x].ph&&TRACKS[x].exam===T.exam)}
+function loadSaved(){const m={};for(const x of svTracks(track)){const s=rawStore.get(x==='ielts'?'saved':x+'.saved',{})||{};for(const k in s){if(!m[k]||(s[k].t||0)>(m[k].t||0))m[k]=Object.assign({tr:x},s[k])}}return m}
+function storeSaved(){for(const x of svTracks(track))rawStore.set(x==='ielts'?'saved':x+'.saved',saved)}
 function loadTrack(t){
   track=t;rawStore.set('track',t);const T=TRACKS[t];
   S=T.stories;D=T.dict;byId=Object.fromEntries(S.map(s=>[s.id,s]));totalWords=new Set(S.filter(s=>s.paras).flatMap(s=>s.paras.flatMap(p=>p.filter(x=>typeof x!=='string').map(x=>norm(x[0]))))).size+S.filter(s=>!s.paras).reduce((a,s)=>a+(s.nw||0),0);
-  saved=store.get('saved',{});readSet=store.get('read',{});last=store.get('last',null);
+  saved=loadSaved();readSet=store.get('read',{});last=store.get('last',null);
   plan=store.get('plan',null);if(!plan){plan={start:dkey(),assign:{}};store.set('plan',plan)}
   document.title=T.name+'・'+T.sub;window._title=document.title;
 }
@@ -2244,7 +2248,7 @@ function renderBook(){
   const keys=Object.keys(saved).sort((a,b)=>(saved[b].t||0)-(saved[a].t||0));
   app.innerHTML=`<div class="view">
     <div class="section-h"><h1 style="font-size:26px">${isPh()?'片語本':'生字本'}</h1><span class="muted">${keys.length} 個${isPh()?'收藏片語':'單字'}</span></div>
-    ${keys.length?`<div>${keys.map(k=>{const d=D[k]||{};const st=byId[saved[k].s];return `<div class="wb-row"><button class="main" data-k="${esc(k)}"><span class="en">${esc(saved[k].w||k)}</span><span class="zh">${esc((d.z||[]).join('、'))}</span><span class="from">${d.i?esc(d.i)+'・':''}${st?'出自〈'+esc(st.title)+'〉':''}</span></button><button class="iconbtn" data-speak="${esc(saved[k].w||k)}" aria-label="朗讀">${ICON.speak}</button></div>`}).join('')}</div>`
+    ${keys.length?`<div>${keys.map(k=>{const d=D[k]||{};const sv=saved[k],trT=TRACKS[sv.tr||track],st=sv.s!=null&&trT?trT.stories.find(x=>x.id===sv.s):null;return `<div class="wb-row"><button class="main" data-k="${esc(k)}"><span class="en">${esc(saved[k].w||k)}</span><span class="zh">${esc((d.z||[]).join('、'))}</span><span class="from">${d.i?esc(d.i)+'・':''}${st?'出自〈'+esc(st.title)+'〉':''}</span></button><button class="iconbtn" data-speak="${esc(saved[k].w||k)}" aria-label="朗讀">${ICON.speak}</button></div>`}).join('')}</div>`
     :`<div class="empty"><p class="bossline" style="margin:0 0 8px;font-family:var(--f-display);font-weight:900;font-size:20px;color:var(--ink)">${genderize(isPh()?'「妳的片語本空空的，是在挑戰我的耐心？」':'「妳的生字本空空的，是在挑戰我的耐心？」')}</p><p style="margin:0">讀故事時點任何畫線的英文字，在解釋卡右上角按書籤就會收進這裡。</p></div><button class="btn block" data-tab-go="list">去讀故事</button>`}
     ${miniLinks()}
   </div>`;
@@ -2283,8 +2287,8 @@ function openWord(k,ctx){
   requestAnimationFrame(()=>{sheet.classList.add('on');scrim.classList.add('on')});
   sheet.scrollTop=0;
   sheetIn.querySelector('#saveBtn').onclick=()=>{
-    if(saved[k]){delete saved[k];toast('已從生字本移除')}else{saved[k]={w:word,s:occ?occ.s.id:null,t:Date.now()};toast('已加入生字本')}
-    store.set('saved',saved);openWord(k,ctx);updCnt();
+    if(saved[k]){delete saved[k];toast('已從生字本移除')}else{saved[k]={w:word,s:occ?occ.s.id:null,t:Date.now(),tr:track};toast('已加入生字本')}
+    storeSaved();openWord(k,ctx);updCnt();
     document.querySelectorAll(`.w[data-k="${CSS.escape(k)}"]`).forEach(el=>el.classList.toggle('saved',!!saved[k]));
     if(state.view==='book')renderBook();
   };
@@ -2310,7 +2314,7 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-quiz')){qz=null;go('quiz');return}
   if(t.dataset.qa!==undefined&&qz&&qz.picked==null){const j=+t.dataset.qa,q=qz.qs[qz.i];qz.picked=j;if(q.opts[j].k===q.it.k)qz.score++;else qz.wrong.push(q.it);renderQuiz();return}
   if(t.hasAttribute('data-qnextq')){qz.i++;qz.picked=null;renderQuiz();window.scrollTo(0,0);return}
-  if(t.hasAttribute('data-qsave')){qz.wrong.forEach(w=>{if(!saved[w.k])saved[w.k]={w:w.w,s:null,t:Date.now()}});store.set('saved',saved);updCnt();toast('已加入生字本');return}
+  if(t.hasAttribute('data-qsave')){qz.wrong.forEach(w=>{if(!saved[w.k])saved[w.k]={w:w.w,s:null,t:Date.now()}});storeSaved();updCnt();toast('已加入生字本');return}
   if(t.hasAttribute('data-qsharescore')){shareScore();return}
   if(t.hasAttribute('data-qnext')){qIdx++;if(state.view==='share')updCardPrev();return}
   if(t.hasAttribute('data-qshare')){shareQuote();return}
