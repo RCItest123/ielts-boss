@@ -1389,7 +1389,10 @@ function gamePassModal(){openModal(`<span class="kicker">開通成功</span><h2>
 function unlockedModal(){openModal(`<span class="kicker">解鎖成功</span><h2>${gamePass?'小說完整版＋遊戲通行證已開通':'完整版已開通'}</h2><div class="quote">${genderize('「從現在起，妳的每一篇故事，都歸我管。」')}<small>已綁定帳號 ${esc(sbUser&&sbUser.email||'')}，換手機登入同一個帳號就能使用</small></div><div class="acts"><button class="btn" data-close data-typepick>去選類型</button><button class="btn ghost" data-close>繼續閱讀</button></div>`,true)}
 async function syncAccount(){
   try{await sbInit()}catch(e){return}
-  if(!sbUser)return;
+  if(!sbUser){if(PAID_NO)openModal(`<span class="kicker">付款確認</span><h2>請登入確認付款</h2><p>請用付款時的 Google 帳號登入，系統會自動開通。</p><div class="acts"><button class="btn" data-sblogin>用 Google 登入</button></div>`);return}
+  const pp=rawStore.get('pendingPay',null);
+  if(pp){rawStore.set('pendingPay',null);payStart(pp);return}
+  if(PAID_NO){payReturn(PAID_NO);return}
   const pc=rawStore.get('pendingCode',null);
   if(pc){rawStore.set('pendingCode',null);const r=await redeemCode(pc);if(r.ok)(r.kind==='game'?gamePassModal:unlockedModal)();else{openUnlock();setTimeout(()=>{const m=document.getElementById('codeMsg'),i=document.getElementById('codeInput');if(i)i.value=pc;if(m){m.textContent=r.msg;m.className='codemsg err'}},60)}return}
   {const {data}=await sb.rpc('get_key',{p_device:devId()});
@@ -1517,12 +1520,43 @@ async function gmPull(){try{if(!unlocked||!sb||!sbUser)return;const {data}=await
 function gmStopAll(){gm.stop.forEach(f=>{try{f()}catch(e){}});gm.stop=[];try{speechSynthesis.cancel()}catch(e){}}
 const GM_TRIAL=2;
 let gamePass=!!rawStore.get('gpass',0);
-const GAME_URL='https://portaly.cc/han_s/product/5id3GqVWozbj47fvwoEq';      // ← 遊戲通行證 Portaly 商品連結（89 元）
-const BUNDLE_URL='https://portaly.cc/han_s/product/6KM5P24S9XdnlRgNmM5L';    // ← 小說付費版＋遊戲通行證 188 元商品連結
+const GAME_URL='https://portaly.cc/han_s/product/5id3GqVWozbj47fvwoEq';      // ← 遊戲通行證 Portaly 商品連結（139 元）
+const BUNDLE_URL='https://portaly.cc/han_s/product/6KM5P24S9XdnlRgNmM5L';
+/* ---------- 綠界線上付款（PAY_LIVE=false 時只有 ?paytest=1 的裝置會看到，其他人照舊走 Portaly） ---------- */
+const PAY_LIVE=false;
+if(/[?&]paytest=1/.test(location.search))rawStore.set('paytest',1);
+if(/[?&]paytest=0/.test(location.search))rawStore.set('paytest',0);
+const payOn=()=>PAY_LIVE||!!rawStore.get('paytest',0);
+const PAID_NO=(new URLSearchParams(location.search).get('paid')||'').replace(/[^A-Z0-9]/gi,'').slice(0,20);
+if(PAID_NO)window.__mvWait=1;
+function payLink(plan,url,cls,label){return payOn()?`<button class="btn${cls}" data-pay="${plan}">${label}</button>`:url?`<a class="btn${cls}" href="${url}" target="_blank" rel="noopener">${label}</a>`:`<button class="btn${cls}" data-buyinfo>${label}</button>`}
+async function payStart(plan){
+  if(INAPP){openInAppHint(null);return}
+  try{await sbInit()}catch(e){toast('無法連線，請稍後再試');return}
+  if(!sbUser){rawStore.set('pendingPay',plan);toast('請先用 Google 登入，登入後會自動前往付款');await sbLogin();return}
+  toast('正在前往綠界付款頁…');
+  let r=null;try{const {data:{session}}=await sb.auth.getSession();
+    r=await fetch(SB_URL+'/functions/v1/ecpay-checkout',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+session.access_token},body:JSON.stringify({plan})}).then(x=>x.json())}catch(e){}
+  if(!r||!r.ok){toast(r&&r.err==='login'?'登入已過期，請重新登入後再試':'付款服務暫時無法使用，請稍後再試');return}
+  rawStore.set('lastOrder',r.trade_no);gcEvent('ecpay-start-'+plan,'前往綠界付款');
+  const f=document.createElement('form');f.method='POST';f.action=r.action;f.style.display='none';
+  for(const k in r.params){const i=document.createElement('input');i.type='hidden';i.name=k;i.value=r.params[k];f.appendChild(i)}
+  document.body.appendChild(f);f.submit()}
+async function payReturn(no){
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  openModal(`<span class="kicker">付款確認中</span><h2>正在確認付款結果</h2><p>請稍候幾秒，不要關閉頁面。</p>`);
+  for(let i=0;i<10;i++){let d=null;try{({data:d}=await sb.rpc('my_order',{p_trade_no:no}))}catch(e){}
+    if(d&&d.status==='paid'){let k=null;try{({data:k}=await sb.rpc('get_key',{p_device:devId()}))}catch(e){}
+      if(k&&k.err==='devices'){devLimitModal();return}
+      if(k&&k.game&&!gamePass){gamePass=true;rawStore.set('gpass',1)}
+      if(k&&k.ok&&k.key&&!unlocked)await applyKey(k.key);
+      gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');(d.plan==='game'?gamePassModal:unlockedModal)();return}
+    await new Promise(r=>setTimeout(r,2000))}
+  openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>如果你選的是 <b>ATM 轉帳</b>，完成轉帳後系統會自動開通，之後打開 App、用同一個 Google 帳號登入就能使用。</p><p>如果已經用信用卡付款卻沒有開通，請寄信到 <b>bazonglearn@outlook.com</b>，附上訂單編號 <b>${esc(no)}</b>，我們會盡快處理。</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
 const BUNDLE=()=>isEarly()?188:249;
-function bundleBtn(){if(unlocked||gamePass)return '';const sv=ORIG.all-BUNDLE();return `<div class="bundle"><span class="bd-tag">👑 最推薦・最划算</span><b class="bd-t">全功能（小說＋遊戲通行證）</b><span class="bd-p"><s>原價 ${ORIG.all}</s> ${PTAG()} <b>${BUNDLE()} 元</b>・省 ${sv} 元</span><small>${TOTAL_N()} 篇小說＋語音朗讀＋遊戲間全部遊戲，一組碼全開通</small>${BUNDLE_URL?`<a class="btn" href="${BUNDLE_URL}" target="_blank" rel="noopener">一起買・NT$${BUNDLE()}</a>`:`<button class="btn" data-buyinfo>一起買・NT$${BUNDLE()}</button>`}</div>`}
+function bundleBtn(){if(unlocked||gamePass)return '';const sv=ORIG.all-BUNDLE();return `<div class="bundle"><span class="bd-tag">👑 最推薦・最划算</span><b class="bd-t">全功能（小說＋遊戲通行證）</b><span class="bd-p"><s>原價 ${ORIG.all}</s> ${PTAG()} <b>${BUNDLE()} 元</b>・省 ${sv} 元</span><small>${TOTAL_N()} 篇小說＋語音朗讀＋遊戲間全部遊戲，一組碼全開通</small>${payLink('all',BUNDLE_URL,'',`一起買・NT$${BUNDLE()}`)}</div>`}
 function passBuy(){const url=GAME_URL;const label='購買遊戲通行證・NT$'+GPRICE();
-  const bd=bundleBtn();return bd+(bd?'<p class="buy-or">或只買遊戲通行證</p>':'')+(url?`<a class="btn${bd?' ghost':''}" href="${url}" target="_blank" rel="noopener">${label}</a>`:`<button class="btn${bd?' ghost':''}" data-buyinfo>${label}</button>`)+
+  const bd=bundleBtn();return bd+(bd?'<p class="buy-or">或只買遊戲通行證</p>':'')+payLink('game',url,bd?' ghost':'',label)+
   `<p class="pricenote"><s>${ORIG.game}</s> <span class="early">${PTAG()}</span> <b>${GPRICE()} 元</b>・永久無限玩・新遊戲也包含</p><button class="btn ghost" data-unlock>輸入通行證序號</button><button class="linkbtn pl-link" data-plans>看方案比較 ›</button>`}
 function gmLeft(){return Math.max(0,GM_TRIAL-(+rawStore.get('gmTrial',0)||0))}
 function gmFreeUsed(){return gmLeft()<=0}
@@ -2193,8 +2227,8 @@ function noteRead(id){if(unlocked)return;const k=track+':'+id,L=readsToday();if(
 function openLimit(){openModal(`${bossPic([genderize('今天的 2 篇已經讀完了。想要更多？'),genderize('不要考驗我的耐心，女人。')])}<span class="kicker">免費版每日上限</span><h2>今天的免費額度用完了</h2>
    <p>免費版每天可以讀 2 篇不同的故事（已讀過的可以重讀）。明天再來，或解鎖完整版無限暢讀。</p>
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="btn ghost" data-close data-quiz>先去做單字挑戰</button><button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`)}
-const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const PRICE=()=>isEarly()?99:199;const GPRICE=()=>89;const PTAG=()=>isEarly()?'早鳥':'限時優惠';const ORIG={novel:288,game:199,all:399};
-function buyBtn(bare){const bd=bundleBtn();return bd+(bd?'<p class="buy-or">或只買小說</p>':'')+(PURCHASE_URL?`<a class="btn${bd?' ghost':''}" href="${PURCHASE_URL}" target="_blank" rel="noopener">小說付費版・NT$${PRICE()}</a>`:`<button class="btn${bd?' ghost':''}" data-buyinfo>小說付費版・NT$${PRICE()}</button>`)+(bare?'':`<p class="pricenote"><s>${ORIG.novel}</s> <span class="early">${PTAG()}</span> <b>${PRICE()} 元</b>${isEarly()?'・到 11/5':''}<br>永久有效・全部小說＋語音朗讀・新故事免費看</p>`)+`<button class="linkbtn pl-link" data-plans>看方案比較 ›</button>`}
+const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const PRICE=()=>isEarly()?99:199;const GPRICE=()=>139;const PTAG=()=>isEarly()?'早鳥':'限時優惠';const ORIG={novel:288,game:199,all:399};
+function buyBtn(bare){const bd=bundleBtn();return bd+(bd?'<p class="buy-or">或只買小說</p>':'')+payLink('novel',PURCHASE_URL,bd?' ghost':'',`小說付費版・NT$${PRICE()}`)+(bare?'':`<p class="pricenote"><s>${ORIG.novel}</s> <span class="early">${PTAG()}</span> <b>${PRICE()} 元</b>${isEarly()?'・到 11/5':''}<br>永久有效・全部小說＋語音朗讀・新故事免費看</p>`)+`<button class="linkbtn pl-link" data-plans>看方案比較 ›</button>`}
 function renderIntro(){
   const s=byId[state.id];
   if(isLocked(s)){app.innerHTML=`<div class="view">
@@ -2334,6 +2368,7 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-mvopen')){mvModal();return}
   if(t.hasAttribute('data-account')){openAccount();return}
   if(t.hasAttribute('data-tour')){closeModal();setTimeout(()=>{go('home');setTimeout(()=>tourStart(0),350)},250);return}
+  if(t.hasAttribute('data-pay')){payStart(t.dataset.pay);return}
   if(t.hasAttribute('data-sblogin')){const o=t.textContent;t.textContent='前往 Google 登入…';t.disabled=true;sbLogin();setTimeout(()=>{if(document.visibilityState==='visible'&&t.isConnected){t.textContent=o;t.disabled=false;toast('沒有跳到 Google 登入頁？請確認網路，或改用 Chrome／Safari 開啟後再試一次')}},8000);return}
   if(t.hasAttribute('data-sblogout')){sbLogout();return}
   if(t.hasAttribute('data-buyinfo')){openBuyInfo();return}
@@ -2376,7 +2411,7 @@ go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
 (async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
-  if(hasSbHint())syncAccount();
+  if(hasSbHint()||PAID_NO)syncAccount();
   setTimeout(()=>{if(window.__mvWait)return;if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s])go('intro',{id:DL.s,from:'list'});if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 });
