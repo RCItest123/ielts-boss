@@ -1389,8 +1389,8 @@ function gamePassModal(){openModal(`<span class="kicker">開通成功</span><h2>
 function unlockedModal(){openModal(`<span class="kicker">解鎖成功</span><h2>${gamePass?'小說完整版＋遊戲通行證已開通':'完整版已開通'}</h2><div class="quote">${genderize('「從現在起，妳的每一篇故事，都歸我管。」')}<small>已綁定帳號 ${esc(sbUser&&sbUser.email||'')}，換手機登入同一個帳號就能使用</small></div><div class="acts"><button class="btn" data-close data-typepick>去選類型</button><button class="btn ghost" data-close>繼續閱讀</button></div>`,true)}
 async function syncAccount(){
   try{await sbInit()}catch(e){return}
-  if(!sbUser){if(PAID_NO)openModal(`<span class="kicker">付款確認</span><h2>請登入確認付款</h2><p>請用付款時的 Google 帳號登入，系統會自動開通。</p><div class="acts"><button class="btn" data-sblogin>用 Google 登入</button></div>`);return}
-  const pp=rawStore.get('pendingPay',null);
+  if(!sbUser){if(PAYGO){rawStore.set('pendingPay',PAYGO);sbLogin();return}if(PAID_NO)openModal(`<span class="kicker">付款確認</span><h2>請登入確認付款</h2><p>請用付款時的 Google 帳號登入，系統會自動開通。</p><div class="acts"><button class="btn" data-sblogin>用 Google 登入</button></div>`);return}
+  const pp=rawStore.get('pendingPay',null)||PAYGO;
   if(pp){rawStore.set('pendingPay',null);payStart(pp);return}
   if(PAID_NO){payReturn(PAID_NO);return}
   const pc=rawStore.get('pendingCode',null);
@@ -1529,6 +1529,8 @@ if(/[?&]paytest=0/.test(location.search))rawStore.set('paytest',0);
 const payOn=()=>PAY_LIVE||!!rawStore.get('paytest',0);
 const PAID_NO=(new URLSearchParams(location.search).get('paid')||'').replace(/[^A-Z0-9]/gi,'').slice(0,20);
 if(PAID_NO)window.__mvWait=1;
+const PAYGO=(q=>payOn()&&/^(novel|game|all)$/.test(q)?q:null)(new URLSearchParams(location.search).get('pay')||'');
+if(PAYGO)window.__mvWait=1;
 function payLink(plan,url,cls,label){return payOn()?`<button class="btn${cls}" data-pay="${plan}">${label}</button>`:url?`<a class="btn${cls}" href="${url}" target="_blank" rel="noopener">${label}</a>`:`<button class="btn${cls}" data-buyinfo>${label}</button>`}
 async function payStart(plan){
   if(INAPP){openInAppHint(null);return}
@@ -2411,7 +2413,7 @@ go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
 (async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
-  if(hasSbHint()||PAID_NO)syncAccount();
+  if(hasSbHint()||PAID_NO||PAYGO)syncAccount();
   setTimeout(()=>{if(window.__mvWait)return;if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s])go('intro',{id:DL.s,from:'list'});if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 });
