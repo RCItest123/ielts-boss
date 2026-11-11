@@ -18,6 +18,7 @@
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "霸總教你背單字", "url": "https://en.bazonglearn.com/", "applicationCategory": "EducationalApplication", "operatingSystem": "Web", "inLanguage": "zh-Hant-TW", "description": "用原創霸道總裁小說背多益、雅思、GRE 單字。英文單字寫進劇情裡，點單字看音標、發音、同義字與例句。霸總、BL、壞壞版、片語版、長篇連載，還有單字遊戲幫你複習。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "TWD"}}</script>
 <meta name="twitter:card" content="summary_large_image">
 <script data-goatcounter="https://hans.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','1129851603343374');fbq('track','PageView');</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -713,6 +714,14 @@ async function openVault(raw){
   for(const t in paid)for(const id in paid[t]){const st=TRACKS[t].stories.find(x=>x.id==id);if(st){st.paras=paid[t][id];delete st.locked}}
   unlocked=true;
 }
+/* Meta 像素事件（沒載入就略過） */
+function fbt(ev,p){try{if(window.fbq)fbq('track',ev,p||{})}catch(e){}}
+const fbSeen=new Set();
+function planVal(pl){try{return pl==='game'?GPRICE():pl==='all'?BUNDLE():PRICE()}catch(e){return 0}}
+function fbBuy(pl,id){const k='fbBuy_'+(id||pl);if(rawStore.get(k,0))return;rawStore.set(k,1);fbt('Purchase',{value:planVal(pl),currency:'TWD',content_name:pl})}
+document.addEventListener('click',e=>{const a=e.target.closest('a[href*="portaly.cc"],[data-pay]');if(!a)return;
+  const h=a.getAttribute('href')||'',pl=a.dataset.pay||(h.indexOf('6KM5P24S9X')>=0?'all':h.indexOf('5id3GqVW')>=0?'game':'novel');
+  fbt('InitiateCheckout',{value:planVal(pl),currency:'TWD',content_name:pl})},true);
 function gcEvent(path,title){try{if(window.goatcounter&&window.goatcounter.count)window.goatcounter.count({path,title,event:true})}catch(e){}}
 async function tryCode(code){
   const c=code.toUpperCase().replace(/\s+/g,'');if(!c)return false;
@@ -1375,6 +1384,7 @@ async function redeemCode(code){
   const {data,error}=await sb.rpc('redeem_code',{p_code:code,p_device:devId()});
   if(error||!data)return {ok:false,msg:'連線失敗，請稍後再試。'};
   if(!data.ok)return {ok:false,msg:RD_ERR[data.err]||'解鎖失敗，請稍後再試。'};
+  fbBuy(data.kind==='game'?'game':data.kind==='all'?'all':'novel');
   if(data.kind==='game'||data.kind==='all'){gamePass=true;rawStore.set('gpass',1);gcEvent((data.kind==='all'?'bundle-':'gamepass-')+String(data.n||0),data.kind==='all'?'小說＋遊戲開通':'遊戲通行證開通')}
   if(data.kind==='game'){setTimeout(gmPull,300);return {ok:true,kind:'game'}}
   await applyKey(data.key);setTimeout(gmPull,300);gcEvent('unlock-'+String(data.n||0).padStart(2,'0'),'解鎖成功 #'+(data.n||0));return {ok:true}}
@@ -1414,6 +1424,7 @@ function unlockedModal(){openModal(`<span class="kicker">解鎖成功</span><h2>
 async function syncAccount(){
   try{await sbInit()}catch(e){return}
   if(!sbUser){if(PAYGO){rawStore.set('pendingPay',PAYGO);sbLogin();return}if(PAID_NO)openModal(`<span class="kicker">付款確認</span><h2>請登入確認付款</h2><p>請用付款時的 Google 帳號登入，系統會自動開通。</p><div class="acts"><button class="btn" data-sblogin>用 Google 登入</button></div>`);return}
+  if(!rawStore.get('fbReg',0)){rawStore.set('fbReg',1);fbt('CompleteRegistration',{content_name:'google'})}
   const pp=rawStore.get('pendingPay',null)||PAYGO;
   if(pp){rawStore.set('pendingPay',null);payStart(pp);return}
   if(PAID_NO){payReturn(PAID_NO);return}
@@ -1576,7 +1587,7 @@ async function payReturn(no){
       if(k&&k.err==='devices'){devLimitModal();return}
       if(k&&k.game&&!gamePass){gamePass=true;rawStore.set('gpass',1)}
       if(k&&k.ok&&k.key&&!unlocked)await applyKey(k.key);
-      gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');(d.plan==='game'?gamePassModal:unlockedModal)();return}
+      gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();return}
     await new Promise(r=>setTimeout(r,2000))}
   openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>如果你選的是 <b>ATM 轉帳</b>，完成轉帳後系統會自動開通，之後打開 App、用同一個 Google 帳號登入就能使用。</p><p>如果已經用信用卡付款卻沒有開通，請寄信到 <b>bazonglearn@outlook.com</b>，附上訂單編號 <b>${esc(no)}</b>，我們會盡快處理。</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
 const BUNDLE=()=>isEarly()?188:249;
@@ -2280,7 +2291,7 @@ function renderIntro(){
    </div></div>`;
 }
 function renderRead(){
-  const s=byId[state.id];if(isLocked(s)){state.view='intro';return renderIntro()}const mode=state.mode;last={id:s.id,mode};store.set('last',last);
+  const s=byId[state.id];if(isLocked(s)){state.view='intro';return renderIntro()}const mode=state.mode;last={id:s.id,mode};store.set('last',last);{const fk=track+':'+s.id;if(!fbSeen.has(fk)){fbSeen.add(fk);fbt('ViewContent',{content_name:s.title,content_category:track,content_ids:[fk]})}}
   const other=mode==='learn'?'review':'learn';
   app.innerHTML=`<div class="view">
    <div class="readbar">
