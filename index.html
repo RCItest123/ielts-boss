@@ -2311,7 +2311,7 @@ function renderRead(){
      ${mode==='learn'?`<h3>讀完了！</h3><p>把中文遮起來再讀一次，測試自己記住了多少。</p><div class="acts"><button class="btn" data-mode="review">挑戰複習版</button><button class="btn ghost" data-done>標記為已讀</button></div>${qzNudge()}`
        :`<h3>複習完成</h3><p>還有不熟的字，回學習版再看一次，或點單字收進生字本。</p><div class="acts"><button class="btn" data-done>標記為已讀</button><button class="btn ghost" data-mode="learn">回到學習版</button>${byId[s.id+1]?`<button class="btn ghost" data-go-intro="${s.id+1}">下一篇：${esc(byId[s.id+1].title)}</button>`:''}</div>`}
      ${mode==='learn'?(byId[s.id+1]?`<button class="btn nextep" data-go-intro="${s.id+1}">${SERIAL_SET.has(track)?'下一集':'下一篇'}：${esc(byId[s.id+1].title)} ›</button>`:SERIAL_SET.has(track)?`<p class="pricenote" style="margin:4px 0 0">下一集即將上線，敬請期待</p>`:''):''}
-     ${unlocked?'':`<p class="supnote">如果你覺得 App 對你有幫助，歡迎購買 ${PRICE()} 元付費版支持${isEarly()?'（早鳥價到 11/5）':''}・<a href="${PURCHASE_URL}" target="_blank" rel="noopener" class="supbtn">支持一下</a></p>`}
+     ${unlocked?'':`<p class="supnote">如果你覺得 App 對你有幫助，歡迎購買 ${BUNDLE()} 元完整版（全部小說＋遊戲間）支持・${payOn()?`<button class="supbtn" data-pay="all">支持一下</button>`:`<a href="${BUNDLE_URL}" target="_blank" rel="noopener" class="supbtn">支持一下</a>`}</p>`}
    </div>${miniLinks()}</div>`;
   onScroll();
 }
