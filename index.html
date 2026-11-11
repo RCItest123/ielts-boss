@@ -873,7 +873,7 @@ const Q=()=>isBL()?{hi1:'「很好，你已經成功引起我的注意。」',hi
   :{hi1:'「很好，女人，妳已經成功引起我的注意。」',hi2:'「3分鐘之內，我要這個女人背10個單字！」',plan:'「女人，妳現在就給我背單字。」'};
 const wcount=st=>st.paras?storyWords(st).length:(st.nw||0);
 const rawStore={get(k,d){try{const v=localStorage.getItem('dqs.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('dqs.'+k,JSON.stringify(v))}catch(e){}}};
-const DL=(()=>{try{const q=new URLSearchParams(location.search),t=q.get('t'),s=+q.get('s');return t&&TRACKS[t]?{t,s}:null}catch(e){return null}})();
+const DL=(()=>{try{const q=new URLSearchParams(location.search),t=q.get('t'),s=+q.get('s');const m=q.get('m');return t&&TRACKS[t]?{t,s,m:(m==='learn'||m==='review')?m:null}:null}catch(e){return null}})();
 if(DL)rawStore.set('track',DL.t);
 let track=rawStore.get('track',null);const firstVisit=!track;
 if(PH_SET.has(track)&&!phLive())track='toeic';
@@ -2310,7 +2310,7 @@ function renderRead(){
    <div class="endcard">
      ${mode==='learn'?`<h3>讀完了！</h3><p>把中文遮起來再讀一次，測試自己記住了多少。</p><div class="acts"><button class="btn" data-mode="review">挑戰複習版</button><button class="btn ghost" data-done>標記為已讀</button></div>${qzNudge()}`
        :`<h3>複習完成</h3><p>還有不熟的字，回學習版再看一次，或點單字收進生字本。</p><div class="acts"><button class="btn" data-done>標記為已讀</button><button class="btn ghost" data-mode="learn">回到學習版</button>${byId[s.id+1]?`<button class="btn ghost" data-go-intro="${s.id+1}">下一篇：${esc(byId[s.id+1].title)}</button>`:''}</div>`}
-     ${SERIAL_SET.has(track)&&mode==='learn'?(byId[s.id+1]?`<button class="btn nextep" data-go-intro="${s.id+1}">下一集：${esc(byId[s.id+1].title)} ›</button>`:`<p class="pricenote" style="margin:4px 0 0">下一集即將上線，敬請期待</p>`):''}
+     ${mode==='learn'?(byId[s.id+1]?`<button class="btn nextep" data-go-intro="${s.id+1}">${SERIAL_SET.has(track)?'下一集':'下一篇'}：${esc(byId[s.id+1].title)} ›</button>`:SERIAL_SET.has(track)?`<p class="pricenote" style="margin:4px 0 0">下一集即將上線，敬請期待</p>`:''):''}
      ${unlocked?'':`<p class="supnote">如果你覺得 App 對你有幫助，歡迎購買 ${PRICE()} 元付費版支持${isEarly()?'（早鳥價到 11/5）':''}・<a href="${PURCHASE_URL}" target="_blank" rel="noopener" class="supbtn">支持一下</a></p>`}
    </div>${miniLinks()}</div>`;
   onScroll();
@@ -2453,7 +2453,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
 (async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
   if(hasSbHint()||PAID_NO||PAYGO)syncAccount();
-  setTimeout(()=>{if(window.__mvWait)return;if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s])go('intro',{id:DL.s,from:'list'});if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
+  setTimeout(()=>{if(window.__mvWait)return;if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 });
 </script>
