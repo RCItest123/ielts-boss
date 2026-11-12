@@ -656,6 +656,7 @@ a.btn{text-decoration:none}
     else if(a&&b&&typeof a==='object'&&typeof b==='object')m=Object.assign({},b,a);
     else if(typeof a==='number'&&typeof b==='number')m=Math.max(a,b);
     localStorage.setItem(key,JSON.stringify(m))}catch(e){}}
+  if(d.k)localStorage.setItem('dqs.legacyKey',JSON.stringify(d.k));
   localStorage.setItem('dqs.mvDone',JSON.stringify({t:Date.now(),paid:d.p||0,game:d.g||0,n:Object.keys(D).length}))
  }catch(e){localStorage.setItem('dqs.mvDone',JSON.stringify({t:Date.now(),err:1}))}}
  try{var b64=raw.replace(/-/g,'+').replace(/_/g,'/');while(b64.length%4)b64+='=';
@@ -1296,7 +1297,7 @@ const MIGRATE_MODE=1; /* 0=關閉 1=顯示搬家提示 2=自動帶進度轉址 *
 const IS_OLD=MV_OLD.indexOf(location.hostname)>=0,MV_FORCE=/[?&]migrate=1/.test(location.search);
 function mvShow(){return IS_OLD&&(MIGRATE_MODE>=1||MV_FORCE)}
 async function mvPack(){const D={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k||k.indexOf('dqs.')!==0)continue;const s=k.slice(4);if(['unlock','gpass','pendingCode','movedTo','mvDone','mvSeen'].indexOf(s)>=0)continue;D[s]=localStorage.getItem(k)}
-  let bytes=new TextEncoder().encode(JSON.stringify({d:D,p:unlocked?1:0,g:gamePass?1:0})),tag='mv';
+  let bytes=new TextEncoder().encode(JSON.stringify({d:D,p:unlocked?1:0,g:gamePass?1:0,k:unlocked?rawStore.get('unlock',null):null})),tag='mv';
   if(typeof CompressionStream!=='undefined'&&typeof DecompressionStream!=='undefined'){try{bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());tag='mz'}catch(e){}}
   let bin='';for(let i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
   return {tag,b64:btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}}
@@ -1430,7 +1431,10 @@ async function syncAccount(){
   if(PAID_NO){payReturn(PAID_NO);return}
   const pc=rawStore.get('pendingCode',null);
   if(pc){rawStore.set('pendingCode',null);const r=await redeemCode(pc);if(r.ok)(r.kind==='game'?gamePassModal:unlockedModal)();else{openUnlock();setTimeout(()=>{const m=document.getElementById('codeMsg'),i=document.getElementById('codeInput');if(i)i.value=pc;if(m){m.textContent=r.msg;m.className='codemsg err'}},60)}return}
-  {const {data}=await sb.rpc('get_key',{p_device:devId()});
+  {let {data}=await sb.rpc('get_key',{p_device:devId()});
+    /* 舊版（未綁帳號）解鎖：用本機或搬家帶來的解鎖金鑰，把付費資格轉到這個 Google 帳號 */
+    const lk=rawStore.get('legacyKey',null)||(unlocked?rawStore.get('unlock',null):null);
+    if(data&&data.err==='none'&&lk){try{const {data:c}=await sb.rpc('claim_legacy',{p_key:lk});if(c&&c.ok){rawStore.set('legacyKey',null);gcEvent('legacy-claim','舊版解鎖轉帳號');({data}=await sb.rpc('get_key',{p_device:devId()}))}else if(c&&c.err==='invalid')rawStore.set('legacyKey',null)}catch(e){}}
     if(data&&data.err==='devices'){if(unlocked||gamePass){lockDevice(true);return}devLimitModal()}
     if(data&&data.game&&!gamePass){gamePass=true;rawStore.set('gpass',1);toast('遊戲通行證已開通')}
     if(data&&data.ok&&data.key&&!unlocked){await applyKey(data.key);toast('已登入 '+(sbUser.email||'')+'，完整版已解鎖')}}
