@@ -1377,7 +1377,10 @@ async function openAccount(){let em='';try{await sbInit();em=sbUser&&sbUser.emai
    <div class="acts"><button class="btn ghost" data-sblogout>登出</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`)}
 async function applyKey(k){await openVault(b64(k));rawStore.set('unlock',k);loadTrack(track);render()}
 function devId(){let d=rawStore.get('devid','');if(!d){d=(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));rawStore.set('devid',d)}return d}
-function devLimitModal(){openModal(`<span class="kicker">帳號</span><h2>這個帳號已在其他裝置使用中</h2><p>同一個帳號最多可以在 3 台裝置使用。請先到其他裝置的「帳號」按「登出」，再回到這台裝置登入。</p><p class="pricenote" style="margin:0">30 天沒使用的裝置會自動釋放。有問題請寄信到 ${REPORT_EMAIL}。</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}
+function devLimitModal(){openModal(`<span class="kicker">帳號</span><h2>這個帳號已在其他裝置使用中</h2><p>同一個帳號最多可以在 3 台裝置使用。iPhone 的桌面圖示、Safari、Chrome 會分別算一台。</p><p style="margin:0">按下面的按鈕，就會登出其他裝置，改在這台使用。</p><p id="devKickMsg" class="codemsg"></p><p class="pricenote" style="margin:0">30 天沒使用的裝置會自動釋放。有問題請寄信到 ${REPORT_EMAIL}。</p><div class="acts"><button class="btn" data-devkick>登出其他裝置，在這台使用</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
+async function devKick(btn){btn.disabled=true;btn.textContent='處理中…';let r=null;try{await sbInit();({data:r}=await sb.rpc('release_others',{p_device:devId()}))}catch(e){}
+  if(r&&r.ok){closeModal();gcEvent('dev-kick','登出其他裝置');toast('已登出其他裝置');syncAccount();return}
+  btn.disabled=false;btn.textContent='登出其他裝置，在這台使用';const m=document.getElementById('devKickMsg');if(m){m.textContent=r&&r.err==='limit'?'這 7 天已經切換太多次了，請先到其他裝置按「登出」，或寄信給我們。':'目前無法處理，請稍後再試。';m.className='codemsg err'}}
 const RD_ERR={devices:'這個帳號已在其他裝置使用中。請先到其他裝置的「帳號」按「登出」，再回到這台裝置登入。',expired:'這組解鎖碼已過期。請確認購買頁面上的最新解鎖碼，或寄信到 bazonglearn@outlook.com。',full:'這組解鎖碼的使用人數已滿，請寄信到 bazonglearn@outlook.com 協助開通。',invalid:'解鎖碼不正確，請確認後再試一次。',used:'這組解鎖碼已綁定其他帳號。如果是你本人，請用當初綁定的 Google 帳號登入。',login:'請先登入。'};
 async function redeemCode(code){
   if(INAPP&&!hasSbHint()){rawStore.set('pendingCode',code);openInAppHint(code);return {wait:1}}
@@ -2405,6 +2408,7 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-reportmail')){openReport();return}
   if(t.dataset.copytxt){const v=t.dataset.copytxt;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('已複製')).catch(()=>toast('請長按選取文字後複製'));return}
   if(t.hasAttribute('data-loginwhy')){openLoginWhy();return}
+  if(t.hasAttribute('data-devkick')){devKick(t);return}
   if(t.hasAttribute('data-mvcode')){mvCode();return}
   if(t.hasAttribute('data-mvin')){mvInputModal();setTimeout(()=>{const i=document.getElementById('mvCodeIn');i&&i.focus()},80);return}
   if(t.hasAttribute('data-mvredeem')){mvRedeem(t);return}
