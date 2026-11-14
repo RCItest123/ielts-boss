@@ -989,13 +989,14 @@ function renderHome(){
   app.innerHTML=`<div class="view">
   <section class="hero">
     ${mvShow()?'<button class="mvbar" data-mvopen>🏠 我們搬家了！點這裡帶著進度搬到新網址 ›</button>':''}
-    <div class="brandrow"><div class="brand">${ICON.heart}${esc(TRACKS[track].name)}</div><div class="brandacts">${hasSbHint()?'<button class="loginbtn" data-account>帳號</button>':'<button class="loginbtn" data-loginwhy>登入</button>'}${typeBtn()}</div></div>
+    <div class="brandrow"><div class="brand">${ICON.heart}${esc(TRACKS[track].name)}</div><div class="brandacts">${GEAR}${hasSbHint()?'<button class="loginbtn" data-account>帳號</button>':'<button class="loginbtn" data-loginwhy>登入</button>'}${typeBtn()}</div></div>
     <h1 class="bossline">${Q().hi1}</h1>
     <p class="bossline2">${Q().hi2}</p>
     <p>看霸道總裁短篇小說，把單字無痛放到腦子裡。每天一篇，零碎時間讀一段，單字自然記住。</p>
   </section>
   ${todayCard(tid)}
   ${cont}
+  ${growHome()}
   <section class="blk" style="gap:14px">
     <h2 style="font-size:20px">怎麼用</h2>
     <ol class="steps">
@@ -2457,12 +2458,318 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button]')){e.preventDefault();e.target.click()}});
 function onScroll(){const p=document.getElementById('prog');if(!p)return;const h=document.documentElement.scrollHeight-innerHeight;p.style.width=(h>0?Math.min(100,scrollY/h*100):100)+'%'}
 addEventListener('scroll',onScroll,{passive:true});
+/* GROW_MOD_START */
+/* ================= 成長功能：邀請好友／命定霸總測驗／霸總契約（考試倒數）／提醒設定 ================= */
+const GROW_TEST=false;
+const GROW_BASE=GROW_TEST?'https://en.bazonglearn.com/':SHARE_URL;
+(()=>{const st=document.createElement('style');st.textContent=`
+.grow{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.grow-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grow-grid button{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;padding:12px 14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line);color:var(--ink);cursor:pointer;min-height:68px}
+.grow-grid b{font-size:14.5px;color:var(--wine)}
+.grow-grid small{font-size:12px;line-height:1.45;color:var(--muted)}
+.grow-grid .on small{color:var(--ok);font-weight:700}
+.pact{position:relative;padding:16px 16px 14px;border-radius:18px;background:linear-gradient(135deg,#3A1626,#7A2440);color:#FBEFF2;display:flex;flex-direction:column;gap:8px;text-align:left}
+.pact .eyebrow{font-size:12px;letter-spacing:.12em;color:#F2C6D4;font-weight:700}
+.pact .cd{display:flex;align-items:baseline;gap:8px}
+.pact .cd b{font-size:40px;line-height:1;font-weight:900;color:#fff}
+.pact .cd span{font-size:14px;opacity:.9}
+.pact .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+.pact .bar i{display:block;height:100%;border-radius:99px;background:#F4D08A}
+.pact .prow{display:flex;justify-content:space-between;gap:10px;font-size:13px;opacity:.95}
+.pact q{quotes:none;font-size:14px;line-height:1.6;font-weight:700;color:#FBEFF2}
+.pact .acts{display:flex;gap:8px;flex-wrap:wrap}
+.pact .acts button{min-height:38px;padding:0 14px;border-radius:99px;font-size:13.5px;font-weight:700;background:#fff;color:#7A2440;cursor:pointer}
+.pact .acts button.gh{background:transparent;color:#FBEFF2;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
+.g-form{display:flex;flex-direction:column;gap:12px;text-align:left}
+.g-form label,.g-form .lab{font-size:13px;font-weight:700;color:var(--muted)}
+.g-chips{display:flex;flex-wrap:wrap;gap:8px}
+.g-chips button{min-height:40px;padding:0 14px;border-radius:99px;font-size:14px;font-weight:700;background:var(--soft);color:var(--ink);cursor:pointer}
+.g-chips button[aria-pressed=true]{background:var(--wine);color:#fff}
+.g-chips button:disabled{opacity:.45;cursor:not-allowed}
+.g-form input[type=date]{width:100%;min-height:46px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font-size:16px;font-family:inherit}
+.g-terms{font-size:13px;line-height:1.7;padding:12px 14px;border-radius:14px;background:var(--soft);color:var(--ink);text-align:left}
+.g-note{font-size:12.5px;line-height:1.6;color:var(--muted);text-align:left;margin:0}
+.g-link{display:flex;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:13px;word-break:break-all;text-align:left}
+.g-stat{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g-stat div{padding:10px;border-radius:14px;background:var(--soft)}
+.g-stat b{display:block;font-size:24px;color:var(--wine);line-height:1.2}
+.g-stat small{font-size:12px;color:var(--muted)}
+.g-sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:14px;background:var(--soft);text-align:left;width:100%;cursor:pointer;color:var(--ink)}
+.g-sw b{font-size:14.5px;display:block}.g-sw small{font-size:12px;color:var(--muted);display:block;line-height:1.45}
+.g-sw i{flex:none;width:46px;height:28px;border-radius:99px;background:#CFC4C8;position:relative;transition:background .2s}
+.g-sw i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.g-sw[aria-checked=true] i{background:var(--wine)}.g-sw[aria-checked=true] i::after{transform:translateX(18px)}
+.g-sub{display:flex;flex-direction:column;gap:10px}
+.g-sub[hidden]{display:none}
+.qb-prog{display:flex;gap:6px;justify-content:center}
+.qb-prog i{width:26px;height:5px;border-radius:99px;background:var(--line)}.qb-prog i.on{background:var(--wine)}
+.qb-opts{display:flex;flex-direction:column;gap:8px}
+.qb-opts button{min-height:50px;padding:10px 14px;border-radius:14px;background:var(--soft);color:var(--ink);font-size:14.5px;line-height:1.5;text-align:left;font-weight:600;cursor:pointer}
+.qb-opts button:active{background:var(--mark)}
+.qb-res{border-radius:18px;overflow:hidden;background:#1a1018;color:#fff;text-align:center}
+.qb-res img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:center 20%}
+.qb-res div{padding:14px 14px 16px;display:flex;flex-direction:column;gap:6px}
+.qb-res small{color:#F2C6D4;font-size:12.5px;letter-spacing:.1em}
+.qb-res b{font-size:24px}.qb-res q{quotes:none;font-size:14.5px;line-height:1.6;color:#FBEFF2}
+.qb-words{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.qb-words span{padding:5px 10px;border-radius:99px;background:var(--mark);color:var(--mark-ink);font-size:13px;font-weight:700}
+.g-push{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top,0px));transform:translate(-50%,-140%);z-index:90;width:min(360px,calc(100vw - 24px));padding:12px 14px;border-radius:18px;background:rgba(38,30,40,.94);color:#fff;box-shadow:0 12px 34px rgba(0,0,0,.35);display:flex;gap:10px;align-items:flex-start;text-align:left;transition:transform .35s}
+.g-push.on{transform:translate(-50%,0)}
+.g-push img{flex:none;width:38px;height:38px;border-radius:9px;object-fit:cover}
+.g-push b{display:block;font-size:13px}.g-push span{display:block;font-size:13.5px;line-height:1.5;opacity:.95}.g-push small{margin-left:auto;font-size:11px;opacity:.6;flex:none}
+.brandacts{gap:6px}.brandacts .loginbtn{white-space:nowrap;padding:7px 10px}.brandrow .brand{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brandrow .typebtn{padding:6px 8px 6px 11px}
+.gearbtn{display:grid;place-items:center;width:34px;height:34px;border-radius:999px;background:var(--soft);color:var(--wine);border:0;cursor:pointer;flex:none}
+.gearbtn svg{width:18px;height:18px}
+@media (max-width:380px){.brandrow .typebtn>span:first-child{display:none}}
+.g-sec{display:flex;flex-direction:column;gap:8px;text-align:left}
+.g-sec h3{font-size:13px;letter-spacing:.08em;color:var(--muted);margin:4px 0 0}
+.g-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:var(--soft)}
+.g-row b{display:block;font-size:14.5px}.g-row small{display:block;font-size:12px;color:var(--muted);line-height:1.45}
+.g-mini{flex:none;min-height:34px;padding:0 14px;border-radius:99px;background:var(--card);color:var(--wine);font-weight:700;font-size:13px;box-shadow:inset 0 0 0 1.5px var(--wine);cursor:pointer}
+.g-time{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:14px;background:var(--soft);font-weight:700;font-size:14.5px}
+.g-time input{min-height:40px;padding:0 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:16px;font-family:inherit}
+.g-sw:disabled{opacity:.5;cursor:not-allowed}
+.g-inv{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line);color:var(--ink);text-align:left;cursor:pointer}
+.g-inv .ic{flex:none;width:44px;height:44px;border-radius:12px;overflow:hidden;background:var(--soft)}.g-inv .ic img{width:100%;height:100%;object-fit:cover;object-position:center 15%}
+.g-inv b{display:block;font-size:14.5px;color:var(--wine)}.g-inv small{display:block;font-size:12.5px;color:var(--muted);line-height:1.5}.g-inv .go{margin-left:auto;color:var(--wine);font-size:20px}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inv-card{display:flex;flex-direction:column;border-radius:14px;overflow:hidden;background:var(--soft);text-align:left;cursor:pointer;padding:0}
+.inv-card img{width:100%;aspect-ratio:1;object-fit:cover;object-position:center 15%;background:#fff}
+.inv-card.lk img{filter:grayscale(1) blur(3px) brightness(.9)}
+.inv-card span{padding:8px 10px}.inv-card b{display:block;font-size:14px;color:var(--wine)}.inv-card small{display:block;font-size:11.5px;line-height:1.4;color:var(--muted)}
+.gm-teaser.g-sm img{display:block;width:100%;max-height:170px;object-fit:cover;object-position:top}
+.g-claim{display:block;width:100%;min-height:44px;border-radius:999px;background:linear-gradient(135deg,#F4D08A,#E8B85C);color:#3A1626;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 6px 16px rgba(180,120,40,.25)}
+.g-dot{margin-left:auto;flex:none;padding:5px 11px;border-radius:999px;background:#F4D08A;color:#3A1626;font-size:12.5px;font-weight:800}
+.modal .box>.mx{position:absolute;top:10px;right:10px;z-index:5;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.92);color:#2B2030;font-size:20px;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:pointer;border:0;padding:0}
+.modal .box>.mx:focus-visible{outline:2px solid var(--wine);outline-offset:2px}
+.g-test{align-self:center;font-size:12.5px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;min-height:32px;cursor:pointer}
+.g-refbar{display:block;width:100%;padding:11px 14px;border-radius:14px;background:var(--mark);color:var(--mark-ink);font-size:13.5px;font-weight:700;text-align:left;cursor:pointer}
+`;document.head.appendChild(st)})();
+const gz=t=>genderize(t);
+const gDay=(a,b)=>Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);
+
+/* ---------- 邀請好友（獎勵：訂製霸總情人機會。每成功邀請 1 位＝雙方各 1 次，按按鈕領取；不給額外閱讀篇數） ---------- */
+const INV_MAX=10;
+function invGet(){return Object.assign({code:'',n:0,by:false},rawStore.get('inv',null)||{})}
+function invSet(v){rawStore.set('inv',v)}
+function invCode(){const v=invGet();if(!v.code&&GROW_TEST){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';v.code=Array.from({length:6},()=>A[Math.floor(Math.random()*A.length)]).join('');invSet(v)}return v.code}
+const invLink=()=>GROW_BASE+'?ref='+invCode();
+const cgGet=()=>Object.assign({claimed:0,used:0},rawStore.get('cbGift',null)||{});
+const cgEarned=()=>{const v=invGet();return Math.min(v.n,INV_MAX)+(v.by?1:0)};
+const cgToClaim=()=>Math.max(0,cgEarned()-cgGet().claimed);
+const cgLeft=()=>{const g=cgGet();return Math.max(0,g.claimed-g.used)};
+function cgClaim(){const n=cgToClaim();if(!n)return;const g=cgGet();g.claimed+=n;rawStore.set('cbGift',g);gcEvent('invite-claim','領取訂製機會');
+  openModal(`<span class="kicker">領取成功</span><h2>獲得 ${n} 次訂製機會</h2>
+   <div class="gm-teaser g-sm"><img src="img/custom_teaser.jpg?v=43a0434e" alt="訂製故事圖卡預覽"></div>
+   <p>${gz('填上妳的名字，成為霸總小說的女主角。劇情由霸總隨機決定，還能匯出故事圖卡。')}</p>
+   <div class="acts"><button class="btn" data-gcbgo>現在就去訂製</button><button class="linkbtn" data-close style="align-self:center">晚點再用</button></div>
+   <p class="g-note" style="text-align:center">目前還剩 ${cgLeft()} 次，沒有使用期限。</p>`,true);if(state.view==='home')render()}
+function cgGo(){closeModal();setTimeout(()=>{go('games');setTimeout(cbOpen,200)},200)}
+function cgBadge(){const c=cgToClaim();return c?`<button class="g-claim" data-gclaim>領取 ${c} 次訂製機會</button>`:''}
+async function invSync(){if(GROW_TEST)return;try{await sbInit();if(!sbUser)return;const ref=rawStore.get('ref','');
+  if(ref&&!rawStore.get('refDone',0)){const r=await sb.rpc('invite_claim',{p_ref:ref,p_device:devId()});rawStore.set('refDone',1);if(r&&r.data&&r.data.ok){const v=invGet();v.by=true;invSet(v);invGot.w=1;setTimeout(()=>invWelcome(),400)}}
+  const {data}=await sb.rpc('invite_info');if(data){const v=invGet();const before=cgToClaim();v.code=data.code||'';v.n=data.invited||0;v.by=!!data.invited_by;invSet(v);
+    if(cgToClaim()>before&&!invGot.w)setTimeout(()=>invGot(),500);if(state.view==='home')render()}}catch(e){}}
+function invWelcome(){openModal(`<span class="kicker">朋友邀請你加入</span><h2>${gz('朋友送妳一次訂製霸總情人')}</h2>
+  <div class="gm-teaser g-sm"><img src="img/custom_teaser.jpg?v=43a0434e" alt="訂製故事圖卡預覽"></div>
+  <p>${gz('用妳的名字當女主角，霸總會為妳寫一篇專屬小說。只有朋友邀請才送得出來。')}</p>
+  <div class="acts">${cgBadge()||'<button class="btn" data-close>開始讀故事</button>'}<button class="linkbtn" data-close style="align-self:center">晚點再領</button></div>`,true)}
+function invGot(){openModal(`<span class="kicker">邀請獎勵</span><h2>朋友加入了</h2><p>${gz('妳的朋友已經用妳的連結登入。妳們各得 1 次「訂製霸總情人」機會。')}</p><div class="acts">${cgBadge()}<button class="linkbtn" data-close style="align-self:center">晚點再領</button></div>`,true)}
+function invOpen(){const need=!GROW_TEST&&!sbUser;
+  const intro=`朋友從你的連結進來並用 Google 登入，你們<b>各得 1 次「訂製霸總情人」</b>：用自己的名字當主角，霸總為你寫一篇專屬小說。`;
+  if(need){openModal(`<span class="kicker">邀請好友</span><h2>先登入，才能拿到專屬連結</h2><p>${intro}</p><div class="gm-teaser g-sm"><img src="img/custom_teaser.jpg?v=43a0434e" alt="訂製故事圖卡預覽"></div><div class="acts"><button class="btn" data-loginwhy>用 Google 登入</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`);return}
+  const v=invGet(),full=v.n>=INV_MAX;
+  openModal(`<span class="kicker">邀請好友</span><h2>${gz('找個人，陪妳一起被霸總盯著')}</h2>
+   <p>${intro}</p>
+   <div class="gm-teaser g-sm"><img src="img/custom_teaser.jpg?v=43a0434e" alt="訂製故事圖卡預覽"></div>
+   <div class="g-stat"><div><b>${v.n}</b><small>已邀請（上限 ${INV_MAX} 位）</small></div><div><b>${gamePass?'無限':cgLeft()}</b><small>${gamePass?'你有通行證，可無限訂製':'剩餘訂製機會'}</small></div></div>
+   ${gamePass?'':cgBadge()}${!gamePass&&cgLeft()?'<button class="btn ghost" data-gcbgo>使用訂製機會</button>':''}
+   <div class="g-link"><span id="gInvLink">${esc(invLink())}</span></div>
+   <div class="acts"><button class="btn" data-ginvshare ${full?'disabled':''}>${full?'已達邀請上限':'分享邀請連結'}</button><button class="btn ghost" data-ginvcopy>複製連結</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>
+   <p class="g-note">朋友必須是第一次使用的新帳號才算數。訂製機會沒有使用期限。</p>`)}
+const invText=()=>gz('「女人，妳朋友叫妳來背單字。」')+'用霸總小說背多益、雅思、GRE 單字。從我的連結加入，我們都能免費訂製一篇自己當主角的霸總小說：';
+async function invCopy(){try{await navigator.clipboard.writeText(invText()+invLink());toast('已複製邀請連結')}catch(e){const el=document.getElementById('gInvLink');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}toast('請長按選取連結後複製')}}
+async function invShare(){gcEvent('invite-share','邀請分享');if(navigator.share){try{await navigator.share({text:invText()+invLink()});return}catch(e){if(e&&e.name==='AbortError')return}}invCopy()}
+function invRefBar(){return (!GROW_TEST&&rawStore.get('ref','')&&!rawStore.get('refDone',0)&&!sbUser)?`<button class="g-refbar" data-loginwhy>朋友送你一次訂製霸總情人：用 Google 登入就能領取 ›</button>`:''}
+(()=>{try{const r=(new URLSearchParams(location.search).get('ref')||'').replace(/[^A-Za-z0-9]/g,'').slice(0,12).toUpperCase();if(r&&!rawStore.get('ref','')&&!rawStore.get('refDone',0)){rawStore.set('ref',r);gcEvent('invite-land','邀請連結進站')}}catch(e){}})();
+/* 訂製霸總情人：沒有通行證時，用邀請送的機會 */
+(()=>{const _build=cbBuild,_note=cbNote,_rg=renderGames;const CG=GM_GAMES.find(x=>x.id==='custom');const D0=CG?CG.desc:'';
+  cbBuild=function(){if(gamePass)return _build();if(cgLeft()<=0){cgNone();return}const b=cbUsed();_build();if(cbUsed()>b){const g=cgGet();g.used++;rawStore.set('cbGift',g)}};
+  cbNote=function(){return gamePass?_note():`邀請好友送的訂製機會・還剩 <b>${cgLeft()}</b> 次`};
+  renderGames=function(){if(CG)CG.desc=(!gamePass&&cgLeft())?`你有 ${cgLeft()} 次邀請好友送的訂製機會，點進來使用`:D0;_rg()};
+})();
+function cgNone(){openModal(`<span class="kicker">訂製霸總情人</span><h2>訂製機會用完了</h2><p>每邀請 1 位朋友，就再得 1 次。想無限訂製，可以開通遊戲通行證。</p><div class="acts"><button class="btn" data-ginv>邀請好友</button>${passBuy()}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-gopen="custom"]');if(!t||gamePass||cgLeft()<=0)return;e.stopPropagation();e.preventDefault();cbOpen()},true);
+
+/* ---------- 命定霸總測驗 ---------- */
+const QB_Q=[
+ {q:'下班時間，他傳來一句話。妳最希望是哪一句？',a:[['「十分鐘後樓下，車在等。」','ice'],['「妳在哪？我已經到了。」','hunt'],['「今天累不累？我煮了湯。」','guard'],['「……沒事，只是想知道妳吃了沒。」','regret']]},
+ {q:'你們大吵一架之後，他會怎麼做？',a:[['讓秘書送來一份「道歉合約」','ice'],['把妳堵在門口，不准妳走','hunt'],['先低頭，抱著妳說是他的錯','guard'],['冷戰三天，然後淋著雨站在妳家樓下','regret']]},
+ {q:'妳在公司被欺負，他的反應是？',a:[['隔天，那間公司被他收購了','ice'],['當眾牽起妳的手，宣示主權','hunt'],['默默把事情全擋下來，不讓妳知道','guard'],['嘴上說妳活該，轉身就去替妳討公道','regret']]},
+ {q:'他送妳的禮物，最可能是什麼？',a:[['一張沒有額度上限的卡','ice'],['一枚戴上就拿不下來的戒指','hunt'],['妳只隨口提過一次的小東西','guard'],['三年前就買好、一直沒送出去的項鍊','regret']]},
+ {q:'最後一題。妳最想聽他親口說哪一句？',a:[['「我的時間很貴，但對妳免費。」','ice'],['「妳逃到哪，我就追到哪。」','hunt'],['「這一世，換我保護妳。」','guard'],['「我後悔了，回來好不好。」','regret']]}];
+const QB_T={
+ ice:{n:'冰山總裁型',img:7,l:'這份合約，我說了算。妳也是。',d:'話少、效率高，習慣用行動解決一切。他不說喜歡，只會把整個世界安排好放在妳面前。',w:[['dominate','支配'],['contract','合約'],['acquire','收購']],t:'ielts',s:1,st:'經典霸總・雅思'},
+ hunt:{n:'強勢掠奪型',img:6,l:'這麼晚了，還想去哪？',d:'佔有慾強，妳退一步他就進三步。你追我逃、插翅難飛，是他最擅長的劇本。',w:[['pursue','追逐'],['possess','擁有'],['escape','逃脫']],t:'serial',s:1,st:'長篇連載《霸總虐戀全餐》・多益'},
+ guard:{n:'深情守護型',img:2,l:'日落只有一次，我只想跟妳一起看。',d:'前世沒能護住妳，這一世他什麼都不要，只要妳平安。溫柔是他唯一的手段。',w:[['protect','保護'],['devoted','深情的'],['cherish','珍惜']],t:'rebirth',s:1,st:'重生短劇・雅思'},
+ regret:{n:'追妻火葬場型',img:3,l:'冷？外套給妳，人也給妳。',d:'嘴硬心軟，失去之後才知道後悔。從高高在上到放下身段追回妳，是他的必經之路。',w:[['regret','後悔'],['stubborn','固執的'],['reconcile','和好']],t:'serialielts',s:1,st:'長篇連載《霸總追妻火葬場》・雅思'}};
+let qb=null;
+function qbStart(){qb={i:0,sc:{ice:0,hunt:0,guard:0,regret:0}};gcEvent('bossquiz-start','命定霸總測驗開始');qbRender()}
+function qbRender(){const Q0=QB_Q[qb.i];openModal(`<span class="kicker">命定霸總測驗・${qb.i+1} / ${QB_Q.length}</span><div class="qb-prog">${QB_Q.map((_,i)=>`<i class="${i<=qb.i?'on':''}"></i>`).join('')}</div><h2 style="font-size:19px;line-height:1.5">${esc(gz(Q0.q))}</h2><div class="qb-opts">${Q0.a.map((a,i)=>`<button data-qbpick="${i}">${esc(gz(a[0]))}</button>`).join('')}</div><button class="linkbtn" data-close style="align-self:center">下次再測</button>`)}
+function qbPick(i){const a=QB_Q[qb.i].a[i];qb.sc[a[1]]++;qb.last=a[1];qb.i++;if(qb.i<QB_Q.length)qbRender();else qbResult()}
+function qbType(){const o=['ice','hunt','guard','regret'];let best=o[0];for(const k of o)if(qb.sc[k]>qb.sc[best])best=k;const top=o.filter(k=>qb.sc[k]===qb.sc[best]);return top.includes(qb.last)?qb.last:best}
+function qbResult(k){k=k||qbType();const T=QB_T[k];rawStore.set('qbType',k);gcEvent('bossquiz-'+k,'命定霸總：'+T.n);
+  openModal(`<div class="qb-res"><img src="${collSrc(T.img)}" alt="${esc(T.n)}"><div><small>${gz('妳的命定霸總')}</small><b>${esc(T.n)}</b><q>「${esc(gz(T.l))}」</q></div></div>
+   <p style="text-align:left">${esc(gz(T.d))}</p>
+   <span class="g-note" style="text-align:center">他會陪你背的單字</span><div class="qb-words">${T.w.map(w=>`<span>${w[0]}　${w[1]}</span>`).join('')}</div>
+   <div class="acts"><button class="btn" data-qbread="${k}">看他的故事（免費）</button><button class="btn ghost" data-qbshare="${k}">分享我的結果</button><button class="linkbtn" data-qbagain style="align-self:center">再測一次</button></div>
+   <p class="g-note" style="text-align:center">推薦：${esc(T.st)}</p>`,true)}
+function qbRead(k){const T=QB_T[k];closeModal();if(!TRACKS[T.t])return;loadTrack(T.t);const s=byId[T.s];if(!s){go('list');return}
+  if(!isLocked(s)&&canRead(T.s)){noteRead(T.s);go('read',{id:T.s,mode:'learn',from:'list'})}else go('intro',{id:T.s,from:'list'})}
+async function qbShare(k){const T=QB_T[k];let b;try{b=await makeCard({h:1920,y:1130,img:collSrc(T.img),lines:[{t:gz('我的命定霸總'),f:'700 50px',lh:70,c:'#F2C6D4',gap:8},{t:T.n,f:'900 104px',lh:130,sh:1,gap:18},{t:'「'+gz(T.l)+'」',f:'800 52px',lh:74,sh:1,gap:20},{t:T.w.map(w=>w[0]+' '+w[1]).join('　'),f:'700 40px',lh:60,c:'#F2C6D4'}]})}catch(e){toast('圖卡產生失敗');return}
+  gcEvent('bossquiz-share','命定霸總分享');shareCard(b,'我的命定霸總是「'+T.n+'」！5 題測出你的：'+GROW_BASE+'?quiz=boss',T.n+'.jpg')}
+const GROW_Q=(()=>{try{return new URLSearchParams(location.search).get('quiz')==='boss'}catch(e){return false}})();
+
+/* ---------- 霸總契約（考試倒數） ---------- */
+const EX_LIST=['多益','雅思','GRE','其他'];
+let exDraft=null;
+const exGet=()=>rawStore.get('exam',null);
+const exToday=()=>(days[dkey()]||[]).length;
+function exKept(c){let n=0,d=new Date(c.at+'T00:00:00');const end=dkey();for(let i=0;i<400;i++){const k=dkey(d);if(k>end||k>c.d)break;if((days[k]||[]).length>=c.g)n++;d=addDays(d,1)}return n}
+function exLine(c,left,done){const N=c.g;if(left<0)return '考完了？成績出來，第一個告訴我。';if(left===0)return '今天上考場。別緊張，妳背過的每個字，我都陪過。';if(done>=N)return '很好。今天的妳，沒讓我失望。';
+  const y=dkey(addDays(new Date(),-1));if(y>=c.at&&(days[y]||[]).length<N)return '昨天妳違約了。今天，加倍還我。';
+  return left<=7?'只剩 '+left+' 天。今天的 '+N+' 篇沒讀完，別想睡。':'今天的 '+N+' 篇還沒讀完。女人，別讓我說第二次。'}
+function exCard(){const c=exGet();if(!c)return '';const left=gDay(dkey(),c.d),done=exToday(),pct=Math.min(100,Math.round(done/c.g*100));
+  return `<div class="pact"><span class="eyebrow">霸總契約・${esc(c.ex)}</span>
+   <div class="cd">${left>0?`<span>距離考試還有</span><b>${left}</b><span>天</span>`:left===0?'<b>今天</b><span>考試日</span>':'<b>已結束</b><span>考試日已過</span>'}</div>
+   ${left>=0?`<div class="prow"><span>今日進度 ${Math.min(done,c.g)} / ${c.g} 篇</span><span>已履約 ${exKept(c)} 天</span></div><div class="bar"><i style="width:${pct}%"></i></div>`:`<div class="prow"><span>共履約 ${exKept(c)} 天</span></div>`}
+   <q>「${esc(gz(exLine(c,left,done)))}」</q>
+   <div class="acts">${left>=0&&done<c.g?`<button data-tab-go="plan">去讀今天的故事</button>`:''}<button class="gh" data-gexam>${left<0?'重新簽約':'修改契約'}</button></div></div>`}
+function exOpen(){const c=exGet();const tm=dkey(addDays(new Date(),1));exDraft=c?{ex:c.ex,d:c.d<tm?'':c.d,g:c.g}:{ex:TRACKS[track].exam||'多益',d:'',g:1};if(!EX_LIST.includes(exDraft.ex))exDraft.ex='其他';exRender()}
+function exRender(){const c=exGet(),d=exDraft;const tm=dkey(addDays(new Date(),1));const maxFree=FREE_DAILY;
+  openModal(`<span class="kicker">霸總契約</span><h2>${gz('簽了，就別想反悔')}</h2>
+   <div class="g-form">
+    <div><span class="lab">考試類型</span><div class="g-chips">${EX_LIST.map(x=>`<button data-gexex="${x}" aria-pressed="${d.ex===x}">${x}</button>`).join('')}</div></div>
+    <div><label for="gExDate">考試日期</label><input type="date" id="gExDate" min="${tm}" value="${d.d}"></div>
+    <div><span class="lab">每天要讀幾篇</span><div class="g-chips">${[1,2,3].map(n=>`<button data-gexg="${n}" aria-pressed="${d.g===n}" ${!unlocked&&n>maxFree?'disabled':''}>${n} 篇${!unlocked&&n>maxFree?'（完整版）':''}</button>`).join('')}</div></div>
+    <div class="g-terms"><b>契約內容</b><br>甲方（霸總）：每天盯著乙方，直到考試那天。<br>乙方（${gz('妳')}）：每天讀完 <b>${d.g}</b> 篇故事並標記已讀。<br>違約責任：隔天會被霸總唸。</div>
+   </div>
+   <div class="acts"><button class="btn" data-gexsign>${c?'更新契約':'簽約'}</button>${c?'<button class="btn ghost" data-gexend>解除契約</button>':''}<button class="linkbtn" data-gset style="align-self:center">回到設定</button></div>
+   <p class="g-note">契約只存在這台裝置。首頁會顯示倒數天數與今日進度，不會主動跳出提醒。想收到通知，請到右上角齒輪的「提醒通知」另外開啟。</p>`)}
+function exKeepDate(){const el=document.getElementById('gExDate');if(el&&exDraft)exDraft.d=el.value||''}
+function exSign(){exKeepDate();const d=exDraft,tm=dkey(addDays(new Date(),1));if(!d.d){toast('請選考試日期');return}if(d.d<tm){toast('考試日期要選明天以後');return}
+  const c=exGet();rawStore.set('exam',{ex:d.ex,d:d.d,g:d.g,at:c&&c.at?c.at:dkey()});gcEvent('pact-sign','霸總契約簽約');closeModal();if(state.view==='home')render();else go('home');
+  setTimeout(()=>bossToast(gz('「契約成立。從今天起，妳的時間歸我管。」')),300)}
+function exEnd(){rawStore.set('exam',null);if(state.view==='home')render();setOpen();toast('考試倒數已解除')}
+
+/* ---------- 設定（首頁右上角齒輪）：提醒通知＋考試倒數＋其他 ---------- */
+const PUSH_LINES={
+ daily:['女人，今天的單字還沒背。給妳十分鐘。','三天沒來了。妳當我這裡是什麼地方？','我的時間很貴，但我願意等妳背完這一篇。','手機滑夠了沒？現在，打開故事。','不要考驗我的耐心。今天那篇，還沒讀。','誰准妳今天偷懶了？','單字背完再睡，這是命令。','我讓秘書清空了行程，就等妳來背單字。','妳的進度停在昨天。我不喜歡等。','別讓我親自去找妳。今天的故事，現在讀。','一篇故事，十分鐘。這點時間，妳給得起。','背完今天的單字，我就准妳休息。','整座城市的燈都亮了，只有妳的進度還暗著。','我說過，妳的時間歸我管。現在，十分鐘。'],
+ serial:['連載更新了。新的一集，我只讓妳第一個看。','新的一集上線了。妳還想讓我等多久？','他又出手了。下一集，現在就來看。','劇情到了最關鍵的地方，妳確定要睡？'],
+ exam:['距離{ex}還有 {n} 天。今天的 {g} 篇，讀完再睡。','還剩 {n} 天。我不接受「來不及」這三個字。','{n} 天後上考場。現在多背一個字，那天就少慌一秒。','契約還在，倒數 {n} 天。今天妳打算違約嗎？','{ex}倒數 {n} 天。我等妳拿高分回來。','只剩 {n} 天了。今天的 {g} 篇，一篇都不准少。']};
+const PUSH_LIVE=false;
+const pushGet=()=>Object.assign({on:false,time:'21:00',daily:true,serial:true,exam:true},rawStore.get('push',null)||{});
+const pushSet=v=>rawStore.set('push',v);
+function pushNext(kinds){const p=rawStore.get('pushIdx',{}),c=exGet();kinds=kinds.filter(k=>k!=='exam'||(c&&gDay(dkey(),c.d)>=0));if(!kinds.length)return null;
+  const turn=(p._t||0)%kinds.length,k=kinds[turn];const L=PUSH_LINES[k],i=(p[k]||0)%L.length;p[k]=i+1;p._t=(p._t||0)+1;rawStore.set('pushIdx',p);
+  let t=L[i];if(k==='exam'){const left=gDay(dkey(),c.d);t=t.replace(/\{n\}/g,left).replace(/\{ex\}/g,c.ex==='其他'?'考試':c.ex).replace(/\{g\}/g,c.g)}
+  return [{daily:'每日催背',serial:'連載更新',exam:'考試倒數'}[k],gz(t)]}
+let pushEl=null;
+function pushPreview(){const p=pushGet();const x=pushNext(PUSH_LIVE||GROW_TEST?['daily','serial','exam'].filter(k=>p[k]):['daily','serial','exam']);if(!x){toast('請至少開一種提醒');return}
+  if(!pushEl){pushEl=document.createElement('div');pushEl.className='g-push';pushEl.setAttribute('role','status');document.body.appendChild(pushEl)}
+  pushEl.innerHTML=`<img src="${BOSS_IMGS[0]}" alt=""><div><b>霸總教你背單字・${esc(x[0])}</b><span>${esc(x[1])}</span></div><small>${PUSH_LIVE||GROW_TEST?esc(p.time):'預覽'}</small>`;
+  requestAnimationFrame(()=>pushEl.classList.add('on'));clearTimeout(pushPreview.t);pushPreview.t=setTimeout(()=>pushEl.classList.remove('on'),4200);
+  try{if(!GROW_TEST&&window.Notification&&Notification.permission==='granted')new Notification('霸總教你背單字',{body:x[1]})}catch(e){}}
+async function pushToggle(){const p=pushGet();if(p.on){p.on=false;pushSet(p);setOpen();return}
+  if(!GROW_TEST){if(IS_IOS&&!IS_STANDALONE){pushNeedA2hs();return}
+    if(!('Notification' in window)){toast('這個瀏覽器不支援通知');return}
+    let perm=Notification.permission;if(perm==='default'){try{perm=await Notification.requestPermission()}catch(e){perm='denied'}}
+    if(perm!=='granted'){openModal(`<span class="kicker">提醒通知</span><h2>通知權限被關閉了</h2><p>請到手機的「設定 → 通知」或瀏覽器的網站設定，允許本站傳送通知，再回來開啟。</p><div class="acts"><button class="btn" data-gset>回到設定</button></div>`);return}}
+  p.on=true;pushSet(p);gcEvent('push-on','開啟提醒');setOpen();setTimeout(pushPreview,350)}
+function pushNeedA2hs(){openModal(`<span class="kicker">提醒通知</span><h2>iPhone 要先加到桌面</h2><p>iPhone 只允許「加到主畫面」的 App 傳送通知。先把 App 加到桌面，從桌面圖示打開後，再到設定開啟提醒。</p><div class="acts"><button class="btn" data-a2hs>看加到桌面的步驟</button><button class="linkbtn" data-gset style="align-self:center">回到設定</button></div>`)}
+function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button class="g-sw" role="switch" aria-checked="${!!p[k]&&!dis}" data-gpsw="${k}" ${dis?'disabled':''}><span><b>${t}</b><small>${s}</small></span><i></i></button>`;
+  const left=c?gDay(dkey(),c.d):null;
+  openModal(`<span class="kicker">設定</span>
+   <section class="g-sec"><h3>提醒通知</h3>
+    ${PUSH_LIVE||GROW_TEST?'':`<div class="g-row"><span><b>即將開放</b><small>霸總會在妳選的時間傳通知催妳背單字，現在可以先預覽他會說什麼</small></span><button class="g-mini" data-gpprev>預覽</button></div>`}
+    <div ${PUSH_LIVE||GROW_TEST?'':'hidden'}>
+    <button class="g-sw" role="switch" aria-checked="${p.on}" data-gptoggle><span><b>開啟提醒</b><small>${p.on?'每天 '+esc(p.time)+' 提醒，霸總的話每次輪流換':'目前關閉'}</small></span><i></i></button>
+    <div class="g-sub" ${p.on?'':'hidden'}>
+     <label class="g-time" for="gPushTime"><span>提醒時間</span><input type="time" id="gPushTime" value="${esc(p.time)}" step="300"></label>
+     ${sw('daily','每日催背','當天還沒讀故事才會提醒')}
+     ${sw('serial','連載更新','長篇連載有新的一集時通知')}
+     ${sw('exam','考試倒數',c?'依照霸總契約，提醒剩餘天數':'要先在下方設定考試倒數',!c)}
+     <button class="btn ghost" data-gpprev>預覽一則通知</button>
+    </div></div></section>
+   <section class="g-sec"><h3>考試倒數</h3>
+    ${c?`<div class="g-row"><span><b>${esc(c.ex)}・${c.d.slice(5).replace('-','/')}</b><small>${left>0?'還有 '+left+' 天':left===0?'今天考試':'考試日已過'}・每天 ${c.g} 篇</small></span><button class="g-mini" data-gexam>修改</button></div>`
+       :`<div class="g-row"><span><b>還沒設定</b><small>和霸總簽約，首頁會顯示倒數與每日進度</small></span><button class="g-mini" data-gexam>設定</button></div>`}
+   </section>
+   <section class="g-sec"><h3>其他</h3>
+    <div class="g-row"><span><b>朗讀聲音</b><small>選擇英文與中文的朗讀聲音</small></span><button class="g-mini" data-voicepick>選擇</button></div>
+    <div class="g-row"><span><b>使用教學</b><small>7 步看懂怎麼用</small></span><button class="g-mini" data-tour>查看</button></div>
+   </section>
+   <div class="acts"><button class="btn" data-close>完成</button></div>
+   ${GROW_TEST?'<p class="g-note">測試版：通知用畫面上方的模擬通知示範。正式上線後才會真的傳到手機通知列。</p><button class="g-test" data-gtest>測試工具</button>':''}`)}
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='gPushTime'){const v=e.target.value;if(/^\d{2}:\d{2}$/.test(v)){const p=pushGet();p.time=v;pushSet(p);const s=document.querySelector('[data-gptoggle] small');if(s)s.textContent='每天 '+v+' 提醒，霸總的話每次輪流換';toast('提醒時間改成 '+v)}}});
+const GEAR=`<button class="gearbtn" data-gset aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>`;
+
+/* 所有提示小視窗右上角加一個關閉叉叉 */
+(()=>{const _om=openModal;openModal=function(html,burst){_om(html,burst);if(!modalBox.querySelector(':scope>.mx')){const b=document.createElement('button');b.className='mx';b.type='button';b.setAttribute('data-close','');b.setAttribute('aria-label','關閉');b.textContent='×';modalBox.appendChild(b)}}})();
+
+/* ---------- 首頁與遊戲間入口 ---------- */
+function growHome(){const v=invGet();const c=cgToClaim(),l=cgLeft();
+  return `<section class="grow" aria-label="邀請與考試倒數">${invRefBar()}${exCard()}
+   <button class="g-inv" data-ginv><span class="ic"><img src="img/custom_teaser.jpg?v=43a0434e" alt=""></span><span><b>邀請好友・送你訂製霸總情人</b><small>${c?'有 '+c+' 次訂製機會可以領取':l&&!gamePass?'還有 '+l+' 次訂製機會・已邀請 '+v.n+' 位':'你和朋友各得 1 次，用自己的名字當霸總小說主角'}</small></span>${c?'<span class="g-dot">領取</span>':'<span class="go" aria-hidden="true">›</span>'}</button>
+   ${GROW_TEST?'<button class="g-test" data-gtest>測試工具</button>':''}</section>`}
+GM_GAMES.unshift({id:'bossquiz',ic:'♛',name:'命定霸總測驗<span class="gm-hot gm-new">免費</span>',desc:'5 題測出妳的命定霸總類型，結果可以存成圖卡分享・不扣試玩次數'});
+function growTest(){openModal(`<span class="kicker">測試工具</span><h2>只有測試版看得到</h2>
+  <div class="acts">
+   <button class="btn ghost" data-gsimfriend>模擬一位朋友用我的連結加入</button>
+   <button class="btn ghost" data-gsimme>模擬我是被朋友邀請來的</button>
+   <button class="btn ghost" data-gsimmiss>考試倒數：模擬昨天沒讀（違約）</button>
+   <button class="btn ghost" data-gsimsoon>考試倒數：改成 3 天後考試</button>
+   <button class="btn ghost" data-gsimclear>清除新功能的全部資料</button>
+   <button class="linkbtn" data-close style="align-self:center">關閉</button></div>`)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-gopen="bossquiz"]');if(!t)return;e.stopPropagation();e.preventDefault();qbStart()},true);
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+  if('gset' in d){setOpen();return}
+  if('gquiz' in d){qbStart();return}
+  if(d.qbpick!==undefined){qbPick(+d.qbpick);return}
+  if(d.qbread){qbRead(d.qbread);return}
+  if(d.qbshare){qbShare(d.qbshare);return}
+  if('qbagain' in d){qbStart();return}
+  if('ginv' in d){invOpen();return}
+  if('gclaim' in d){cgClaim();return}
+  if('gcbgo' in d){cgGo();return}
+  if('ginvcopy' in d){invCopy();return}
+  if('ginvshare' in d){invShare();return}
+  if('gexam' in d){exOpen();return}
+  if(d.gexex){exKeepDate();exDraft.ex=d.gexex;exRender();return}
+  if(d.gexg){exKeepDate();exDraft.g=+d.gexg;exRender();return}
+  if('gexsign' in d){exSign();return}
+  if('gexend' in d){exEnd();return}
+  if('gptoggle' in d){pushToggle();return}
+  if(d.gpsw){if(t.disabled)return;const p=pushGet();p[d.gpsw]=!p[d.gpsw];pushSet(p);setOpen();return}
+  if('gpprev' in d){pushPreview();return}
+  if(GROW_TEST){
+   if('gtest' in d){growTest();return}
+   if('gsimfriend' in d){invCode();const v=invGet();if(v.n>=INV_MAX){toast('已達邀請上限');return}v.n++;invSet(v);if(state.view==='home')render();invGot();return}
+   if('gsimme' in d){const v=invGet();if(v.by){toast('已經模擬過了');return}v.by=true;invSet(v);if(state.view==='home')render();invWelcome();return}
+   if('gsimmiss' in d){const c=exGet();if(!c){toast('請先到設定簽考試倒數');return}c.at=dkey(addDays(new Date(),-3));rawStore.set('exam',c);const y=dkey(addDays(new Date(),-1));delete days[y];rawStore.set('days',days);closeModal();go('home');return}
+   if('gsimsoon' in d){const c=exGet();if(!c){toast('請先到設定簽考試倒數');return}c.d=dkey(addDays(new Date(),3));rawStore.set('exam',c);closeModal();go('home');return}
+   if('gsimclear' in d){['inv','ref','refDone','exam','push','pushIdx','qbType','cbGift'].forEach(k=>{try{localStorage.removeItem('dqs.'+k)}catch(e){}});closeModal();go('home');toast('已清除');return}
+  }
+});
+
+/* GROW_MOD_END */
 go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
 (async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
-  if(hasSbHint()||PAID_NO||PAYGO)syncAccount();
-  setTimeout(()=>{if(window.__mvWait)return;if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
+  if(hasSbHint()||PAID_NO||PAYGO)syncAccount().then(()=>invSync()).catch(()=>{});
+  setTimeout(()=>{if(window.__mvWait)return;if(GROW_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}if(firstVisit)rawStore.set('tour1',0);go('games');setTimeout(qbStart,300);return}if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 });
 </script>
