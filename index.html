@@ -984,7 +984,7 @@ function render(){
 function renderHome(){
   const nRead=Object.keys(readSet).length;
   const tid=todayLesson();
-  const demo=firstSentence(S.find(x=>x.paras)||TRACKS.toeic.stories[0]);
+  const demo=firstSentence((()=>{const R=S.filter(x=>x.paras);return R[2]||R[0]||TRACKS.toeic.stories[0]})());
   const cont=last&&byId[last.id]&&last.id!==tid&&!readSet[last.id]?`<button class="continue" data-go-intro="${last.id}"><span class="no">${String(last.id).padStart(2,'0')}</span><div><span class="eyebrow">繼續閱讀</span><strong>${esc(byId[last.id].title)}</strong></div></button>`:'';
   app.innerHTML=`<div class="view">
   <section class="hero">
