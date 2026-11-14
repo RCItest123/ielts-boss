@@ -2659,16 +2659,16 @@ function exRender(){const c=exGet(),d=exDraft;const tm=dkey(addDays(new Date(),1
    <p class="g-note">契約只存在這台裝置。首頁會顯示倒數天數與今日進度，不會主動跳出提醒。想收到通知，請到右上角齒輪的「提醒通知」另外開啟。</p>`)}
 function exKeepDate(){const el=document.getElementById('gExDate');if(el&&exDraft)exDraft.d=el.value||''}
 function exSign(){exKeepDate();const d=exDraft,tm=dkey(addDays(new Date(),1));if(!d.d){toast('請選考試日期');return}if(d.d<tm){toast('考試日期要選明天以後');return}
-  const c=exGet();rawStore.set('exam',{ex:d.ex,d:d.d,g:d.g,at:c&&c.at?c.at:dkey()});gcEvent('pact-sign','霸總契約簽約');closeModal();if(state.view==='home')render();else go('home');
+  const c=exGet();rawStore.set('exam',{ex:d.ex,d:d.d,g:d.g,at:c&&c.at?c.at:dkey()});pushSave();gcEvent('pact-sign','霸總契約簽約');closeModal();if(state.view==='home')render();else go('home');
   setTimeout(()=>bossToast(gz('「契約成立。從今天起，妳的時間歸我管。」')),300)}
-function exEnd(){rawStore.set('exam',null);if(state.view==='home')render();setOpen();toast('考試倒數已解除')}
+function exEnd(){rawStore.set('exam',null);pushSave();if(state.view==='home')render();setOpen();toast('考試倒數已解除')}
 
 /* ---------- 設定（首頁右上角齒輪）：提醒通知＋考試倒數＋其他 ---------- */
 const PUSH_LINES={
  daily:['女人，今天的單字還沒背。給妳十分鐘。','三天沒來了。妳當我這裡是什麼地方？','我的時間很貴，但我願意等妳背完這一篇。','手機滑夠了沒？現在，打開故事。','不要考驗我的耐心。今天那篇，還沒讀。','誰准妳今天偷懶了？','單字背完再睡，這是命令。','我讓秘書清空了行程，就等妳來背單字。','妳的進度停在昨天。我不喜歡等。','別讓我親自去找妳。今天的故事，現在讀。','一篇故事，十分鐘。這點時間，妳給得起。','背完今天的單字，我就准妳休息。','整座城市的燈都亮了，只有妳的進度還暗著。','我說過，妳的時間歸我管。現在，十分鐘。'],
  serial:['連載更新了。新的一集，我只讓妳第一個看。','新的一集上線了。妳還想讓我等多久？','他又出手了。下一集，現在就來看。','劇情到了最關鍵的地方，妳確定要睡？'],
  exam:['距離{ex}還有 {n} 天。今天的 {g} 篇，讀完再睡。','還剩 {n} 天。我不接受「來不及」這三個字。','{n} 天後上考場。現在多背一個字，那天就少慌一秒。','契約還在，倒數 {n} 天。今天妳打算違約嗎？','{ex}倒數 {n} 天。我等妳拿高分回來。','只剩 {n} 天了。今天的 {g} 篇，一篇都不准少。']};
-const PUSH_LIVE=false;
+const PUSH_LIVE=true;
 const pushGet=()=>Object.assign({on:false,time:'21:00',daily:true,serial:true,exam:true},rawStore.get('push',null)||{});
 const pushSet=v=>rawStore.set('push',v);
 function pushNext(kinds){const p=rawStore.get('pushIdx',{}),c=exGet();kinds=kinds.filter(k=>k!=='exam'||(c&&gDay(dkey(),c.d)>=0));if(!kinds.length)return null;
@@ -2681,12 +2681,37 @@ function pushPreview(){const p=pushGet();const x=pushNext(PUSH_LIVE||GROW_TEST?[
   pushEl.innerHTML=`<img src="${BOSS_IMGS[0]}" alt=""><div><b>霸總教你背單字・${esc(x[0])}</b><span>${esc(x[1])}</span></div><small>${PUSH_LIVE||GROW_TEST?esc(p.time):'預覽'}</small>`;
   requestAnimationFrame(()=>pushEl.classList.add('on'));clearTimeout(pushPreview.t);pushPreview.t=setTimeout(()=>pushEl.classList.remove('on'),4200);
   try{if(!GROW_TEST&&window.Notification&&Notification.permission==='granted')new Notification('霸總教你背單字',{body:x[1]})}catch(e){}}
-async function pushToggle(){const p=pushGet();if(p.on){p.on=false;pushSet(p);setOpen();return}
-  if(!GROW_TEST){if(IS_IOS&&!IS_STANDALONE){pushNeedA2hs();return}
-    if(!('Notification' in window)){toast('這個瀏覽器不支援通知');return}
+/* 真正的推播：背景程式 sw.js ＋ Supabase（push_save／push_read／push_delete）＋ 排程 push-send */
+const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const u8k=b=>{const s=b.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((b.length+3)%4);const r=atob(s);return Uint8Array.from(r,c=>c.charCodeAt(0))};
+async function pushReg(){const reg=await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;return reg}
+async function pushSub(create){const reg=await pushReg();let sub=await reg.pushManager.getSubscription();
+  if(!sub&&create){await sbInit();const r=await sb.rpc('push_pubkey');if(!r||!r.data)throw new Error('nokey');sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8k(r.data)})}
+  return sub}
+async function pushSaveNow(){const p=pushGet();if(!p.on||GROW_TEST||!PUSH_LIVE||!pushOK())return;try{const sub=await pushSub(false);if(!sub)return;const j=sub.toJSON(),c=exGet();await sbInit();
+  await sb.rpc('push_save',{p:{endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,time:p.time,daily:!!p.daily,serial:!!p.serial,exam:!!(p.exam&&c),exam_date:c?c.d:null,exam_name:c?c.ex:null,exam_goal:c?c.g:1,bl:isBL()}});
+  rawStore.set('pushEp',j.endpoint)}catch(e){}}
+function pushSave(){clearTimeout(pushSave.t);pushSave.t=setTimeout(pushSaveNow,600)}
+async function pushReadNow(){const ep=rawStore.get('pushEp','');if(!ep||!pushGet().on||GROW_TEST)return;try{await sbInit();await sb.rpc('push_read',{p_endpoint:ep,p_day:dkey()})}catch(e){}}
+async function pushToggle(){const p=pushGet();
+  if(p.on){p.on=false;pushSet(p);setOpen();if(!GROW_TEST&&pushOK()){try{const sub=await pushSub(false);const ep=sub?sub.endpoint:rawStore.get('pushEp','');if(sub)await sub.unsubscribe();await sbInit();if(ep)await sb.rpc('push_delete',{p_endpoint:ep})}catch(e){}}rawStore.set('pushEp','');return}
+  if(!GROW_TEST){
+    if(IS_IOS&&!IS_STANDALONE){pushNeedA2hs();return}
+    if(!pushOK()){openModal(`<span class="kicker">提醒通知</span><h2>這個瀏覽器收不到通知</h2><p>請改用手機的 Chrome，或把 App 加到桌面後從桌面圖示打開，再來開啟提醒。</p><div class="acts"><button class="btn" data-gset>回到設定</button></div>`);return}
     let perm=Notification.permission;if(perm==='default'){try{perm=await Notification.requestPermission()}catch(e){perm='denied'}}
-    if(perm!=='granted'){openModal(`<span class="kicker">提醒通知</span><h2>通知權限被關閉了</h2><p>請到手機的「設定 → 通知」或瀏覽器的網站設定，允許本站傳送通知，再回來開啟。</p><div class="acts"><button class="btn" data-gset>回到設定</button></div>`);return}}
+    if(perm!=='granted'){openModal(`<span class="kicker">提醒通知</span><h2>通知權限被關閉了</h2><p>請到手機的「設定 → 通知」或瀏覽器的網站設定，允許本站傳送通知，再回來開啟。</p><div class="acts"><button class="btn" data-gset>回到設定</button></div>`);return}
+    toast('設定中…');
+    try{const sub=await pushSub(true);if(!sub)throw new Error('nosub');p.on=true;pushSet(p);await pushSaveNow();
+      const reg=await pushReg();reg.showNotification('霸總教你背單字',{body:gz('女人，通知設定好了。每天 '+p.time+'，我會準時來找妳。'),icon:'icon-192.png',badge:'icon-192.png',tag:'bz-test'});
+      if((days[dkey()]||[]).length)pushReadNow()}
+    catch(e){p.on=false;pushSet(p);toast('開啟失敗，請稍後再試');return}
+    gcEvent('push-on','開啟提醒');setOpen();return}
   p.on=true;pushSet(p);gcEvent('push-on','開啟提醒');setOpen();setTimeout(pushPreview,350)}
+async function pushStartup(){const p=pushGet();if(!p.on||GROW_TEST||!PUSH_LIVE)return;
+  if(!pushOK()||Notification.permission!=='granted'){if(pushOK()&&Notification.permission==='denied'){p.on=false;pushSet(p)}return}
+  try{await pushSub(true);await pushSaveNow();if((days[dkey()]||[]).length)pushReadNow()}catch(e){}}
+setTimeout(pushStartup,4000);
+document.addEventListener('click',e=>{if(e.target.closest('[data-done]'))setTimeout(pushReadNow,300)});
 function pushNeedA2hs(){openModal(`<span class="kicker">提醒通知</span><h2>iPhone 要先加到桌面</h2><p>iPhone 只允許「加到主畫面」的 App 傳送通知。先把 App 加到桌面，從桌面圖示打開後，再到設定開啟提醒。</p><div class="acts"><button class="btn" data-a2hs>看加到桌面的步驟</button><button class="linkbtn" data-gset style="align-self:center">回到設定</button></div>`)}
 function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button class="g-sw" role="switch" aria-checked="${!!p[k]&&!dis}" data-gpsw="${k}" ${dis?'disabled':''}><span><b>${t}</b><small>${s}</small></span><i></i></button>`;
   const left=c?gDay(dkey(),c.d):null;
@@ -2701,6 +2726,7 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
      ${sw('serial','連載更新','長篇連載有新的一集時通知')}
      ${sw('exam','考試倒數',c?'依照霸總契約，提醒剩餘天數':'要先在下方設定考試倒數',!c)}
      <button class="btn ghost" data-gpprev>預覽一則通知</button>
+     ${IS_IOS?'<p class="g-note">iPhone 要從桌面圖示打開 App，才收得到通知。</p>':''}
     </div></div></section>
    <section class="g-sec"><h3>考試倒數</h3>
     ${c?`<div class="g-row"><span><b>${esc(c.ex)}・${c.d.slice(5).replace('-','/')}</b><small>${left>0?'還有 '+left+' 天':left===0?'今天考試':'考試日已過'}・每天 ${c.g} 篇</small></span><button class="g-mini" data-gexam>修改</button></div>`
@@ -2712,7 +2738,7 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
    </section>
    <div class="acts"><button class="btn" data-close>完成</button></div>
    ${GROW_TEST?'<p class="g-note">測試版：通知用畫面上方的模擬通知示範。正式上線後才會真的傳到手機通知列。</p><button class="g-test" data-gtest>測試工具</button>':''}`)}
-document.addEventListener('change',e=>{if(e.target&&e.target.id==='gPushTime'){const v=e.target.value;if(/^\d{2}:\d{2}$/.test(v)){const p=pushGet();p.time=v;pushSet(p);const s=document.querySelector('[data-gptoggle] small');if(s)s.textContent='每天 '+v+' 提醒，霸總的話每次輪流換';toast('提醒時間改成 '+v)}}});
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='gPushTime'){const v=e.target.value;if(/^\d{2}:\d{2}$/.test(v)){const p=pushGet();p.time=v;pushSet(p);const s=document.querySelector('[data-gptoggle] small');if(s)s.textContent='每天 '+v+' 提醒，霸總的話每次輪流換';toast('提醒時間改成 '+v);pushSave()}}});
 const GEAR=`<button class="gearbtn" data-gset aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>`;
 
 /* 所有提示小視窗右上角加一個關閉叉叉 */
@@ -2751,7 +2777,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   if('gexsign' in d){exSign();return}
   if('gexend' in d){exEnd();return}
   if('gptoggle' in d){pushToggle();return}
-  if(d.gpsw){if(t.disabled)return;const p=pushGet();p[d.gpsw]=!p[d.gpsw];pushSet(p);setOpen();return}
+  if(d.gpsw){if(t.disabled)return;const p=pushGet();p[d.gpsw]=!p[d.gpsw];pushSet(p);setOpen();pushSave();return}
   if('gpprev' in d){pushPreview();return}
   if(GROW_TEST){
    if('gtest' in d){growTest();return}
