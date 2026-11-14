@@ -1360,13 +1360,13 @@ function openA2hs(){
 function siteURL(){return location.origin+location.pathname}
 function openInAppHint(code){
   const app=IS_LINE?'LINE':/Instagram/i.test(UA)?'Instagram':/Threads|Barcelona/i.test(UA)?'Threads':/FBAN|FBAV|FB_IAB|Messenger/i.test(UA)?'Facebook':'這個 App';
-  const ext=IS_LINE?siteURL()+'?openExternalBrowser=1':IS_ANDROID?'intent://'+location.host+location.pathname+'#Intent;scheme=https;package=com.android.chrome;end':'';
+  const _q=(typeof srcQS==='function'?srcQS():'');const ext=IS_LINE?siteURL()+(_q?_q+'&':'?')+'openExternalBrowser=1':IS_ANDROID?'intent://'+location.host+location.pathname+_q+'#Intent;scheme=https;package=com.android.chrome;end':'';
   openModal(`<span class="kicker">請改用瀏覽器開啟</span><h2>${app} 裡無法用 Google 登入</h2>
    <p>Google 不允許在 ${app} 的內建瀏覽器登入。請用 Safari 或 Chrome 打開網站，再輸入解鎖碼。</p>
    ${ext?`<a class="btn" href="${ext}" target="_blank" rel="noopener">用瀏覽器開啟</a>`:''}
    <ol class="inapp-steps"><li>點右上角（或右下角）的 <b>⋯</b> 選單</li><li>選「<b>在瀏覽器中開啟</b>」或「用 Safari／Chrome 開啟」</li><li>在新開的網頁按「輸入解鎖碼」</li></ol>
    ${code?`<div class="sharebox">${esc(code)}</div><button class="btn ghost shsm" data-copytxt="${esc(code)}">複製我的解鎖碼</button>`:''}
-   <button class="btn ghost shsm" data-copytxt="${esc(siteURL())}">複製網址，貼到瀏覽器</button>
+   <button class="btn ghost shsm" data-copytxt="${esc(siteURL()+_q)}">複製網址，貼到瀏覽器</button>
    <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
 async function sbLogin(){if(INAPP){openInAppHint(rawStore.get('pendingCode',null));return}try{await sbInit();await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}})}catch(e){toast('無法連線登入服務，請稍後再試')}}
 function lockDevice(limit){try{localStorage.removeItem('dqs.unlock');localStorage.removeItem('dqs.gpass')}catch(e){}if(limit)rawStore.set('devLimit',1);location.reload()}
@@ -2744,6 +2744,25 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
 document.addEventListener('change',e=>{if(e.target&&(e.target.id==='gPushH'||e.target.id==='gPushM')){const h=document.getElementById('gPushH'),m=document.getElementById('gPushM');if(!h||!m)return;const v=h.value+':'+m.value;const p=pushGet();p.time=v;pushSet(p);const s=document.querySelector('[data-gptoggle] small');if(s)s.textContent='每天 '+tFull(v)+' 提醒，霸總的話每次輪流換';toast('提醒時間改成 '+tFull(v));pushSave()}});
 const GEAR=`<button class="gearbtn" data-gset aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>`;
 
+/* ---------- 來源追蹤：記下訪客從哪裡來（Meta 廣告／Threads／Google…），登入時存到帳號，開通時一起記錄 ---------- */
+const SRC_KEYS=['utm_source','utm_medium','utm_campaign','utm_content','fbclid'];
+const srcKeep=(()=>{const keep={};try{const q=new URLSearchParams(location.search);SRC_KEYS.forEach(k=>{const v=q.get(k);if(v)keep[k]=v.slice(0,300)});
+  let r='';try{r=document.referrer?new URL(document.referrer).hostname:''}catch(e){}
+  if(r===location.hostname)r='';
+  const src=(keep.utm_source||(keep.fbclid?'meta':'')||r||'').toLowerCase().slice(0,60);
+  const info={src:src||'direct',camp:(keep.utm_campaign||'').slice(0,80),cont:(keep.utm_content||'').slice(0,80),fb:keep.fbclid?1:0,ref:r.slice(0,60),inapp:INAPP?1:0,land:location.pathname,at:new Date().toISOString()};
+  if(!rawStore.get('src1',null))rawStore.set('src1',info);
+  if(src)rawStore.set('srcL',info);
+  if(Object.keys(keep).length)rawStore.set('srcQ',keep)}catch(e){}return keep})();
+const srcQS=()=>{const k=Object.keys(srcKeep).length?srcKeep:(rawStore.get('srcQ',null)||{});const q=new URLSearchParams(k).toString();return q?'?'+q:''};
+/* 在 FB／IG／Threads 內建瀏覽器裡，把廣告參數留在網址上，使用者改用 Safari／Chrome 開啟時來源才不會斷掉 */
+if(INAPP)setTimeout(()=>{try{const q=srcQS();if(q&&!location.search.includes('utm_')&&!location.search.includes('fbclid'))history.replaceState(history.state,'',location.pathname+q+location.hash)}catch(e){}},1500);
+async function srcSync(){if(GROW_TEST)return;try{await sbInit();if(!sbUser)return;const f=rawStore.get('src1',null),l=rawStore.get('srcL',null);if(!f&&!l)return;
+  const sig=JSON.stringify([f&&f.at,l&&l.at]);if(rawStore.get('srcSent','')===sig)return;
+  await sb.rpc('src_save',{p_first:f,p_last:l});rawStore.set('srcSent',sig)}catch(e){}}
+(()=>{const _fb=fbBuy;fbBuy=function(pl,id){const k='fbBuy_'+(id||pl),first=!rawStore.get(k,0);_fb(pl,id);
+  if(first){try{const s=rawStore.get('srcL',null)||rawStore.get('src1',null);gcEvent('buy-src-'+(s?s.src+(s.camp?'-'+s.camp:''):'unknown').replace(/[^\w一-鿿.-]/g,'_').slice(0,60),'購買來源')}catch(e){}srcSync()}}})();
+
 /* 所有提示小視窗右上角加一個關閉叉叉 */
 (()=>{const _om=openModal;openModal=function(html,burst){_om(html,burst);if(!modalBox.querySelector(':scope>.mx')){const b=document.createElement('button');b.className='mx';b.type='button';b.setAttribute('data-close','');b.setAttribute('aria-label','關閉');b.textContent='×';modalBox.appendChild(b)}}})();
 
@@ -2797,7 +2816,7 @@ go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
 (async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
-  if(hasSbHint()||PAID_NO||PAYGO)syncAccount().then(()=>invSync()).catch(()=>{});
+  if(hasSbHint()||PAID_NO||PAYGO)syncAccount().then(()=>{invSync();srcSync()}).catch(()=>{});
   setTimeout(()=>{if(window.__mvWait)return;if(GROW_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}if(firstVisit)rawStore.set('tour1',0);go('games');setTimeout(qbStart,300);return}if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 });
