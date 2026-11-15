@@ -2750,6 +2750,8 @@ const SRC_KEYS=['utm_source','utm_medium','utm_campaign','utm_content','fbclid']
 const srcKeep=(()=>{const keep={};try{const q=new URLSearchParams(location.search);SRC_KEYS.forEach(k=>{const v=q.get(k);if(v)keep[k]=v.slice(0,300)});
   let r='';try{r=document.referrer?new URL(document.referrer).hostname:''}catch(e){}
   if(r===location.hostname||/(^|\.)(accounts\.google\.com|supabase\.co|portaly\.cc|ecpay\.com\.tw|bazonglearn\.com|rcitest123\.github\.io|pages\.dev)$/.test(r))r='';
+  const appSrc=/Barcelona|Threads/i.test(UA)?'threads':/Instagram/i.test(UA)?'instagram':/FBAN|FBAV|FB_IAB|Messenger/i.test(UA)?'facebook':/\bLine\//i.test(UA)?'line':'';
+  if(INAPP&&!keep.utm_source&&!keep.fbclid&&(appSrc||r)){keep.utm_source=(appSrc||r).slice(0,40);keep.utm_medium='inapp'}
   const src=(keep.utm_source||(keep.fbclid?'meta':'')||r||'').toLowerCase().slice(0,60);
   const info={src:src||'direct',camp:(keep.utm_campaign||'').slice(0,80),cont:(keep.utm_content||'').slice(0,80),fb:keep.fbclid?1:0,ref:r.slice(0,60),inapp:INAPP?1:0,land:location.pathname,at:new Date().toISOString()};
   {const l=rawStore.get('srcL',null);if(l&&/accounts\.google\.com/.test(l.src||''))rawStore.set('srcL',null)}
