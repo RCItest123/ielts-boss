@@ -18,8 +18,11 @@ self.addEventListener('push', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  const url = new URL((e.notification.data && e.notification.data.u) || './', self.registration.scope).href;
+  const u = new URL((e.notification.data && e.notification.data.u) || './', self.registration.scope);
   e.waitUntil((async () => {
+    // 有安裝 Android App 的手機：通知會由 App 打開，帶上 app=android 讓網頁進入 App 模式
+    try { if (await caches.match('/__app')) u.searchParams.set('app', 'android'); } catch (_) {}
+    const url = u.href;
     const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const w of wins) {
       if (w.url.startsWith(self.registration.scope) && 'focus' in w) return w.focus();

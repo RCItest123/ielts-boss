@@ -18,7 +18,8 @@
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "霸總教你背單字", "url": "https://en.bazonglearn.com/", "applicationCategory": "EducationalApplication", "operatingSystem": "Web", "inLanguage": "zh-Hant-TW", "description": "用原創霸道總裁小說背多益、雅思、GRE 單字。英文單字寫進劇情裡，點單字看音標、發音、同義字與例句。霸總、BL、壞壞版、片語版、長篇連載，還有單字遊戲幫你複習。", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "TWD"}}</script>
 <meta name="twitter:card" content="summary_large_image">
 <script data-goatcounter="https://hans.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
-<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','1129851603343374');fbq('init','1876581503503613');fbq('track','PageView');</script>
+<script>(function(){var a='';try{if(/[?&]app=android/.test(location.search)||/^android-app:/.test(document.referrer))sessionStorage.setItem('bzApp','android');a=sessionStorage.getItem('bzApp')||''}catch(e){}window.BZ_APP=a;if(a)document.documentElement.classList.add('isapp')})();</script>
+<script>if(!window.BZ_APP){!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','1129851603343374');fbq('init','1876581503503613');fbq('track','PageView');}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -2739,6 +2740,8 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
    <section class="g-sec"><h3>其他</h3>
     <div class="g-row"><span><b>朗讀聲音</b><small>選擇英文與中文的朗讀聲音</small></span><button class="g-mini" data-voicepick>選擇</button></div>
     <div class="g-row"><span><b>使用教學</b><small>7 步看懂怎麼用</small></span><button class="g-mini" data-tour>查看</button></div>
+    <div class="g-row"><span><b>隱私權政策</b><small>我們收集哪些資料、怎麼使用</small></span><a class="g-mini" href="privacy.html" target="_blank" rel="noopener">查看</a></div>
+    <div class="g-row"><span><b>刪除帳號</b><small>永久刪除帳號與伺服器上的資料</small></span><button class="g-mini" data-delopen>刪除</button></div>
    </section>
    <div class="acts"><button class="btn" data-close>完成</button></div>
    ${GROW_TEST?'<p class="g-note">測試版：通知用畫面上方的模擬通知示範。正式上線後才會真的傳到手機通知列。</p><button class="g-test" data-gtest>測試工具</button>':''}`)}
@@ -2816,11 +2819,77 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
 });
 
 /* GROW_MOD_END */
+/* APP_MOD_START */
+/* ---------- Android App 版（Google Play）：只閱讀、不在 App 內販售任何東西，也不載入 Meta 像素 ----------
+   App 從 start_url「/?app=android」啟動（或通知點開），head 的小程式會把 window.BZ_APP 設好。
+   App 裡：所有購買、價格、解鎖碼、贊助入口都隱藏；已在網站開通的人，登入同一個 Google 帳號就能閱讀。 */
+const IS_APP=!!window.BZ_APP;
+const APP_PAYRE=/NT\$|購買|買斷|早鳥|原價|方案|\d+\s*元|解鎖碼|序號|支持一下|限時優惠|漲價|付費版|金流|(?<!已)解鎖完整版|開通付費/;
+function appLockedModal(){openModal(`<span class="kicker">${ICON.lock} 完整版內容</span><h2>這是完整版篇章</h2>
+   <p>已開通完整版的帳號，登入後就能閱讀全部故事，也能使用語音朗讀和遊戲間。</p>
+   <div class="acts">${sbUser?'':'<button class="btn" data-sblogin>用 Google 帳號登入</button>'}<button class="${sbUser?'btn':'btn ghost'}" data-close>先讀免費故事</button></div>`)}
+function appScrub(root){if(!IS_APP||!root||root.nodeType!==1)return;
+  root.querySelectorAll('p,li,small,.kicker,.lc-bar,.ebbar,.supnote,.pricenote,.buy-or,.note').forEach(el=>{
+    if(el.dataset.appok)return;if(el.querySelector('[data-sblogin],[data-sblogout],[data-close],[data-delacct]'))return;
+    if(APP_PAYRE.test(el.textContent))el.style.display='none'})}
+if(IS_APP){
+  document.documentElement.classList.add('isapp');
+  const st=document.createElement('style');
+  st.textContent=`html.isapp [data-unlock],html.isapp [data-pay],html.isapp [data-plans],html.isapp [data-buyinfo],html.isapp a[href*="portaly.cc"],html.isapp a[href*="ecpay"],
+   html.isapp .gt-buy,html.isapp .gt-code,html.isapp .pl-link,html.isapp .supnote,html.isapp .lc-bar,html.isapp .ebbar,html.isapp .buy-or,
+   html.isapp .bobacute,html.isapp .ml-boba,html.isapp .bobabtn,html.isapp .boba,html.isapp [data-a2hs],html.isapp [data-a2hs-go],html.isapp .paylist{display:none!important}`;
+  document.head.appendChild(st);
+  buyBtn=function(){return sbUser?'':'<button class="btn" data-sblogin>已開通？登入帳號</button>'};
+  openPaywall=appLockedModal;openPlans=appLockedModal;openTtsPromo=appLockedModal;openBuyInfo=appLockedModal;openUnlock=appLockedModal;
+  openA2hs=function(){};
+  appScrub(document.body);
+  const q=new Set();let qt=0;
+  try{new MutationObserver(ms=>{for(const m of ms)if(m.addedNodes.length)q.add(m.target);if(!qt)qt=requestAnimationFrame(()=>{qt=0;const L=[...q];q.clear();L.forEach(appScrub)})}).observe(document.body,{childList:true,subtree:true})}catch(e){}
+  /* 通知點開時也要進 App 模式：留一個記號給背景程式 */
+  try{caches.open('bz-flags').then(c=>c.put('/__app',new Response('android')))}catch(e){}
+}
+
+{const st=document.createElement('style');st.textContent=`.btn.danger{background:#B3261E;color:#fff}.btn.danger:disabled{opacity:.45}
+ .g-row a.g-mini{display:inline-flex;align-items:center;text-decoration:none}.g-del{margin:0;padding-left:20px;line-height:1.8}.g-delchk{display:flex;gap:8px;align-items:center;font-weight:500;margin:4px 0}.g-delchk input{width:18px;height:18px;accent-color:#B3261E}`;document.head.appendChild(st)}
+/* ---------- 刪除帳號（網站與 App 共用；Google Play 規定 App 內要能刪除） ---------- */
+function delAcctOpen(){
+  if(!sbUser){openModal(`<span class="kicker">刪除帳號</span><h2>你目前沒有登入帳號</h2>
+     <p>沒有登入時，伺服器上不會有你的帳號資料。閱讀進度、生字本只存在這台手機裡。</p>
+     <p>如果之前用 Google 帳號登入過，請先登入，再回到這裡刪除帳號。也可以清除這台手機上的所有資料。</p>
+     <div class="acts"><button class="btn" data-sblogin>用 Google 帳號登入</button><button class="btn ghost" data-delocal>清除這台手機的資料</button><button class="linkbtn" data-gset style="align-self:center">回到設定</button></div>`);return}
+  openModal(`<span class="kicker">刪除帳號</span><h2>確定要刪除帳號嗎？</h2>
+   <p data-appok="1">帳號 <b>${esc(sbUser.email||'')}</b> 會被永久刪除，包含：</p>
+   <ul class="g-del" data-appok="1"><li data-appok="1">帳號與登入紀錄</li><li data-appok="1">綁定在帳號上的完整版、遊戲通行證，會一併失效且<b>無法恢復</b></li><li data-appok="1">邀請紀錄、提醒通知設定、裝置紀錄</li></ul>
+   <p data-appok="1">刪除後無法復原。之後用同一個 Google 帳號登入，會是全新的帳號。</p>
+   <label class="g-delchk"><input type="checkbox" id="delChk"> 我了解，確定要刪除</label>
+   <div class="acts"><button class="btn danger" data-delacct disabled>永久刪除帳號</button><button class="btn ghost" data-gset>取消</button></div>
+   <p class="codemsg" id="delMsg"></p>`)}
+async function delAcctGo(btn){const msg=document.getElementById('delMsg');btn.disabled=true;btn.textContent='刪除中…';
+  try{await sbInit();const {data,error}=await sb.rpc('delete_my_account');if(error||!data||!data.ok)throw error||new Error('fail');
+    try{const sub=await (navigator.serviceWorker&&navigator.serviceWorker.ready.then(r=>r.pushManager.getSubscription()));if(sub)await sub.unsubscribe()}catch(e){}
+    try{await sb.auth.signOut({scope:'local'})}catch(e){}
+    sbUser=null;try{localStorage.removeItem(SB_LS)}catch(e){}
+    ['unlock','gpass','pushEp','inv','cbGift','legacyKey'].forEach(k=>{try{localStorage.removeItem('dqs.'+k)}catch(e){}});
+    gcEvent('account-deleted','刪除帳號');
+    openModal(`<span class="kicker">刪除帳號</span><h2>帳號已刪除</h2><p>你的帳號和伺服器上的資料已經刪除。這台手機上的閱讀進度還在，要一併清除可以按下方按鈕。</p>
+     <div class="acts"><button class="btn" data-reloadapp>完成</button><button class="btn ghost" data-delocal>也清除這台手機的資料</button></div>`)
+  }catch(e){if(msg){msg.textContent='刪除失敗，請確認網路後再試一次。';msg.className='codemsg err'}btn.disabled=false;btn.textContent='永久刪除帳號'}}
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='delChk'){const b=document.querySelector('[data-delacct]');if(b)b.disabled=!e.target.checked}});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-delopen],[data-delacct],[data-delocal],[data-reloadapp]');if(!t)return;
+  if(t.hasAttribute('data-delopen')){delAcctOpen();return}
+  if(t.hasAttribute('data-delacct')){delAcctGo(t);return}
+  if(t.hasAttribute('data-delocal')){if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='再按一次確認清除';return}
+    try{Object.keys(localStorage).filter(k=>k.startsWith('dqs.')||k===SB_LS).forEach(k=>localStorage.removeItem(k))}catch(e){}location.replace(location.pathname);return}
+  if(t.hasAttribute('data-reloadapp')){location.replace(location.pathname);return}});
+/* 刪除帳號網頁（/delete-account.html）的「前往刪除」會帶 ?del=1 */
+const DEL_Q=/[?&]del=1/.test(location.search);
+/* APP_MOD_END */
 go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
 (async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
   if(hasSbHint()||PAID_NO||PAYGO)syncAccount().then(()=>{invSync();srcSync()}).catch(()=>{});
+  if(DEL_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(async()=>{try{await sbInit()}catch(e){}delAcctOpen()},700)}
   setTimeout(()=>{if(window.__mvWait)return;if(GROW_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}if(firstVisit)rawStore.set('tour1',0);go('games');setTimeout(qbStart,300);return}if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 });
