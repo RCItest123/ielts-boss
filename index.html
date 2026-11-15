@@ -2749,9 +2749,10 @@ const GEAR=`<button class="gearbtn" data-gset aria-label="設定"><svg viewBox="
 const SRC_KEYS=['utm_source','utm_medium','utm_campaign','utm_content','fbclid'];
 const srcKeep=(()=>{const keep={};try{const q=new URLSearchParams(location.search);SRC_KEYS.forEach(k=>{const v=q.get(k);if(v)keep[k]=v.slice(0,300)});
   let r='';try{r=document.referrer?new URL(document.referrer).hostname:''}catch(e){}
-  if(r===location.hostname)r='';
+  if(r===location.hostname||/(^|\.)(accounts\.google\.com|supabase\.co|portaly\.cc|ecpay\.com\.tw|bazonglearn\.com|rcitest123\.github\.io|pages\.dev)$/.test(r))r='';
   const src=(keep.utm_source||(keep.fbclid?'meta':'')||r||'').toLowerCase().slice(0,60);
   const info={src:src||'direct',camp:(keep.utm_campaign||'').slice(0,80),cont:(keep.utm_content||'').slice(0,80),fb:keep.fbclid?1:0,ref:r.slice(0,60),inapp:INAPP?1:0,land:location.pathname,at:new Date().toISOString()};
+  {const l=rawStore.get('srcL',null);if(l&&/accounts\.google\.com/.test(l.src||''))rawStore.set('srcL',null)}
   if(!rawStore.get('src1',null))rawStore.set('src1',info);
   if(src)rawStore.set('srcL',info);
   if(Object.keys(keep).length)rawStore.set('srcQ',keep)}catch(e){}return keep})();
