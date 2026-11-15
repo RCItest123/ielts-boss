@@ -2843,8 +2843,8 @@ if(IS_APP){
   openPaywall=appLockedModal;openPlans=appLockedModal;openTtsPromo=appLockedModal;openBuyInfo=appLockedModal;openUnlock=appLockedModal;
   openA2hs=function(){};
   appScrub(document.body);
-  const q=new Set();let qt=0;
-  try{new MutationObserver(ms=>{for(const m of ms)if(m.addedNodes.length)q.add(m.target);if(!qt)qt=requestAnimationFrame(()=>{qt=0;const L=[...q];q.clear();L.forEach(appScrub)})}).observe(document.body,{childList:true,subtree:true})}catch(e){}
+  const q=new Set();
+  try{new MutationObserver(ms=>{for(const m of ms)if(m.addedNodes.length)q.add(m.target);const L=[...q];q.clear();L.forEach(appScrub)}).observe(document.body,{childList:true,subtree:true})}catch(e){}
   /* 通知點開時也要進 App 模式：留一個記號給背景程式 */
   try{caches.open('bz-flags').then(c=>c.put('/__app',new Response('android')))}catch(e){}
 }
