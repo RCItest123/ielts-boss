@@ -1416,10 +1416,10 @@ function openPlans(){
    ['之後新增的遊戲',N,N,Y,Y],
    ['綁定 Google 帳號<br>換手機也能用',N,Y,Y,Y]];
   openModal(`<span class="kicker">方案</span><h2>免費版和全功能付費版</h2>
-   <div class="pl-wrap"><table class="pl"><thead><tr><th></th><th>免費版</th><th class="pl-hl"><span class="pl-rec">終身版特價</span>全功能</th></tr>
-    <tr class="pl-price"><th>價格</th><td>0 元</td><td class="pl-hl"><s>${LIFE_ORIG}</s><b>${LIFE}</b></td></tr></thead>
+   <div class="pl-wrap"><table class="pl"><thead><tr><th></th><th>免費版</th><th class="pl-hl">${lifeOn()?'<span class="pl-rec">終身版特價</span>':''}全功能</th></tr>
+    <tr class="pl-price"><th>價格</th><td>0 元</td><td class="pl-hl">${lifeOn()?`<s>${LIFE_ORIG}</s>`:''}<b>${LIFE}</b></td></tr></thead>
     <tbody>${rows.map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td><td class="pl-hl">${r[4]}</td></tr>`).join('')}</tbody></table></div>
-   <p class="lifenote">${LIFE_NOTE}</p>
+   ${LIFE_NOTE?`<p class="lifenote">${LIFE_NOTE}</p>`:''}
    <div class="acts">${unlocked&&gamePass?'':buyBtn(true).replace(/<button class="linkbtn pl-link"[^>]*>[^<]*<\/button>/,'').replace(/<p class="lifenote">.*?<\/p>/,'')}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`);
   setTimeout(()=>{modalBox.scrollTop=0},40);
 }
@@ -1635,7 +1635,7 @@ function renderGames(){
    ${gamePass?`<div class="gm-pass"><b>✓ 遊戲間已開通</b>・所有遊戲無限玩，之後的新遊戲也能玩</div>`:''}
    ${gmRankCard()}
    ${cramBanner()}
-   ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>'+GM_TRIAL+'</b> 次，先玩玩看':'免費試玩已用完'}<small>全功能 特價 <b>${LIFE} 元</b>・終身無限玩</small></div>
+   ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>'+GM_TRIAL+'</b> 次，先玩玩看':'免費試玩已用完'}<small>全功能 ${PTAG()} <b>${LIFE} 元</b>・終身無限玩</small></div>
      <div class="gt-r">${GAME_URL?`<a class="gt-buy" href="${GAME_URL}" target="_blank" rel="noopener">購買</a>`:`<button class="gt-buy" data-buyinfo>購買</button>`}<button class="gt-code" data-unlock>輸入序號</button></div></div>
      <button class="linkbtn pl-link" data-plans style="margin:-4px auto 12px">看方案比較 ›</button>`}
    <div class="gm-list">${GM_GAMES.map(g=>{
@@ -2273,9 +2273,18 @@ function noteRead(id){if(unlocked)return;const k=track+':'+id,L=readsToday();if(
 function openLimit(){openModal(`${bossPic([genderize('今天的 2 篇已經讀完了。想要更多？'),genderize('不要考驗我的耐心，女人。')])}<span class="kicker">免費版每日上限</span><h2>今天的免費額度用完了</h2>
    <p>免費版每天可以讀 2 篇不同的故事（已讀過的可以重讀）。明天再來，或解鎖完整版無限暢讀。</p>
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="btn ghost" data-close data-quiz>先去做單字挑戰</button><button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`)}
-const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const LIFE=299,LIFE_ORIG=399;const PRICE=()=>LIFE;const GPRICE=()=>LIFE;const PTAG=()=>'特價';const ORIG={novel:LIFE_ORIG,game:LIFE_ORIG,all:LIFE_ORIG};
-const LIFE_NOTE='終身版即將結束販售，之後將改為訂閱制（月繳 99 元／年繳 699 元）。現在買終身版，一次付清，之後不用再付月費。';
-function buyBtn(bare){return payLink('all',BUNDLE_URL,'',`終身全功能・特價 NT$${LIFE}`)+(bare?'':`<p class="pricenote"><s>原價 ${LIFE_ORIG}</s> <b>特價 ${LIFE} 元</b>・一次付清、終身有效<br>全部故事＋語音朗讀＋遊戲間全部遊戲</p>`)+`<p class="lifenote">${LIFE_NOTE}</p><button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button>`}
+const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const LIFE_END='2026-11-30';const lifeOn=()=>dkey()<=LIFE_END;const LIFE_ORIG=399;const LIFE=lifeOn()?299:LIFE_ORIG;const PRICE=()=>LIFE;const GPRICE=()=>LIFE;const PTAG=()=>lifeOn()?'特價':'';const ORIG={novel:LIFE_ORIG,game:LIFE_ORIG,all:LIFE_ORIG};
+const lifeLeft=()=>Math.max(0,Math.round((new Date(LIFE_END+'T00:00:00')-new Date(dkey()+'T00:00:00'))/864e5));
+const LIFE_NOTE=lifeOn()?`終身版特價 299 只到 11/30${lifeLeft()?`（還剩 ${lifeLeft()+1} 天）`:'（今天最後一天）'}。之後將恢復原價或改為訂閱制，現在買一次付清、終身有效。`:'';
+function buyBtn(bare){const on=lifeOn();return payLink('all',BUNDLE_URL,'',`終身全功能・${on?'特價 ':''}NT$${LIFE}`)+(bare?'':`<p class="pricenote">${on?`<s>原價 ${LIFE_ORIG}</s> <b>特價 ${LIFE} 元</b>`:`<b>${LIFE} 元</b>`}・一次付清、終身有效<br>全部故事＋語音朗讀＋遊戲間全部遊戲</p>`)+(LIFE_NOTE?`<p class="lifenote">${LIFE_NOTE}</p>`:'')+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button>`}
+/* 終身版特價倒數：只對免費用戶跳一次（付費用戶、App 版都不跳） */
+function lifeAnn(){if(window.BZ_APP||unlocked||gamePass||!lifeOn()||firstVisit||rawStore.get('lifeAnn',0))return;if(!modal.hidden){setTimeout(lifeAnn,4000);return}
+  rawStore.set('lifeAnn',1);gcEvent('life-ann','終身版倒數公告');
+  openModal(`${bossPic([genderize('299，只到 11/30。過了這天，別來求我。'),'霸總的最後通牒'])}<span class="kicker">終身全功能・限時公告</span><h2>特價 299，只到 11/30</h2>
+   <p>一次付清、終身有效：全部 ${TOTAL_N()} 篇故事、語音朗讀、遊戲間全部遊戲，之後新增的故事和遊戲也包含。</p>
+   <p class="lifenote" style="margin:0">11/30 之後將恢復原價或改為訂閱制。${lifeLeft()?`還剩 ${lifeLeft()+1} 天。`:'今天是最後一天。'}</p>
+   <div class="acts">${buyBtn(true).replace(/<p class="lifenote">.*?<\/p>/,'')}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
+setTimeout(lifeAnn,3500);
 function renderIntro(){
   const s=byId[state.id];
   if(isLocked(s)){app.innerHTML=`<div class="view">
