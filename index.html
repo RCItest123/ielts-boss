@@ -2275,7 +2275,7 @@ function openLimit(){openModal(`${bossPic([genderize('今天的 2 篇已經讀�
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="btn ghost" data-close data-quiz>先去做單字挑戰</button><button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`)}
 const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const LIFE_END='2026-11-30';const lifeOn=()=>dkey()<=LIFE_END;const LIFE_ORIG=399;const LIFE=lifeOn()?299:LIFE_ORIG;const PRICE=()=>LIFE;const GPRICE=()=>LIFE;const PTAG=()=>lifeOn()?'特價':'';const ORIG={novel:LIFE_ORIG,game:LIFE_ORIG,all:LIFE_ORIG};
 const lifeLeft=()=>Math.max(0,Math.round((new Date(LIFE_END+'T00:00:00')-new Date(dkey()+'T00:00:00'))/864e5));
-const LIFE_NOTE=lifeOn()?`終身版特價 299 只到 11/30${lifeLeft()?`（還剩 ${lifeLeft()+1} 天）`:'（今天最後一天）'}。之後將恢復原價或改為訂閱制，現在買一次付清、終身有效。`:'';
+const LIFE_NOTE=lifeOn()?`終身版特價 299 只到 11/30${lifeLeft()?`（還剩 ${lifeLeft()+1} 天）`:'（今天最後一天）'}，11/30 之後將改訂閱制。現在買一次付清、終身有效。`:'';
 function buyBtn(bare){const on=lifeOn();return payLink('all',BUNDLE_URL,'',`終身全功能・${on?'特價 ':''}NT$${LIFE}`)+(bare?'':`<p class="pricenote">${on?`<s>原價 ${LIFE_ORIG}</s> <b>特價 ${LIFE} 元</b>`:`<b>${LIFE} 元</b>`}・一次付清、終身有效<br>全部故事＋語音朗讀＋遊戲間全部遊戲</p>`)+(LIFE_NOTE?`<p class="lifenote">${LIFE_NOTE}</p>`:'')+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button>`}
 /* 終身版特價倒數：只對免費用戶跳一次（付費用戶、App 版都不跳） */
 function lifeAnn(){if(window.BZ_APP||unlocked||gamePass||rawStore.get('paidSeen',0)||!lifeOn()||firstVisit||rawStore.get('lifeAnn',0))return;if(!modal.hidden){setTimeout(lifeAnn,4000);return}
@@ -2283,7 +2283,7 @@ function lifeAnn(){if(window.BZ_APP||unlocked||gamePass||rawStore.get('paidSeen'
   rawStore.set('lifeAnn',1);gcEvent('life-ann','終身版倒數公告');
   openModal(`${bossPic([genderize('299，只到 11/30。過了這天，別來求我。'),'霸總的最後通牒'])}<span class="kicker">終身全功能・限時公告</span><h2>特價 299，只到 11/30</h2>
    <p>一次付清、終身有效：全部 ${TOTAL_N()} 篇故事、語音朗讀、遊戲間全部遊戲，之後新增的故事和遊戲也包含。</p>
-   <p class="lifenote" style="margin:0">11/30 之後將恢復原價或改為訂閱制。${lifeLeft()?`還剩 ${lifeLeft()+1} 天。`:'今天是最後一天。'}</p>
+   <p class="lifenote" style="margin:0">11/30 之後將改訂閱制。${lifeLeft()?`還剩 ${lifeLeft()+1} 天。`:'今天是最後一天。'}</p>
    <div class="acts">${buyBtn(true).replace(/<p class="lifenote">.*?<\/p>/,'')}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
 setTimeout(lifeAnn,3500);
 /* 這台裝置曾經是付費狀態（之後登出也一樣）就不再跳任何價格公告 */
