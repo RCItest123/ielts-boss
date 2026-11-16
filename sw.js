@@ -1,6 +1,7 @@
 // 霸總教你背單字：通知用的背景程式。
 // 只負責「收到推播 → 顯示通知」與「點通知 → 打開 App」。
-// 刻意不處理任何網頁請求、不做快取，所以不會讓 App 卡在舊版。
+// 離線閱讀：只有使用者按過「下載供離線閱讀」才會有離線資料。
+// 網頁一律先連網路（拿到最新版），連不上才用下載的檔案，所以不會卡在舊版；帶 ?v= 的資料檔內容固定，下載過就直接用。
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
@@ -28,5 +29,27 @@ self.addEventListener('notificationclick', (e) => {
       if (w.url.startsWith(self.registration.scope) && 'focus' in w) return w.focus();
     }
     return self.clients.openWindow(url);
+  })());
+});
+
+const OFF = 'bz-offline';
+self.addEventListener('fetch', (e) => {
+  const r = e.request;
+  if (r.method !== 'GET') return;
+  const u = new URL(r.url);
+  if (u.origin !== self.location.origin) return;
+  if (r.mode === 'navigate') {
+    if (!/^\/(index\.html)?$/.test(u.pathname)) return;
+    e.respondWith(fetch(r).catch(async () => {
+      const c = await caches.open(OFF);
+      return (await c.match(new URL('./', self.registration.scope).href)) || Response.error();
+    }));
+    return;
+  }
+  e.respondWith((async () => {
+    const c = await caches.open(OFF);
+    const hit = await c.match(r);
+    if (hit && u.searchParams.has('v')) return hit;
+    try { return await fetch(r); } catch (err) { if (hit) return hit; throw err; }
   })());
 });

@@ -674,7 +674,7 @@ a.btn{text-decoration:none}
 </script>
 <script>
 /* 字典另外載入（可長期快取），主程式等字典到了才啟動 */
-window.__dxP=fetch('data/dict.json?v=8bf651d6').then(function(r){if(!r.ok)throw new Error(r.status);return r.json()});
+window.__DXU='data/dict.json?v=8bf651d6';window.__dxP=fetch(window.__DXU).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()});
 window.__dxP.catch(function(){var d=document.createElement('div');d.style.cssText='position:fixed;left:16px;right:16px;top:40%;z-index:99;background:#fff;border-radius:16px;padding:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:15px';d.innerHTML='資料載入失敗，請檢查網路後重新整理。<br><br><button onclick="location.reload()" style="font:inherit;padding:8px 18px;border-radius:999px;border:0;background:#9A2B4A;color:#fff">重新整理</button>';document.body.appendChild(d)});
 </script>
 <script>
@@ -1301,7 +1301,7 @@ const MIGRATE_MODE=1; /* 0=關閉 1=顯示搬家提示 2=自動帶進度轉址 *
 const IS_OLD=MV_OLD.indexOf(location.hostname)>=0,MV_FORCE=/[?&]migrate=1/.test(location.search);
 function mvShow(){return IS_OLD&&(MIGRATE_MODE>=1||MV_FORCE)}
 async function mvPack(){const D={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!k||k.indexOf('dqs.')!==0)continue;const s=k.slice(4);if(['unlock','gpass','pendingCode','movedTo','mvDone','mvSeen'].indexOf(s)>=0)continue;D[s]=localStorage.getItem(k)}
-  let bytes=new TextEncoder().encode(JSON.stringify({d:D,p:unlocked?1:0,g:gamePass?1:0,k:unlocked?rawStore.get('unlock',null):null})),tag='mv';
+  let bytes=new TextEncoder().encode(JSON.stringify({d:D,p:unlocked?1:0,g:gamePass?1:0,k:null})),tag='mv';
   if(typeof CompressionStream!=='undefined'&&typeof DecompressionStream!=='undefined'){try{bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());tag='mz'}catch(e){}}
   let bin='';for(let i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
   return {tag,b64:btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}}
@@ -1443,6 +1443,8 @@ async function syncAccount(){
     const lk=rawStore.get('legacyKey',null)||(unlocked?rawStore.get('unlock',null):null);
     if(data&&data.err==='none'&&lk){try{const {data:c}=await sb.rpc('claim_legacy',{p_key:lk});if(c&&c.ok){rawStore.set('legacyKey',null);gcEvent('legacy-claim','舊版解鎖轉帳號');({data}=await sb.rpc('get_key',{p_device:devId()}))}else if(c&&c.err==='invalid')rawStore.set('legacyKey',null)}catch(e){}}
     if(data&&data.err==='devices'){if(unlocked||gamePass){lockDevice(true);return}devLimitModal()}
+    if(data&&data.ok===false&&data.err==='none'&&(unlocked||(gamePass&&!data.game))){lockDevice(false);return}
+    if(sbUser)rawStore.set('needLogin',0);
     if(data&&data.game&&!gamePass){gamePass=true;rawStore.set('gpass',1);toast('遊戲通行證已開通')}
     if(data&&data.ok&&data.key&&!unlocked){await applyKey(data.key);toast('已登入 '+(sbUser.email||'')+'，完整版已解鎖')}}
   gmPull();if(state.view==='games'||state.view==='stats')render()
@@ -2239,6 +2241,7 @@ function renderList(){
    <div class="section-h"><h1 style="font-size:26px">故事書架</h1>${typeBtn()}</div>
    <span class="muted" style="margin-top:-12px">${esc(TRACKS[track].name)}・${TRACKS[track].sub}・${Object.keys(readSet).length} / ${S.length} 已讀</span>
    ${SERIAL_SET.has(track)?`<p class="pricenote" style="margin:0;text-align:left">連載中：已更新到第 ${S.length} 集（全 ${SERIAL_TOTAL} 集），第 1、2 集免費，第 3 集起付費版限定，下一集即將上線。</p>`:''}
+   ${offBar()}
    <label class="search">${ICON.search}<input id="q" type="search" placeholder="搜尋故事標題或英文單字" value="${esc(query)}" autocomplete="off"></label>
    <div class="chips" role="group" aria-label="篩選">
      <button class="chip" data-f="all" aria-pressed="${filter==='all'}">全部</button>
@@ -2751,6 +2754,7 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
    <section class="g-sec"><h3>其他</h3>
     <div class="g-row"><span><b>朗讀聲音</b><small>選擇英文與中文的朗讀聲音</small></span><button class="g-mini" data-voicepick>選擇</button></div>
     <div class="g-row"><span><b>使用教學</b><small>7 步看懂怎麼用</small></span><button class="g-mini" data-tour>查看</button></div>
+    <div class="g-row"><span><b>離線閱讀</b><small>${offGet().length?'已下載：'+offGet().map(k=>TRACKS[k]?TRACKS[k].short:k).join('、'):'到「故事」頁按下載，沒網路也能讀'}</small></span>${offGet().length?'<button class="g-mini" data-offclear>清除</button>':''}</div>
     <div class="g-row"><span><b>隱私權政策</b><small>我們收集哪些資料、怎麼使用</small></span><a class="g-mini" href="privacy.html" target="_blank" rel="noopener">查看</a></div>
     <div class="g-row"><span><b>刪除帳號</b><small>永久刪除帳號與伺服器上的資料</small></span><button class="g-mini" data-delopen>刪除</button></div>
    </section>
@@ -2896,6 +2900,53 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-delopen],[
 /* 刪除帳號網頁（/delete-account.html）的「前往刪除」會帶 ?del=1 */
 const DEL_Q=/[?&]del=1/.test(location.search);
 /* APP_MOD_END */
+/* OFF_MOD_START */
+/* ---------- 付費版一定要登入（2026-11-17）：沒登入時，裝置上的解鎖不再算數 ----------
+   舊版（帳號功能前）或搬家帶來的解鎖：改存成 legacyKey，登入後 syncAccount 會用 claim_legacy 自動轉進帳號。 */
+(()=>{const k=rawStore.get('unlock',null),g=rawStore.get('gpass',0);
+  if((k||g)&&!hasSbHint()){
+    if(k&&!rawStore.get('legacyKey',null))rawStore.set('legacyKey',k);
+    try{localStorage.removeItem('dqs.unlock');localStorage.removeItem('dqs.gpass')}catch(e){}
+    gamePass=false;rawStore.set('needLogin',1);rawStore.set('paidSeen',1)}})();
+function needLoginModal(){if(sbUser||hasSbHint()||!rawStore.get('needLogin',0))return;if(!modal.hidden){setTimeout(needLoginModal,4000);return}
+  if(rawStore.get('needLoginDay','')===dkey())return;rawStore.set('needLoginDay',dkey());
+  openModal(`<span class="kicker">帳號</span><h2>完整版改用帳號登入</h2>
+   <p>為了保護你的付費內容，完整版現在要登入 Google 帳號才能使用。</p>
+   <p>登入後會自動恢復，<b>不用重新購買</b>。換手機時，用同一個帳號登入也能直接使用。</p>
+   <div class="acts"><button class="btn" data-sblogin>用 Google 帳號登入</button><button class="linkbtn" data-close style="align-self:center">稍後再說</button></div>`)}
+setTimeout(needLoginModal,3000);
+
+/* ---------- 離線閱讀：下載後沒有網路也能打開 App、讀故事（背景程式 sw.js 負責離線時改用下載的檔案） ---------- */
+const OFF_CACHE='bz-offline';
+const offOK=()=>'caches' in window&&'serviceWorker' in navigator;
+const offGet=()=>rawStore.get('offT',[]);
+function offUrls(){const set=new Set(['./','icon-192.png','icon-512.png','manifest.webmanifest',VAULT.ctUrl,window.__DXU].filter(Boolean));
+  (document.documentElement.innerHTML.match(/img\/[\w-]+\.(?:jpg|png|webp)\?v=\w+/g)||[]).forEach(u=>set.add(u));return [...set]}
+async function offFetchAll(onStep){const c=await caches.open(OFF_CACHE);const L=offUrls();let i=0;
+  for(const u of L){const req=new Request(new URL(u,location.href).href,{cache:'no-cache'});const res=await fetch(req);if(!res.ok)throw new Error(u);
+    await c.put(u==='./'?new URL('./',location.href).href:req.url,res);i++;onStep&&onStep(i,L.length)}
+  /* 清掉舊版本的資料檔 */
+  const keep=new Set(L.map(u=>new URL(u,location.href).href));for(const r of await c.keys()){if(/\?v=/.test(r.url)&&!keep.has(r.url))await c.delete(r)}}
+async function offDownload(btn){if(!offOK()){toast('這個瀏覽器不支援離線閱讀，請改用 Chrome 或 Safari');return}
+  const t=track,o=btn.innerHTML;btn.disabled=true;
+  try{await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;await offFetchAll((i,n)=>{btn.textContent=`下載中… ${Math.round(i/n*100)}%`});
+    const L=offGet();if(!L.includes(t))L.push(t);rawStore.set('offT',L);rawStore.set('offAt',Date.now());gcEvent('offline-dl-'+t,'下載離線閱讀');
+    toast(`「${TRACKS[t].short}」已下載，沒有網路也能讀`);render()}
+  catch(e){btn.disabled=false;btn.innerHTML=o;toast('下載失敗，請確認網路後再試一次')}}
+async function offClear(){try{await caches.delete(OFF_CACHE)}catch(e){}rawStore.set('offT',[]);toast('已清除離線資料');if(typeof setOpen==='function'&&!modal.hidden)setOpen()}
+function offBar(){if(!offOK())return '';const on=offGet().includes(track);
+  return on?`<div class="offbar on"><span>已下載「${esc(TRACKS[track].short)}」，沒有網路也能讀${unlocked?'':'免費篇章'}</span><button class="linkbtn" data-offdl>更新</button></div>`
+    :`<button class="offbar" data-offdl><b>下載「${esc(TRACKS[track].short)}」供離線閱讀</b><small>約 5 MB・搭捷運、飛機沒網路也能讀${unlocked?'':'（付費篇章需登入完整版）'}</small></button>`}
+if(offGet().length&&offOK()){try{navigator.serviceWorker.register('sw.js')}catch(e){}}
+/* 有下載過：每次有網路打開時，在背景把新版內容補進離線資料 */
+setTimeout(()=>{if(offGet().length&&navigator.onLine&&offOK()&&Date.now()-(+rawStore.get('offAt',0)||0)>6*3600e3){offFetchAll().then(()=>rawStore.set('offAt',Date.now())).catch(()=>{})}},8000);
+document.addEventListener('click',e=>{const t=e.target.closest('[data-offdl],[data-offclear]');if(!t)return;
+  if(t.hasAttribute('data-offdl')){offDownload(t);return}
+  if(t.hasAttribute('data-offclear')){if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='再按一次確認';return}offClear()}});
+{const st=document.createElement('style');st.textContent=`.offbar{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:10px 14px;border-radius:14px;background:var(--soft);color:var(--ink);text-align:left;font-size:14px}
+ .offbar small{color:var(--muted);font-size:12.5px}.offbar.on{flex-direction:row;align-items:center;justify-content:space-between;color:var(--ok);font-weight:600}
+`;document.head.appendChild(st)}
+/* OFF_MOD_END */
 go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
