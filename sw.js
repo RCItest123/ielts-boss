@@ -11,7 +11,7 @@ self.addEventListener('push', (e) => {
   e.waitUntil(self.registration.showNotification(d.t || '霸總教你背單字', {
     body: d.b || '女人，今天的單字還沒背。',
     icon: 'icon-192.png',
-    badge: 'icon-192.png',
+    badge: 'badge-96.png',
     tag: d.tag || 'bz',
     data: { u: d.u || './' },
   }));

@@ -2729,7 +2729,7 @@ async function pushToggle(){const p=pushGet();
     if(perm!=='granted'){openModal(`<span class="kicker">提醒通知</span><h2>通知權限被關閉了</h2><p>請到手機的「設定 → 通知」或瀏覽器的網站設定，允許本站傳送通知，再回來開啟。</p><div class="acts"><button class="btn" data-gset>回到設定</button></div>`);return}
     p.on=true;pushSet(p);setOpen();toast('設定中，請稍候幾秒…');
     try{const sub=await pushSub(true);if(!sub)throw new Error('nosub');
-      const reg=await pushReg();reg.showNotification('霸總教你背單字',{body:gz('女人，通知設定好了。每天 '+tFull(p.time)+'，我會準時來找妳。'),icon:'icon-192.png',badge:'icon-192.png',tag:'bz-test'});
+      const reg=await pushReg();reg.showNotification('霸總教你背單字',{body:gz('女人，通知設定好了。每天 '+tFull(p.time)+'，我會準時來找妳。'),icon:'icon-192.png',badge:'badge-96.png',tag:'bz-test'});
       await pushSaveNow();if((days[dkey()]||[]).length)pushReadNow()}
     catch(e){p.on=false;pushSet(p);setOpen();toast('開啟失敗，請稍後再試');return}
     gcEvent('push-on','開啟提醒');setOpen();return}
