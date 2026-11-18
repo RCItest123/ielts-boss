@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bazonglearn.app",
+      "sha256_cert_fingerprints": [
+        "64:59:37:FB:2D:0D:32:74:FA:A7:B3:6F:0E:98:1D:9E:C1:FF:46:DA:8B:2C:84:5D:8E:2C:43:96:1F:CB:8A:63",
+        "AC:CF:2F:78:39:7D:0C:D5:44:51:41:9D:EC:FC:34:F6:81:B5:7B:C7:55:ED:85:E6:8C:20:4C:55:7F:09:4A:9F"
+      ]
+    }
+  }
+]
