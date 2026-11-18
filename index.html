@@ -1467,14 +1467,23 @@ const FAQ=[
  ['按了朗讀沒有聲音？',`<ul><li>iPhone 請確認側邊的<b>靜音開關</b>已關閉、音量有開。</li><li>在 LINE、IG、FB 裡面直接開啟可能不支援語音，請點右上角「在瀏覽器中開啟」，改用 Safari 或 Chrome。</li><li>有接藍牙耳機的話，確認聲音有輸出到耳機。</li></ul>`],
  ['網站打不開、顯示「連線已重設」？',`<p>這通常是你目前的<b>網路擋住了這個網址</b>，不是 App 壞掉。請試試：</p><ul><li>手機關掉 Wi-Fi，改用<b>行動數據（4G／5G）</b>開啟。</li><li>暫時關閉 VPN、廣告阻擋、防毒軟體的網頁防護。</li><li>家裡網路：檢查分享器或電信的「家長監護」「上網安全」服務；公司、學校網路可能有防火牆。</li><li>把手機 DNS 改成 8.8.8.8／1.1.1.1（Android：設定 → 網路 → 私人 DNS → 輸入 dns.google）。</li><li>還是不行就用<b>備用網址</b>：<a href="https://bazonglearn-en.pages.dev" target="_blank" rel="noopener">bazonglearn-en.pages.dev</a>，用同一個 Google 帳號登入就能用。</li></ul>`],
  ['輸入解鎖碼後沒有解鎖？',`<ul><li>請用 <b>Safari 或 Chrome</b> 開啟，不要在 LINE、IG、FB 裡面直接開，那些內建瀏覽器不能用 Google 登入。</li><li>如果之前已經兌換過，直接點「<b>已綁定過？直接用 Google 登入</b>」，用同一個 Google 帳號登入就會自動解鎖，不用再輸入解鎖碼。</li><li>顯示「已綁定其他帳號」：請改用當初兌換時的 Google 帳號登入。</li></ul>`],
- ['換手機或換瀏覽器，付費會不會不見？',`<ul><li>不會。付費綁定在你的 <b>Google 帳號</b>，換手機只要用同一個帳號登入就會自動解鎖。</li><li>閱讀進度、生字本、收藏卡是存在<b>目前這個瀏覽器</b>裡，換手機或換瀏覽器不會跟著過去。</li></ul>`],
+ ['換手機或換瀏覽器，付費會不會不見？',`<ul><li>不會。付費綁定在你的 <b>Google 帳號</b>，換手機只要用同一個帳號登入就會自動解鎖。</li><li>閱讀進度、生字本、收藏卡：<b>登入同一個 Google 帳號</b>就會自動同步，換手機、換瀏覽器都能接著讀。</li></ul>`],
  ['免費版可以看多少？',`<ul><li>一般版、BL 版每類可以看前 10 篇，每天最多讀 2 篇不同的故事（讀過的可以重讀）。</li><li>壞壞隱藏版、片語版、語音朗讀全文是付費版功能。</li></ul>`],
  ['怎麼加到手機桌面？',`<ul><li><b>iPhone</b>：用 Safari 開啟 → 下方「分享」鍵 → 加入主畫面。</li><li><b>Android</b>：用 Chrome 開啟 → 右上角 ⋮ → 加到主畫面／安裝應用程式。</li></ul>`]];
 function openFaq(){openModal(`<span class="kicker">問題回報</span><h2>遇到問題了嗎？</h2>
    <p style="margin:0;font-size:14px">先看看下面有沒有答案，點題目就會展開。</p>
    <button class="btn ghost shsm" data-tour>📖 看使用教學（${tourSteps().length} 步）</button>
    <div class="faq">${FAQ.map(([q,a])=>`<details><summary>${q}</summary><div class="faq-a">${a}</div></details>`).join('')}</div>
-   ${unlocked?'<button class="btn" data-reportmail>還是解決不了？寫信給我們</button>':`<p class="pricenote" style="margin:0">免費版不提供個別客服，請先參考上面的常見問題。開通付費版後，可以直接寫信回報問題。</p><div class="acts">${buyBtn(true)}<button class="btn ghost" data-unlock>已購買？輸入解鎖碼</button></div>`}
+   ${unlocked?'<button class="btn" data-reportmail>還是解決不了？寫信給我們</button>':`<p class="pricenote" style="margin:0">免費版不提供個別客服，請先參考上面的常見問題。開通付費版後，可以直接寫信回報問題。</p><div class="acts">${buyBtn(true)}<button class="btn ghost" data-unlock>已購買？輸入解鎖碼</button></div><button class="btn ghost shsm" data-payreport>付款或開通遇到問題？回報給我們</button>`}
+   <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
+/* 付款／開通問題：免費版也能回報（避免付了錢卻找不到人） */
+function openPayReport(){const no=rawStore.get('lastOrder','')||'';const info=reportInfo().replace('問題描述：',`訂單編號：${no||'（沒有）'}\n問題類型：付款／開通\n問題描述：`);
+  openModal(`<span class="kicker">付款問題回報</span><h2>付款或開通遇到問題？</h2>
+   <ul class="paylist"><li><b>已刷卡但沒開通</b>：請用付款時的 Google 帳號重新登入，通常幾分鐘內會自動開通。</li><li><b>在 LINE、IG、Threads 裡按購買沒反應</b>：請改用 Chrome 或 Safari 開啟網站再購買。</li><li><b>其他問題</b>：寫信給我們，附上下面的資訊和刷卡畫面截圖，我們會盡快處理。</li></ul>
+   <div class="sharebox" style="white-space:pre-line;font-size:14px;font-weight:500">${esc(info)}</div>
+   <button class="btn ghost shsm" data-copytxt="${esc(info)}">複製上面的資訊</button>
+   <a class="btn" href="mailto:${REPORT_EMAIL}?subject=${encodeURIComponent('霸總付款問題'+(no?' '+no:''))}&body=${encodeURIComponent(info)}" data-reportgo>寫 email 回報付款問題</a>
+   <p class="pricenote">沒有跳出 email？請直接寄到 <b>${REPORT_EMAIL}</b></p>
    <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
 function openReport(){const info=reportInfo();
   openModal(`<span class="kicker">付費會員專屬</span><h2>問題回報</h2>
@@ -1612,7 +1621,7 @@ async function payReturn(no){
       if(k&&k.ok&&k.key&&!unlocked)await applyKeyResp(k);
       gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();return}
     await new Promise(r=>setTimeout(r,2000))}
-  openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>付款結果有時會晚幾分鐘送達，請稍後重新整理頁面，或用同一個 Google 帳號重新登入。</p><p>如果已經刷卡成功卻一直沒有開通，請寄信到 <b>bazonglearn@outlook.com</b>，附上訂單編號 <b>${esc(no)}</b>，我們會盡快處理。</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
+  openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>付款結果有時會晚幾分鐘送達，請稍後重新整理頁面，或用同一個 Google 帳號重新登入。</p><p>如果已經刷卡成功卻一直沒有開通，請按下面的按鈕回報，我們會盡快處理。</p><div class="acts"><button class="btn" data-payreport>回報付款問題</button><button class="btn ghost" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
 const BUNDLE=()=>LIFE;
 function bundleBtn(){return ''}
 function passBuy(){return buyBtn()+`<button class="btn ghost" data-unlock>我有解鎖碼／序號</button>`}
@@ -2289,7 +2298,7 @@ function openLimit(){openModal(`${bossPic([genderize('今天的 2 篇已經讀�
 const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const LIFE_END='2026-11-30';const lifeOn=()=>dkey()<=LIFE_END;const LIFE=299;const LIFE_ORIG=LIFE;const PRICE=()=>LIFE;const GPRICE=()=>LIFE;const PTAG=()=>lifeOn()?'特價':'';const ORIG={novel:LIFE_ORIG,game:LIFE_ORIG,all:LIFE_ORIG};
 const lifeLeft=()=>Math.max(0,Math.round((new Date(LIFE_END+'T00:00:00')-new Date(dkey()+'T00:00:00'))/864e5));
 const LIFE_NOTE=lifeOn()?`終身版特價 299 只到 11/30${lifeLeft()?`（還剩 ${lifeLeft()+1} 天）`:'（今天最後一天）'}，11/30 之後將改訂閱制。現在買一次付清、終身有效。`:'';
-function buyBtn(bare){const on=lifeOn();return payLink('all',BUNDLE_URL,'',`終身全功能・${on?'特價 ':''}NT$${LIFE}`)+(bare?'':`<p class="pricenote"><b>${on?'特價 ':''}${LIFE} 元</b>・一次付清、終身有效<br>全部故事＋語音朗讀＋遊戲間全部遊戲</p>`)+(LIFE_NOTE?`<p class="lifenote">${LIFE_NOTE}</p>`:'')+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button>`}
+function buyBtn(bare){const on=lifeOn();return payLink('all',BUNDLE_URL,'',`終身全功能・${on?'特價 ':''}NT$${LIFE}`)+(bare?'':`<p class="pricenote"><b>${on?'特價 ':''}${LIFE} 元</b>・一次付清、終身有效<br>全部故事＋語音朗讀＋遊戲間全部遊戲</p>`)+(LIFE_NOTE?`<p class="lifenote">${LIFE_NOTE}</p>`:'')+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button><button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`}
 /* 終身版特價倒數：只對免費用戶跳一次（付費用戶、App 版都不跳） */
 function lifeAnn(){if(window.BZ_APP||unlocked||gamePass||rawStore.get('paidSeen',0)||!lifeOn()||firstVisit||rawStore.get('lifeAnnDay','')===dkey())return;if(!modal.hidden){setTimeout(lifeAnn,4000);return}
   if(hasSbHint()&&!lifeAnn.w){lifeAnn.w=1;setTimeout(lifeAnn,6000);return}
@@ -2435,6 +2444,7 @@ document.addEventListener('click',e=>{
   if(t.hasAttribute('data-a2hs-hide')){rawStore.set('a2hsHide',1);closeModal();if(state.view==='home')render();return}
   if(t.hasAttribute('data-report')){openFaq();return}
   if(t.hasAttribute('data-reportmail')){openReport();return}
+  if(t.hasAttribute('data-payreport')){openPayReport();return}
   if(t.dataset.copytxt){const v=t.dataset.copytxt;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('已複製')).catch(()=>toast('請長按選取文字後複製'));return}
   if(t.hasAttribute('data-loginwhy')){openLoginWhy();return}
   if(t.hasAttribute('data-devkick')){devKick(t);return}
@@ -2867,7 +2877,7 @@ if(IS_APP){
   const st=document.createElement('style');
   st.textContent=`html.isapp [data-unlock],html.isapp [data-pay],html.isapp [data-plans],html.isapp [data-buyinfo],html.isapp a[href*="portaly.cc"],html.isapp a[href*="ecpay"],
    html.isapp .gt-buy,html.isapp .gt-code,html.isapp .pl-link,html.isapp .supnote,html.isapp .lc-bar,html.isapp .ebbar,html.isapp .buy-or,
-   html.isapp .bobacute,html.isapp .ml-boba,html.isapp .bobabtn,html.isapp .boba,html.isapp [data-a2hs],html.isapp [data-a2hs-go],html.isapp .paylist,html.isapp [data-mvcode],html.isapp [data-mvin],html.isapp [data-mvopen],html.isapp .mvbar{display:none!important}`;
+   html.isapp .bobacute,html.isapp .ml-boba,html.isapp .bobabtn,html.isapp .boba,html.isapp [data-a2hs],html.isapp [data-a2hs-go],html.isapp .paylist,html.isapp [data-payreport],html.isapp [data-mvcode],html.isapp [data-mvin],html.isapp [data-mvopen],html.isapp .mvbar{display:none!important}`;
   document.head.appendChild(st);
   buyBtn=function(){return sbUser?'':'<button class="btn" data-sblogin>已開通？登入帳號</button>'};
   openPaywall=appLockedModal;openPlans=appLockedModal;openTtsPromo=appLockedModal;openBuyInfo=appLockedModal;openUnlock=appLockedModal;
@@ -2962,7 +2972,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-offdl],[da
   if(t.hasAttribute('data-offdl')){offDownload(t);return}
   if(t.hasAttribute('data-offclear')){if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='再按一次確認';return}offClear()}});
 {const st=document.createElement('style');st.textContent=`.offbar{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:10px 14px;border-radius:14px;background:var(--soft);color:var(--ink);text-align:left;font-size:14px}
- .offbar small{color:var(--muted);font-size:12.5px}.offbar.on{flex-direction:row;align-items:center;justify-content:space-between;color:var(--ok);font-weight:600}
+ .payrep-link{display:block;margin:6px auto 0;font-size:13px;color:var(--muted)}.offbar small{color:var(--muted);font-size:12.5px}.offbar.on{flex-direction:row;align-items:center;justify-content:space-between;color:var(--ok);font-weight:600}
 `;document.head.appendChild(st)}
 /* ---------- 購買者輪廓（2026-11-18）：判斷是老用戶被倒數打動，還是新客人 ----------
    開通當下記錄：這台裝置第一次使用的日期、讀過幾篇、是否從桌面圖示開啟、是否看過倒數公告。只存在 GoatCounter 事件與帳號的來源紀錄。 */
