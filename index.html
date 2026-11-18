@@ -1643,7 +1643,7 @@ function renderGames(){
    <div class="gm-list">${GM_GAMES.map(g=>{
      if(g.soon&&!gamePass){si++;return `<button class="gm-g gm-soon" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${ICON.lock}</span><span class="gm-tx"><b>神秘遊戲 ${si}</b><small>全功能限定</small></span></button>`}
      const tz=g.teaser&&!gamePass;const b=rawStore.get('gmBest.'+g.id,0);
-     return `<button class="gm-g${g.hot?' hot':''}${tz?' teaser':''}" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${g.ic}</span><span class="gm-tx"><b>${g.name}${g.hot?'<span class="gm-hot">推薦</span>':''}${g.nw?'<span class="gm-hot gm-new">NEW</span>':''}${g.teaser?`<span class="gm-hot gm-new">${gamePass?'NEW':'通行證限定'}</span>`:''}${g.id==='cram'&&cramDue().length?`<span class="gm-hot">今天 ${cramDue().length} 個</span>`:''}</b><small>${g.desc}</small>${b?`<em>最高 +${b} 分</em>`:''}</span>${tz?`<span aria-hidden="true" class="gm-go">${ICON.lock}</span>`:'<span aria-hidden="true" class="gm-go">›</span>'}</button>`}).join('')}</div>
+     return `<button class="gm-g${g.hot?' hot':''}${tz?' teaser':''}" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${g.ic}</span><span class="gm-tx"><b>${g.name}${g.hot?'<span class="gm-hot">推薦</span>':''}${g.nw?'<span class="gm-hot gm-new">NEW</span>':''}${g.teaser?`<span class="gm-hot gm-new">${gamePass?'NEW':'全功能限定'}</span>`:''}${g.id==='cram'&&cramDue().length?`<span class="gm-hot">今天 ${cramDue().length} 個</span>`:''}</b><small>${g.desc}</small>${b?`<em>最高 +${b} 分</em>`:''}</span>${tz?`<span aria-hidden="true" class="gm-go">${ICON.lock}</span>`:'<span aria-hidden="true" class="gm-go">›</span>'}</button>`}).join('')}</div>
    <section class="gm-why" style="margin-top:16px"><h3>遊戲間怎麼幫你記單字？</h3>
     <p>讀故事是「第一次認識」單字，遊戲是「再見幾次面」。學過的單字在幾天內反覆<b>主動回想</b>，最能從短期記憶搬進長期記憶。</p>
     <ul><li><b>情境找物品</b>：把單字和畫面連在一起，用圖像記憶</li>
@@ -1882,7 +1882,7 @@ function cramAdd(list){if(!list||!list.length)return 0;const C=cramGet(),td=dkey
 function cramDue(){const C=cramGet(),td=dkey();return Object.values(C).filter(x=>x.d<=td).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(b.n||1)-(a.n||1))}
 function cramNote(n){if(!n)return '';return `<p class="cram-note">📒 答錯的 <b>${n}</b> 個字已收進「錯字補習班」${gamePass?'，明天記得來複習':'・<b>通行證</b>可以照記憶曲線複習'}</p>`}
 function cramBanner(){const C=cramGet(),all=Object.keys(C).length;if(!all)return '';const due=cramDue().length;
-  return `<button class="cram-ban" data-gopen="cram"><span>📒</span><span><b>${due?`今天有 ${due} 個錯字該複習`:'今天的錯字都複習完了'}</b><small>錯字補習班・共 ${all} 個${gamePass?'':'・通行證限定'}</small></span><span aria-hidden="true">${gamePass?'›':ICON.lock}</span></button>`}
+  return `<button class="cram-ban" data-gopen="cram"><span>📒</span><span><b>${due?`今天有 ${due} 個錯字該複習`:'今天的錯字都複習完了'}</b><small>錯字補習班・共 ${all} 個${gamePass?'':'・全功能限定'}</small></span><span aria-hidden="true">${gamePass?'›':ICON.lock}</span></button>`}
 function cramTeaser(){const all=Object.keys(cramGet()).length,due=cramDue().length;
   openModal(`<span class="kicker">全功能限定</span><h2>錯字補習班</h2>
    <p>${all?`你已經累積 <b>${all}</b> 個錯字，今天有 <b>${due}</b> 個該複習。`:'在遊戲裡答錯的字，會自動收進這裡。'}</p>
