@@ -1428,7 +1428,7 @@ function earlyModal(){if(unlocked||!isEarly())return false;
    <p>原價 288。全部霸總小說＋語音朗讀，<b>一次購買永久有效</b>，新故事也免費看。</p>
    <div class="acts">${buyBtn(true)}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="linkbtn" data-close style="align-self:center">先免費看前 10 篇</button></div>`);return true}
 function gamePassModal(){openModal(`<span class="kicker">開通成功</span><h2>遊戲通行證已開通</h2><div class="quote">${genderize('「遊戲間，從現在起整間都是妳的。」')}<small>已綁定帳號 ${esc(sbUser&&sbUser.email||'')}，換手機登入同一個帳號就能使用</small></div><div class="acts"><button class="btn" data-close data-tab-go="games">進入遊戲間</button><button class="btn ghost" data-close>稍後再玩</button></div>`,true);if(state.view==='games')renderGames()}
-function unlockedModal(){openModal(`<span class="kicker">解鎖成功</span><h2>${gamePass?'小說完整版＋遊戲通行證已開通':'完整版已開通'}</h2><div class="quote">${genderize('「從現在起，妳的每一篇故事，都歸我管。」')}<small>已綁定帳號 ${esc(sbUser&&sbUser.email||'')}，換手機登入同一個帳號就能使用</small></div><div class="acts"><button class="btn" data-close data-typepick>去選類型</button><button class="btn ghost" data-close>繼續閱讀</button></div>`,true)}
+function unlockedModal(){openModal(`<span class="kicker">解鎖成功</span><h2>${gamePass?'全功能已開通':'完整版已開通'}</h2><div class="quote">${genderize('「從現在起，妳的每一篇故事，都歸我管。」')}<small>已綁定帳號 ${esc(sbUser&&sbUser.email||'')}，換手機登入同一個帳號就能使用</small></div><div class="acts"><button class="btn" data-close data-typepick>去選類型</button><button class="btn ghost" data-close>繼續閱讀</button></div>`,true)}
 async function syncAccount(){
   try{await sbInit()}catch(e){return}
   if(!sbUser){if(PAYGO){rawStore.set('pendingPay',PAYGO);sbLogin();return}if(PAID_NO)openModal(`<span class="kicker">付款確認</span><h2>請登入確認付款</h2><p>請用付款時的 Google 帳號登入，系統會自動開通。</p><div class="acts"><button class="btn" data-sblogin>用 Google 登入</button></div>`);return}
@@ -1578,7 +1578,7 @@ let gamePass=!!rawStore.get('gpass',0);
 const GAME_URL='https://portaly.cc/han_s/product/6KM5P24S9XdnlRgNmM5L';  // 只賣終身全功能（舊遊戲通行證：5id3GqVWozbj47fvwoEq）      // ← 遊戲通行證 Portaly 商品連結（139 元）
 const BUNDLE_URL='https://portaly.cc/han_s/product/6KM5P24S9XdnlRgNmM5L';
 /* ---------- 綠界線上付款（PAY_LIVE=false 時只有 ?paytest=1 的裝置會看到，其他人照舊走 Portaly） ---------- */
-const PAY_LIVE=false;
+const PAY_LIVE=true;
 if(/[?&]paytest=1/.test(location.search))rawStore.set('paytest',1);
 if(/[?&]paytest=0/.test(location.search))rawStore.set('paytest',0);
 const payOn=()=>PAY_LIVE||!!rawStore.get('paytest',0);
@@ -1609,7 +1609,7 @@ async function payReturn(no){
       if(k&&k.ok&&k.key&&!unlocked)await applyKey(k.key);
       gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();return}
     await new Promise(r=>setTimeout(r,2000))}
-  openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>如果你選的是 <b>ATM 轉帳</b>，完成轉帳後系統會自動開通，之後打開 App、用同一個 Google 帳號登入就能使用。</p><p>如果已經用信用卡付款卻沒有開通，請寄信到 <b>bazonglearn@outlook.com</b>，附上訂單編號 <b>${esc(no)}</b>，我們會盡快處理。</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
+  openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>付款結果有時會晚幾分鐘送達，請稍後重新整理頁面，或用同一個 Google 帳號重新登入。</p><p>如果已經刷卡成功卻一直沒有開通，請寄信到 <b>bazonglearn@outlook.com</b>，附上訂單編號 <b>${esc(no)}</b>，我們會盡快處理。</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
 const BUNDLE=()=>LIFE;
 function bundleBtn(){return ''}
 function passBuy(){return buyBtn()+`<button class="btn ghost" data-unlock>我有解鎖碼／序號</button>`}
@@ -1645,7 +1645,7 @@ function renderGames(){
    ${gmRankCard()}
    ${cramBanner()}
    ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>'+GM_TRIAL+'</b> 次，先玩玩看':'免費試玩已用完'}<small>全功能 ${PTAG()} <b>${LIFE} 元</b>・終身無限玩</small></div>
-     <div class="gt-r">${GAME_URL?`<a class="gt-buy" href="${GAME_URL}" target="_blank" rel="noopener">購買</a>`:`<button class="gt-buy" data-buyinfo>購買</button>`}<button class="gt-code" data-unlock>輸入序號</button></div></div>
+     <div class="gt-r">${payOn()?`<button class="gt-buy" data-pay="all">購買</button>`:GAME_URL?`<a class="gt-buy" href="${GAME_URL}" target="_blank" rel="noopener">購買</a>`:`<button class="gt-buy" data-buyinfo>購買</button>`}<button class="gt-code" data-unlock>輸入序號</button></div></div>
      <button class="linkbtn pl-link" data-plans style="margin:-4px auto 12px">看方案比較 ›</button>`}
    <div class="gm-list">${GM_GAMES.map(g=>{
      if(g.soon&&!gamePass){si++;return `<button class="gm-g gm-soon" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${ICON.lock}</span><span class="gm-tx"><b>神秘遊戲 ${si}</b><small>全功能限定</small></span></button>`}
