@@ -1548,10 +1548,17 @@ function gmPersonal(lv){const Dd=lv==='toeic'?D2:lv==='ielts'?IELTS_D:D3;const s
     const Dt=T.dict;const svd=rawStore.get(pre+'saved',{})||{};for(const k in svd){const w=svd[k]&&svd[k].w||k;const e=Dt[norm(w)]||Dd[norm(w)]||{};const x=mk(w,(e.z||[])[0],Dt);if(x)sv.push(x)}
     const rs=rawStore.get(pre+'read',{})||{};T.stories.filter(st=>st.paras&&rs[st.id]).forEach(st=>storyWords(st).forEach(x=>{const y=mk(x[0],x[1],Dt);if(y)rd.push(y)}))}
   return {saved:sv,read:rd}}
-function gmWords(lv){const p=gmPersonal(lv);const all=gshuf(p.saved).concat(gshuf(p.read),gshuf(gmPool(lv)));const zs=new Set(),ws=new Set(),out=[];
-  for(const x of all){if(zs.has(x[1])||ws.has(x[0]))continue;zs.add(x[1]);ws.add(x[0]);out.push(x)}return out}
+/* 出題：生字本＋已讀文章的字和字庫隨機字交錯混合；最近出過的字排到後面，每次玩都換一批 */
+function gmWords(lv){const p=gmPersonal(lv);const rec=new Set(rawStore.get('gmRecent',[]));
+  const fresh=a=>{const s=gshuf(a);return s.filter(x=>!rec.has(x[0])).concat(s.filter(x=>rec.has(x[0])))};
+  const pers=fresh(p.saved).concat(fresh(p.read)),pl=fresh(gmPool(lv)),all=[];
+  for(let i=0;i<Math.max(pers.length,pl.length);i++){if(i<pers.length)all.push(pers[i]);if(i<pl.length)all.push(pl[i])}
+  const zs=new Set(),ws=new Set(),out=[];
+  for(const x of all){if(zs.has(x[1])||ws.has(x[0]))continue;zs.add(x[1]);ws.add(x[0]);out.push(x)}
+  try{rawStore.set('gmRecent',out.slice(0,30).map(x=>x[0]).concat([...rec]).slice(0,240))}catch(e){}
+  return out}
 function gmSrcNote(lv){const p=gmPersonal(lv);const n=p.saved.length+p.read.length;
-  return `<p class="gm-src">${n?`出題來源：你的生字本 <b>${p.saved.length}</b> 字＋已讀文章 <b>${p.read.length}</b> 字${n<40?`，不夠的從${gmLvName()}字庫補`:''}`:`還沒有讀過${gmLvName()}的文章，先從${gmLvName()}字庫隨機出題；讀過的文章和生字本會優先出題`}</p>`}
+  return `<p class="gm-src">${n?`出題來源：你的生字本 <b>${p.saved.length}</b> 字＋已讀文章 <b>${p.read.length}</b> 字，再混合${gmLvName()}字庫隨機單字，每次都換一批`:`還沒有讀過${gmLvName()}的文章，先從${gmLvName()}字庫隨機出題，每次都換一批；讀過的文章和生字本會一起混進題目`}</p>`}
 const gshuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 function gmXP(){return rawStore.get('gmXP',0)||0}
 function gmRank(xp){let r=GM_RANK[0],nx=null;for(let i=0;i<GM_RANK.length;i++){if(xp>=GM_RANK[i][0]){r=GM_RANK[i];nx=GM_RANK[i+1]||null}}return {lv:GM_RANK.indexOf(r)+1,title:r[1],from:r[0],next:nx}}
@@ -2720,17 +2727,20 @@ async function pushToggle(){const p=pushGet();
     if(!pushOK()){openModal(`<span class="kicker">提醒通知</span><h2>這個瀏覽器收不到通知</h2><p>請改用手機的 Chrome，或把 App 加到桌面後從桌面圖示打開，再來開啟提醒。</p><div class="acts"><button class="btn" data-gset>回到設定</button></div>`);return}
     let perm=Notification.permission;if(perm==='default'){try{perm=await Notification.requestPermission()}catch(e){perm='denied'}}
     if(perm!=='granted'){openModal(`<span class="kicker">提醒通知</span><h2>通知權限被關閉了</h2><p>請到手機的「設定 → 通知」或瀏覽器的網站設定，允許本站傳送通知，再回來開啟。</p><div class="acts"><button class="btn" data-gset>回到設定</button></div>`);return}
-    toast('設定中…');
-    try{const sub=await pushSub(true);if(!sub)throw new Error('nosub');p.on=true;pushSet(p);await pushSaveNow();
+    p.on=true;pushSet(p);setOpen();toast('設定中，請稍候幾秒…');
+    try{const sub=await pushSub(true);if(!sub)throw new Error('nosub');
       const reg=await pushReg();reg.showNotification('霸總教你背單字',{body:gz('女人，通知設定好了。每天 '+tFull(p.time)+'，我會準時來找妳。'),icon:'icon-192.png',badge:'icon-192.png',tag:'bz-test'});
-      if((days[dkey()]||[]).length)pushReadNow()}
-    catch(e){p.on=false;pushSet(p);toast('開啟失敗，請稍後再試');return}
+      await pushSaveNow();if((days[dkey()]||[]).length)pushReadNow()}
+    catch(e){p.on=false;pushSet(p);setOpen();toast('開啟失敗，請稍後再試');return}
     gcEvent('push-on','開啟提醒');setOpen();return}
   p.on=true;pushSet(p);gcEvent('push-on','開啟提醒');setOpen();setTimeout(pushPreview,350)}
 async function pushStartup(){const p=pushGet();if(!p.on||GROW_TEST||!PUSH_LIVE)return;
   if(!pushOK()||Notification.permission!=='granted'){if(pushOK()&&Notification.permission==='denied'){p.on=false;pushSet(p)}return}
   try{await pushSub(true);await pushSaveNow();if((days[dkey()]||[]).length)pushReadNow()}catch(e){}}
 setTimeout(pushStartup,4000);
+/* 開關提醒時避免重複點擊；登出時關掉這台裝置的提醒、清掉考試倒數，下一個登入的帳號不會看到前一個人的設定 */
+(()=>{const _t=pushToggle;pushToggle=async function(){if(_t.busy){toast('設定中，請稍候…');return}_t.busy=1;try{return await _t()}finally{_t.busy=0}}})();
+(()=>{const _l=sbLogout;sbLogout=async function(){try{if(pushGet().on&&pushOK()){const sub=await pushSub(false);const ep=sub?sub.endpoint:rawStore.get('pushEp','');if(sub)await sub.unsubscribe();await sbInit();if(ep)await sb.rpc('push_delete',{p_endpoint:ep})}}catch(e){}try{localStorage.removeItem('dqs.push');localStorage.removeItem('dqs.exam');localStorage.removeItem('dqs.pushEp')}catch(e){}return _l.apply(this,arguments)}})();
 document.addEventListener('click',e=>{if(e.target.closest('[data-done]'))setTimeout(pushReadNow,300)});
 function pushNeedA2hs(){openModal(`<span class="kicker">提醒通知</span><h2>iPhone 要先加到桌面</h2><p>iPhone 只允許「加到主畫面」的 App 傳送通知。先把 App 加到桌面，從桌面圖示打開後，再到設定開啟提醒。</p><div class="acts"><button class="btn" data-a2hs>看加到桌面的步驟</button><button class="linkbtn" data-gset style="align-self:center">回到設定</button></div>`)}
 function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button class="g-sw" role="switch" aria-checked="${!!p[k]&&!dis}" data-gpsw="${k}" ${dis?'disabled':''}><span><b>${t}</b><small>${s}</small></span><i></i></button>`;
@@ -2853,7 +2863,7 @@ if(IS_APP){
   const st=document.createElement('style');
   st.textContent=`html.isapp [data-unlock],html.isapp [data-pay],html.isapp [data-plans],html.isapp [data-buyinfo],html.isapp a[href*="portaly.cc"],html.isapp a[href*="ecpay"],
    html.isapp .gt-buy,html.isapp .gt-code,html.isapp .pl-link,html.isapp .supnote,html.isapp .lc-bar,html.isapp .ebbar,html.isapp .buy-or,
-   html.isapp .bobacute,html.isapp .ml-boba,html.isapp .bobabtn,html.isapp .boba,html.isapp [data-a2hs],html.isapp [data-a2hs-go],html.isapp .paylist{display:none!important}`;
+   html.isapp .bobacute,html.isapp .ml-boba,html.isapp .bobabtn,html.isapp .boba,html.isapp [data-a2hs],html.isapp [data-a2hs-go],html.isapp .paylist,html.isapp [data-mvcode],html.isapp [data-mvin],html.isapp [data-mvopen],html.isapp .mvbar{display:none!important}`;
   document.head.appendChild(st);
   buyBtn=function(){return sbUser?'':'<button class="btn" data-sblogin>已開通？登入帳號</button>'};
   openPaywall=appLockedModal;openPlans=appLockedModal;openTtsPromo=appLockedModal;openBuyInfo=appLockedModal;openUnlock=appLockedModal;
