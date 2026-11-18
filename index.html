@@ -2947,6 +2947,20 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-offdl],[da
 {const st=document.createElement('style');st.textContent=`.offbar{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;padding:10px 14px;border-radius:14px;background:var(--soft);color:var(--ink);text-align:left;font-size:14px}
  .offbar small{color:var(--muted);font-size:12.5px}.offbar.on{flex-direction:row;align-items:center;justify-content:space-between;color:var(--ok);font-weight:600}
 `;document.head.appendChild(st)}
+/* ---------- 購買者輪廓（2026-11-18）：判斷是老用戶被倒數打動，還是新客人 ----------
+   開通當下記錄：這台裝置第一次使用的日期、讀過幾篇、是否從桌面圖示開啟、是否看過倒數公告。只存在 GoatCounter 事件與帳號的來源紀錄。 */
+function devProfile(){let first=dkey(),reads=0;
+  try{for(const k of Object.keys(days||{})){if(k<first)first=k;reads+=(days[k]||[]).length}
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^dqs\.(.+\.)?plan$/.test(k)){const p=JSON.parse(localStorage.getItem(k)||'null');if(p&&p.start&&p.start<first)first=p.start}}}catch(e){}
+  const age=Math.max(0,Math.round((parseKey(dkey())-parseKey(first))/864e5));
+  const pwa=(()=>{try{return matchMedia('(display-mode: standalone)').matches||!!navigator.standalone}catch(e){return false}})();
+  const ann=rawStore.get('lifeAnnDay','')||(rawStore.get('lifeAnn',0)?'old':'');
+  return {first,age,reads,pwa:pwa?1:0,ann:ann?1:0,annToday:ann===dkey()?1:0}}
+(()=>{const _fb=fbBuy;fbBuy=function(pl,id){const k='who_'+(id||pl),first=!rawStore.get(k,0);_fb(pl,id);if(!first)return;rawStore.set(k,1);
+  try{const p=devProfile();const g=p.age>=7?'old':p.age>=1?'week':'new';
+    gcEvent(`buy-who-${g}-${p.ann?'ann':'noann'}-${p.pwa?'pwa':'web'}`,'購買者輪廓');
+    sbInit().then(()=>{if(!sbUser)return;const l=Object.assign({},rawStore.get('srcL',null)||rawStore.get('src1',null)||{src:'direct'},{dev:p,at:new Date().toISOString()});
+      return sb.rpc('src_save',{p_first:rawStore.get('src1',null),p_last:l})}).catch(()=>{})}catch(e){}}})();
 /* OFF_MOD_END */
 go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
