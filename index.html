@@ -2858,6 +2858,9 @@ if(IS_APP){
   buyBtn=function(){return sbUser?'':'<button class="btn" data-sblogin>已開通？登入帳號</button>'};
   openPaywall=appLockedModal;openPlans=appLockedModal;openTtsPromo=appLockedModal;openBuyInfo=appLockedModal;openUnlock=appLockedModal;
   openA2hs=function(){};
+  /* App 使用追蹤：每台裝置第一次打開記一次「安裝」，之後每天第一次打開記一次（GoatCounter 事件，不含個人資料） */
+  try{if(!rawStore.get('appInst',0)){rawStore.set('appInst',dkey());gcEvent('app-install','App 首次開啟')}
+    if(rawStore.get('appDay','')!==dkey()){rawStore.set('appDay',dkey());setTimeout(()=>gcEvent('app-daily-'+dkey().slice(5).replace('-',''),'App 每日使用'),3000)}}catch(e){}
   appScrub(document.body);
   const q=new Set();
   try{new MutationObserver(ms=>{for(const m of ms)if(m.addedNodes.length)q.add(m.target);const L=[...q];q.clear();L.forEach(appScrub)}).observe(document.body,{childList:true,subtree:true})}catch(e){}
