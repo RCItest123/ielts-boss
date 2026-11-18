@@ -1371,7 +1371,7 @@ function openInAppHint(code){
    <button class="btn ghost shsm" data-copytxt="${esc(siteURL()+_q)}">複製網址，貼到瀏覽器</button>
    <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
 async function sbLogin(){if(INAPP){openInAppHint(rawStore.get('pendingCode',null));return}try{await sbInit();await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}})}catch(e){toast('無法連線登入服務，請稍後再試')}}
-function lockDevice(limit){try{localStorage.removeItem('dqs.unlock');localStorage.removeItem('dqs.gpass')}catch(e){}if(limit)rawStore.set('devLimit',1);location.reload()}
+function lockDevice(limit){try{localStorage.removeItem('dqs.unlock');localStorage.removeItem('dqs.unlockMeta');localStorage.removeItem('dqs.gpass')}catch(e){}if(limit)rawStore.set('devLimit',1);location.reload()}
 async function sbLogout(){try{await sbInit();if(sbUser)await sb.rpc('release_device',{p_device:devId()});await sb.auth.signOut()}catch(e){}sbUser=null;try{localStorage.removeItem(SB_LS)}catch(e){}closeModal();
   if(unlocked||gamePass){rawStore.set('paidSeen',1);toast('已登出，這台裝置已回到免費版');setTimeout(()=>lockDevice(false),600)}else{toast('已登出帳號');if(state.view==='home')render()}}
 async function openAccount(){let em='';try{await sbInit();em=sbUser&&sbUser.email||''}catch(e){}
@@ -1379,7 +1379,9 @@ async function openAccount(){let em='';try{await sbInit();em=sbUser&&sbUser.emai
   openModal(`<span class="kicker">Google 帳號</span><h2>已登入</h2><p style="margin:0">${esc(em)}</p>
    <p class="pricenote" style="margin:0">${unlocked||gamePass?'付費內容已綁定這個帳號，換手機登入同一個帳號就能恢復。':'購買後輸入解鎖碼，就會綁定這個帳號。'}<br>學習進度和生字本會自動同步到這個帳號，換手機、換瀏覽器登入就能接著讀。<br>登出後，這台裝置會回到免費版（閱讀進度會保留），重新登入就能恢復付費內容。</p>
    <div class="acts"><button class="btn ghost" data-sblogout>登出</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`)}
-async function applyKey(k){await openVault(b64(k));rawStore.set('unlock',k);loadTrack(track);render()}
+async function applyKey(k,d){await openVault(b64(k));rawStore.set('unlock',k);rawStore.set('unlockMeta',{v:(d&&d.ver)||null,exp:(d&&d.exp)||null});loadTrack(track);render()}
+/* 換鑰空窗期：伺服器同時給目前金鑰與前一把，哪把解得開就用哪把 */
+async function applyKeyResp(d){for(const k of [d&&d.key,d&&d.prev].filter(Boolean)){try{await applyKey(k,d);return true}catch(e){}}return false}
 function devId(){let d=rawStore.get('devid','');if(!d){d=(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));rawStore.set('devid',d)}return d}
 function devLimitModal(){openModal(`<span class="kicker">帳號</span><h2>這個帳號已在其他裝置使用中</h2><p>同一個帳號最多可以在 3 台裝置使用。iPhone 的桌面圖示、Safari、Chrome 會分別算一台。</p><p style="margin:0">按下面的按鈕，就會登出其他裝置，改在這台使用。</p><p id="devKickMsg" class="codemsg"></p><p class="pricenote" style="margin:0">30 天沒使用的裝置會自動釋放。有問題請寄信到 ${REPORT_EMAIL}。</p><div class="acts"><button class="btn" data-devkick>登出其他裝置，在這台使用</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
 async function devKick(btn){btn.disabled=true;btn.textContent='處理中…';let r=null;try{await sbInit();({data:r}=await sb.rpc('release_others',{p_device:devId()}))}catch(e){}
@@ -1395,7 +1397,7 @@ async function redeemCode(code){
   fbBuy(data.kind==='game'?'game':data.kind==='all'?'all':'novel');
   if(data.kind==='game'||data.kind==='all'){gamePass=true;rawStore.set('gpass',1);gcEvent((data.kind==='all'?'bundle-':'gamepass-')+String(data.n||0),data.kind==='all'?'小說＋遊戲開通':'遊戲通行證開通')}
   if(data.kind==='game'){setTimeout(gmPull,300);return {ok:true,kind:'game'}}
-  await applyKey(data.key);setTimeout(gmPull,300);gcEvent('unlock-'+String(data.n||0).padStart(2,'0'),'解鎖成功 #'+(data.n||0));return {ok:true}}
+  await applyKeyResp(data);setTimeout(gmPull,300);gcEvent('unlock-'+String(data.n||0).padStart(2,'0'),'解鎖成功 #'+(data.n||0));return {ok:true}}
 function openPlans(){
   const Y='<span class="pl-y">✓</span>',N='<span class="pl-n">—</span>';
   const rows=[
@@ -1446,7 +1448,8 @@ async function syncAccount(){
     if(data&&data.ok===false&&data.err==='none'&&(unlocked||(gamePass&&!data.game))){lockDevice(false);return}
     if(sbUser)rawStore.set('needLogin',0);
     if(data&&data.game&&!gamePass){gamePass=true;rawStore.set('gpass',1);toast('遊戲通行證已開通')}
-    if(data&&data.ok&&data.key&&!unlocked){await applyKey(data.key);toast('已登入 '+(sbUser.email||'')+'，完整版已解鎖')}}
+    if(data&&data.ok&&data.key&&!unlocked){if(await applyKeyResp(data))toast('已登入 '+(sbUser.email||'')+'，完整版已解鎖')}
+    else if(data&&data.ok&&unlocked){const m=rawStore.get('unlockMeta',{})||{};rawStore.set('unlockMeta',Object.assign({},m,{exp:data.exp||null}))}}
   gmPull();if(state.view==='games'||state.view==='stats')render()
 }
 /* ---------- 付費用戶：問題回報 ---------- */
@@ -1606,7 +1609,7 @@ async function payReturn(no){
     if(d&&d.status==='paid'){let k=null;try{({data:k}=await sb.rpc('get_key',{p_device:devId()}))}catch(e){}
       if(k&&k.err==='devices'){devLimitModal();return}
       if(k&&k.game&&!gamePass){gamePass=true;rawStore.set('gpass',1)}
-      if(k&&k.ok&&k.key&&!unlocked)await applyKey(k.key);
+      if(k&&k.ok&&k.key&&!unlocked)await applyKeyResp(k);
       gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();return}
     await new Promise(r=>setTimeout(r,2000))}
   openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>付款結果有時會晚幾分鐘送達，請稍後重新整理頁面，或用同一個 Google 帳號重新登入。</p><p>如果已經刷卡成功卻一直沒有開通，請寄信到 <b>bazonglearn@outlook.com</b>，附上訂單編號 <b>${esc(no)}</b>，我們會盡快處理。</p><div class="acts"><button class="btn" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
@@ -2978,7 +2981,7 @@ function devProfile(){let first=dkey(),reads=0;
 /* ---------- 進度雲端同步（2026-11-18）：登入後把閱讀進度、生字本、遊戲紀錄存到帳號 ----------
    iPhone 的主畫面圖示、Safari、Chrome、Android App 各自存資料；登入同一個帳號就會自動合併、同步。
    付費權限、推播、裝置碼、來源追蹤等不同步（這些跟裝置綁定，或由伺服器另外管理）。 */
-const PG_DENY=/^(unlock|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|who_.*|__.*)$/;
+const PG_DENY=/^(unlock|unlockMeta|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|who_.*|__.*)$/;
 /* 這些資料兩邊合併（聯集／取最大），不會因為另一台比較新就蓋掉 */
 const PG_UNION=/(^|\.)(read|days|quiz|coll|seenCounts|gnDays|gmXP|cramGrad|gmBest\..*)$/;
 const pgOK=k=>!PG_DENY.test(k);
@@ -3036,7 +3039,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-pgnow]');i
 go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
-(async()=>{const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
+(async()=>{const um=rawStore.get('unlockMeta',null);if(um&&um.exp&&Date.now()>Date.parse(um.exp)){try{['unlock','unlockMeta','gpass'].forEach(x=>localStorage.removeItem('dqs.'+x))}catch(e){}gamePass=false}
+  const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
   if(hasSbHint()||PAID_NO||PAYGO)syncAccount().then(()=>{invSync();srcSync()}).catch(()=>{});
   if(DEL_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(async()=>{try{await sbInit()}catch(e){}delAcctOpen()},700)}
   setTimeout(()=>{if(window.__mvWait)return;if(GROW_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}if(firstVisit)rawStore.set('tour1',0);go('games');setTimeout(qbStart,300);return}if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
