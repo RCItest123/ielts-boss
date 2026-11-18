@@ -1288,7 +1288,7 @@ async function sbInit(){if(sb)return sb;await loadScript('https://cdn.jsdelivr.n
   sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true}});
   const {data}=await sb.auth.getSession();sbUser=data&&data.session?data.session.user:null;return sb}
 function openLoginWhy(){openModal(`<span class="kicker">Google 帳號</span><h2>登入有什麼好處？</h2>
-   <ul class="paylist"><li><b>買了直接開通</b>：購買後輸入解鎖碼，就會綁定這個帳號，不怕解鎖碼弄丟</li><li><b>換手機也能用</b>：在新手機或新瀏覽器登入同一個帳號，付費內容和遊戲通行證自動恢復</li><li><b>網址搬家不怕</b>：App 之後換新網址、上架手機 App 時，用同一個帳號登入，購買紀錄都會跟著你</li></ul>
+   <ul class="paylist"><li><b>買了直接開通</b>：購買後輸入解鎖碼，就會綁定這個帳號，不怕解鎖碼弄丟</li><li><b>換手機也能用</b>：在新手機或新瀏覽器登入同一個帳號，付費內容和遊戲通行證自動恢復</li><li><b>進度跟著帳號</b>：學習進度、生字本、遊戲紀錄自動同步，主畫面圖示、Safari、Chrome、手機 App 登入同一個帳號都能接著讀</li><li><b>網址搬家不怕</b>：App 之後換新網址、上架手機 App 時，用同一個帳號登入，購買紀錄都會跟著你</li></ul>
    <p class="pricenote" style="margin:0">只會取得你的 Email 用來綁定解鎖碼，不會發文或讀取其他資料。<br>LINE、IG、FB 內建瀏覽器無法 Google 登入，請用 Safari 或 Chrome 開啟。</p>
    <div class="acts"><button class="btn" data-sblogin>用 Google 登入</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
 function hasSbHint(){try{return !!localStorage.getItem(SB_LS)||/access_token=/.test(location.hash)}catch(e){return false}}
@@ -1377,7 +1377,7 @@ async function sbLogout(){try{await sbInit();if(sbUser)await sb.rpc('release_dev
 async function openAccount(){let em='';try{await sbInit();em=sbUser&&sbUser.email||''}catch(e){}
   if(!sbUser){openLoginWhy();return}
   openModal(`<span class="kicker">Google 帳號</span><h2>已登入</h2><p style="margin:0">${esc(em)}</p>
-   <p class="pricenote" style="margin:0">${unlocked||gamePass?'付費內容已綁定這個帳號，換手機登入同一個帳號就能恢復。':'購買後輸入解鎖碼，就會綁定這個帳號。'}<br>登出後，這台裝置會回到免費版（閱讀進度會保留），重新登入就能恢復付費內容。</p>
+   <p class="pricenote" style="margin:0">${unlocked||gamePass?'付費內容已綁定這個帳號，換手機登入同一個帳號就能恢復。':'購買後輸入解鎖碼，就會綁定這個帳號。'}<br>學習進度和生字本會自動同步到這個帳號，換手機、換瀏覽器登入就能接著讀。<br>登出後，這台裝置會回到免費版（閱讀進度會保留），重新登入就能恢復付費內容。</p>
    <div class="acts"><button class="btn ghost" data-sblogout>登出</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`)}
 async function applyKey(k){await openVault(b64(k));rawStore.set('unlock',k);loadTrack(track);render()}
 function devId(){let d=rawStore.get('devid','');if(!d){d=(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));rawStore.set('devid',d)}return d}
@@ -2765,6 +2765,7 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
    <section class="g-sec"><h3>其他</h3>
     <div class="g-row"><span><b>朗讀聲音</b><small>選擇英文與中文的朗讀聲音</small></span><button class="g-mini" data-voicepick>選擇</button></div>
     <div class="g-row"><span><b>使用教學</b><small>7 步看懂怎麼用</small></span><button class="g-mini" data-tour>查看</button></div>
+    <div class="g-row"><span><b>進度同步</b><small>${sbUser?'學習進度、生字本已同步到 '+esc(sbUser.email||'帳號'):'登入後，學習進度和生字本會存到帳號，換裝置也能接著讀'}</small></span>${sbUser?'<button class="g-mini" data-pgnow>立即同步</button>':'<button class="g-mini" data-sblogin>登入</button>'}</div>
     <div class="g-row"><span><b>離線閱讀</b><small>${offGet().length?'已下載：'+offGet().map(k=>TRACKS[k]?TRACKS[k].short:k).join('、'):'到「故事」頁按下載，沒網路也能讀'}</small></span>${offGet().length?'<button class="g-mini" data-offclear>清除</button>':''}</div>
     <div class="g-row"><span><b>隱私權政策</b><small>我們收集哪些資料、怎麼使用</small></span><a class="g-mini" href="privacy.html" target="_blank" rel="noopener">查看</a></div>
     <div class="g-row"><span><b>刪除帳號</b><small>永久刪除帳號與伺服器上的資料</small></span><button class="g-mini" data-delopen>刪除</button></div>
@@ -2974,6 +2975,63 @@ function devProfile(){let first=dkey(),reads=0;
     gcEvent(`buy-who-${g}-${p.ann?'ann':'noann'}-${p.pwa?'pwa':'web'}`,'購買者輪廓');
     sbInit().then(()=>{if(!sbUser)return;const l=Object.assign({},rawStore.get('srcL',null)||rawStore.get('src1',null)||{src:'direct'},{dev:p,at:new Date().toISOString()});
       return sb.rpc('src_save',{p_first:rawStore.get('src1',null),p_last:l})}).catch(()=>{})}catch(e){}}})();
+/* ---------- 進度雲端同步（2026-11-18）：登入後把閱讀進度、生字本、遊戲紀錄存到帳號 ----------
+   iPhone 的主畫面圖示、Safari、Chrome、Android App 各自存資料；登入同一個帳號就會自動合併、同步。
+   付費權限、推播、裝置碼、來源追蹤等不同步（這些跟裝置綁定，或由伺服器另外管理）。 */
+const PG_DENY=/^(unlock|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|who_.*|__.*)$/;
+/* 這些資料兩邊合併（聯集／取最大），不會因為另一台比較新就蓋掉 */
+const PG_UNION=/(^|\.)(read|days|quiz|coll|seenCounts|gnDays|gmXP|cramGrad|gmBest\..*)$/;
+const pgOK=k=>!PG_DENY.test(k);
+const pgT=()=>{try{return JSON.parse(localStorage.getItem('dqs.__pt')||'{}')||{}}catch(e){return {}}};
+const pgTSet=t=>{try{localStorage.setItem('dqs.__pt',JSON.stringify(t))}catch(e){}};
+let pgApplying=false,pgTimer=0,pgBusy=null,pgAt=0,pgDirty=false;
+(()=>{const _s=rawStore.set;rawStore.set=function(k,v){_s.call(rawStore,k,v);if(pgApplying||!pgOK(k))return;
+  const t=pgT();t[k]=Date.now();pgTSet(t);pgDirty=true;if(sbUser||hasSbHint()){clearTimeout(pgTimer);pgTimer=setTimeout(()=>progSync('push'),5000)}}})();
+function pgLocal(){const k={};for(let i=0;i<localStorage.length;i++){const n=localStorage.key(i);if(!n||n.indexOf('dqs.')!==0)continue;const s=n.slice(4);if(pgOK(s))k[s]=localStorage.getItem(n)}return k}
+function pgMerge(a,b){/* a=本機 b=雲端；數字取大、清單聯集、物件逐項合併，其餘以雲端為準 */
+  if(a==null)return b;if(b==null)return a;
+  if(typeof a==='number'&&typeof b==='number')return Math.max(a,b);
+  if(Array.isArray(a)&&Array.isArray(b)){const seen=new Set(),out=[];for(const x of a.concat(b)){const j=JSON.stringify(x);if(!seen.has(j)){seen.add(j);out.push(x)}}return out}
+  if(typeof a==='object'&&typeof b==='object'&&!Array.isArray(a)&&!Array.isArray(b)){const o=Object.assign({},a);for(const k in b)o[k]=k in a?pgMerge(a[k],b[k]):b[k];return o}
+  return b}
+const pgParse=s=>{try{return JSON.parse(s)}catch(e){return s}};
+/* 把雲端資料併進本機；回傳本機是否有變 */
+function pgApply(cloud,mode){const L=pgLocal(),T=pgT(),C=(cloud&&cloud.k)||{},CT=(cloud&&cloud.t)||{};let changed=false;
+  pgApplying=true;
+  try{
+    if(mode==='switch'&&Object.keys(C).length){for(const k in L){if(!(k in C)){localStorage.removeItem('dqs.'+k);delete T[k];changed=true}}}
+    for(const k in C){if(!pgOK(k))continue;const cv=C[k],lv=mode==='switch'?undefined:L[k];let nv=cv;
+      if(lv!==undefined&&lv!==cv){
+        if(PG_UNION.test(k)||mode==='first')nv=JSON.stringify(pgMerge(pgParse(lv),pgParse(cv)));
+        else nv=(CT[k]||0)>(T[k]||0)?cv:lv}
+      if(nv!==L[k]){localStorage.setItem('dqs.'+k,nv);changed=true}
+      T[k]=Math.max(T[k]||0,CT[k]||0)}
+  }catch(e){}
+  pgApplying=false;pgTSet(T);return changed}
+function pgBlob(){const T=pgT(),k=pgLocal(),t={};for(const x in k)t[x]=T[x]||0;return {k,t}}
+function pgRefresh(){try{days=rawStore.get('days',{})||{};const t=rawStore.get('track',track);loadTrack(TRACKS[t]?t:track);fontSize=rawStore.get('font',fontSize);render()}catch(e){}}
+async function progSync(why){if(pgBusy)return pgBusy;
+  pgBusy=(async()=>{try{await sbInit();if(!sbUser)return;const uid=sbUser.id,pu=localStorage.getItem('dqs.__pu');
+    const mode=pu===uid?'normal':pu?'switch':'first';
+    let {data:g}=await sb.rpc('prog_get');if(!g||!g.ok)return;
+    let changed=g.d?pgApply(g.d,mode):false;
+    for(let i=0;i<3;i++){const blob=pgBlob();
+      if(g.d&&JSON.stringify(g.d)===JSON.stringify(blob))break;
+      const {data:p}=await sb.rpc('prog_put',{p_data:blob,p_ver:g.v||0});if(!p)break;
+      if(p.ok){g={v:p.v,d:blob};break}
+      if(p.err!=='stale')break;
+      g={v:p.v,d:p.d};if(p.d&&pgApply(p.d,'normal'))changed=true}
+    try{localStorage.setItem('dqs.__pu',uid)}catch(e){}
+    pgAt=Date.now();pgDirty=false;
+    if(changed){pgRefresh();if(mode!=='normal')toast('已從帳號同步學習進度和生字本')}
+    if(mode==='first')gcEvent('prog-sync-first','進度首次同步')}catch(e){}finally{pgBusy=null}})();
+  return pgBusy}
+(()=>{const _a=syncAccount;syncAccount=async function(){const r=await _a.apply(this,arguments);progSync('login');return r}})();
+document.addEventListener('visibilitychange',()=>{if(!sbUser)return;
+  if(document.visibilityState==='hidden'){if(pgDirty){clearTimeout(pgTimer);progSync('hide')}}
+  else if(Date.now()-pgAt>60e3)progSync('show')});
+/* 登出不刪本機進度；換帳號登入時，改用新帳號的進度 */
+document.addEventListener('click',e=>{const t=e.target.closest('[data-pgnow]');if(!t)return;t.disabled=true;t.textContent='同步中…';progSync('manual').then(()=>{toast('學習進度已同步');t.disabled=false;t.textContent='立即同步'})});
 /* OFF_MOD_END */
 go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
