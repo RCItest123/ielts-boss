@@ -1442,7 +1442,7 @@ async function syncAccount(){
   if(pc){rawStore.set('pendingCode',null);const r=await redeemCode(pc);if(r.ok)(r.kind==='game'?gamePassModal:unlockedModal)();else{openUnlock();setTimeout(()=>{const m=document.getElementById('codeMsg'),i=document.getElementById('codeInput');if(i)i.value=pc;if(m){m.textContent=r.msg;m.className='codemsg err'}},60)}return}
   {let {data}=await sb.rpc('get_key',{p_device:devId()});
     /* 舊版（未綁帳號）解鎖：用本機或搬家帶來的解鎖金鑰，把付費資格轉到這個 Google 帳號 */
-    const lk=rawStore.get('legacyKey',null)||(unlocked?rawStore.get('unlock',null):null);
+    const lk=rawStore.get('legacyKey',null);  /* 只轉「帳號功能以前」的本機解鎖；帳號開通的金鑰不能拿來替別的帳號開通 */
     if(data&&data.err==='none'&&lk){try{const {data:c}=await sb.rpc('claim_legacy',{p_key:lk});if(c&&c.ok){rawStore.set('legacyKey',null);gcEvent('legacy-claim','舊版解鎖轉帳號');({data}=await sb.rpc('get_key',{p_device:devId()}))}else if(c&&c.err==='invalid')rawStore.set('legacyKey',null)}catch(e){}}
     if(data&&data.err==='devices'){if(unlocked||gamePass){lockDevice(true);return}devLimitModal()}
     if(data&&data.ok===false&&data.err==='none'&&(unlocked||(gamePass&&!data.game))){lockDevice(false);return}
