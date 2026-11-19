@@ -2809,6 +2809,10 @@ const srcKeep=(()=>{const keep={};try{const q=new URLSearchParams(location.searc
 const srcQS=()=>{const k=Object.keys(srcKeep).length?srcKeep:(rawStore.get('srcQ',null)||{});const q=new URLSearchParams(k).toString();return q?'?'+q:''};
 /* 在 FB／IG／Threads 內建瀏覽器裡，把廣告參數留在網址上，使用者改用 Safari／Chrome 開啟時來源才不會斷掉 */
 if(INAPP)setTimeout(()=>{try{const q=srcQS();if(q&&!location.search.includes('utm_')&&!location.search.includes('fbclid'))history.replaceState(history.state,'',location.pathname+q+location.hash)}catch(e){}},1500);
+/* 每日訪客（2026-11-20）：每台裝置每天回報一次，隨機編號、不含個資；當天若之後從廣告進來會補上來源 */
+setTimeout(()=>{try{if(GROW_TEST)return;const day=dkey(),L=rawStore.get('srcL',null),fresh=!!(L&&L.at&&Date.now()-Date.parse(L.at)<20000&&L.src&&L.src!=='direct');
+  if(rawStore.get('hitDay','')===day&&!fresh)return;let v=rawStore.get('vid','');if(!v){v=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'');rawStore.set('vid',v)}
+  fetch(SB_URL+'/rest/v1/rpc/hit',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+SB_KEY},body:JSON.stringify({p_vid:v,p_src:fresh?L.src:(window.BZ_APP?'app':'direct'),p_camp:fresh?(L.camp||''):'',p_ad:fresh?(L.cont||''):'',p_app:!!window.BZ_APP})}).then(r=>{if(r.ok)rawStore.set('hitDay',day)}).catch(()=>{})}catch(e){}},1200);
 async function srcSync(){if(GROW_TEST)return;try{await sbInit();if(!sbUser)return;const f=rawStore.get('src1',null),l=rawStore.get('srcL',null);if(!f&&!l)return;
   const sig=JSON.stringify([f&&f.at,l&&l.at]);if(rawStore.get('srcSent','')===sig)return;
   await sb.rpc('src_save',{p_first:f,p_last:l});rawStore.set('srcSent',sig)}catch(e){}}
@@ -2996,7 +3000,7 @@ function devProfile(){let first=dkey(),reads=0;
 /* ---------- 進度雲端同步（2026-11-18）：登入後把閱讀進度、生字本、遊戲紀錄存到帳號 ----------
    iPhone 的主畫面圖示、Safari、Chrome、Android App 各自存資料；登入同一個帳號就會自動合併、同步。
    付費權限、推播、裝置碼、來源追蹤等不同步（這些跟裝置綁定，或由伺服器另外管理）。 */
-const PG_DENY=/^(unlock|unlockMeta|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|subui|subNudgeDay|who_.*|__.*)$/;
+const PG_DENY=/^(unlock|unlockMeta|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|subui|subNudgeDay|vid|hitDay|who_.*|__.*)$/;
 /* 這些資料兩邊合併（聯集／取最大），不會因為另一台比較新就蓋掉 */
 const PG_UNION=/(^|\.)(read|days|quiz|coll|seenCounts|gnDays|gmXP|cramGrad|gmBest\..*)$/;
 const pgOK=k=>!PG_DENY.test(k);

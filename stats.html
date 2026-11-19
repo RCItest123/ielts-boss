@@ -34,11 +34,18 @@ async function load(){const sub=document.getElementById('sub'),out=document.getE
   const t=d.days[0]||{},w=d.days.reduce((a,x)=>({paid:a.paid+x.paid,amount:a.amount+x.amount,portaly:a.portaly+x.portaly}),{paid:0,amount:0,portaly:0});
   sub.textContent='更新時間 '+d.now+'（台灣時間）';
   out.innerHTML=`<div class="kpi"><div class="k"><span>今天綠界成交</span><b>${t.paid}</b><span>NT$${t.amount}</span></div><div class="k"><span>今天 Portaly 碼</span><b>${t.portaly}</b><span>開通次數</span></div><div class="k"><span>今天未完成付款</span><b class="${t.unpaid?'warn':''}">${t.unpaid}</b><span>進了綠界沒付</span></div></div>
-   <div class="kpi"><div class="k"><span>近 7 天綠界</span><b>${w.paid}</b><span>NT$${w.amount}</span></div><div class="k"><span>近 7 天 Portaly</span><b>${w.portaly}</b><span>開通次數</span></div><div class="k"><span>今天新帳號</span><b>${t.signups}</b><span>登入人數</span></div></div>
-   <h2>每日</h2><table><tr><th>日期</th><th>綠界成交</th><th>金額</th><th>未付款</th><th>Portaly</th><th>新帳號</th></tr>
-   ${d.days.map((x,i)=>`<tr class="${i?'':'today'}"><td>${esc(x.day)}</td><td>${x.paid}</td><td>${x.amount}</td><td class="${x.unpaid?'warn':''}">${x.unpaid}</td><td>${x.portaly}</td><td>${x.signups}</td></tr>`).join('')}</table>
+   <div class="kpi"><div class="k"><span>近 7 天綠界</span><b>${w.paid}</b><span>NT$${w.amount}</span></div><div class="k"><span>近 7 天 Portaly</span><b>${w.portaly}</b><span>開通次數</span></div><div class="k"><span>帳號總數</span><b>${d.users_total}</b><span>今天新增 ${t.signups}</span></div></div>
+   <div class="kpi"><div class="k"><span>今天訪客</span><b>${t.visitors}</b><span>網站自己記</span></div><div class="k"><span>今天造訪</span><b id="gcT">…</b><span>GoatCounter</span></div><div class="k"><span>今天轉換</span><b>${t.visitors?((t.paid+t.portaly)/t.visitors*100).toFixed(1)+'%':'—'}</b><span>購買÷訪客</span></div></div>
+   <h2>每日</h2><table><tr><th>日期</th><th>造訪</th><th>訪客</th><th>綠界</th><th>金額</th><th>未付</th><th>Portaly</th><th>新帳號</th></tr>
+   ${d.days.map((x,i)=>`<tr class="${i?'':'today'}"><td>${esc(x.day)}</td><td id="gc${i}">…</td><td>${x.visitors||'—'}</td><td>${x.paid}</td><td>${x.amount}</td><td class="${x.unpaid?'warn':''}">${x.unpaid}</td><td>${x.portaly}</td><td>${x.signups}</td></tr>`).join('')}</table>
+   <h2>訪客來源（今天／近 7 天）</h2><table><tr><th>來源</th><th>今天</th><th>7 天</th></tr>${(d.sources||[]).map(x=>`<tr><td>${esc(SRC[x.src]||x.src)}${x.camp?'<br><span class="muted">'+esc(x.camp)+'</span>':''}</td><td>${x.today}</td><td>${x.week}</td></tr>`).join('')||'<tr><td colspan="3" class="muted">從 11/20 開始記錄</td></tr>'}</table>
    <h2>最近綠界訂單</h2><table><tr><th>時間</th><th>方案</th><th>金額</th><th>狀態</th><th>來源</th></tr>
-   ${(d.recent||[]).map(x=>`<tr><td>${esc(x.t)}<br><span class="muted">${esc(x.who)}</span></td><td>${esc(PL[x.plan]||x.plan)}</td><td>${x.amount}</td><td class="${x.status==='paid'?'':'muted'}">${x.status==='paid'?'已付款':'已退款'}</td><td>${esc(x.src)||'<span class="muted">—</span>'}</td></tr>`).join('')}</table>`}
+   ${(d.recent||[]).map(x=>`<tr><td>${esc(x.t)}<br><span class="muted">${esc(x.who)}</span></td><td>${esc(PL[x.plan]||x.plan)}</td><td>${x.amount}</td><td class="${x.status==='paid'?'':'muted'}">${x.status==='paid'?'已付款':'已退款'}</td><td>${esc(x.src)||'<span class="muted">—</span>'}</td></tr>`).join('')}</table>`;
+  goat(d.days)}
+const SRC={direct:'直接進站（含回訪）',meta:'Meta 廣告',threads:'Threads',instagram:'Instagram',facebook:'Facebook',line:'LINE',app:'Android App','l.threads.com':'Threads 連結','www.google.com':'Google 搜尋'};
+async function goat(days){const nx=s=>{const d=new Date(s+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10)};
+  await Promise.all(days.map(async(x,i)=>{let n='—';try{const j=await fetch('https://hans.goatcounter.com/counter/TOTAL.json?start='+x.date+'&end='+nx(x.date)).then(r=>r.json());n=j.count}catch(e){}
+    const c=document.getElementById('gc'+i);if(c)c.textContent=n;if(i===0){const b=document.getElementById('gcT');if(b)b.textContent=n}}))}
 document.getElementById('re').onclick=load;load();
 </script>
 </body>
