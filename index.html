@@ -1619,6 +1619,7 @@ async function payReturn(no){
       if(k&&k.err==='devices'){devLimitModal();return}
       if(k&&k.game&&!gamePass){gamePass=true;rawStore.set('gpass',1)}
       if(k&&k.ok&&k.key&&!unlocked)await applyKeyResp(k);
+      else if(k&&k.ok&&unlocked){const m=rawStore.get('unlockMeta',{})||{};rawStore.set('unlockMeta',Object.assign({},m,{exp:k.exp||null}))}
       gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();return}
     await new Promise(r=>setTimeout(r,2000))}
   openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>付款結果有時會晚幾分鐘送達，請稍後重新整理頁面，或用同一個 Google 帳號重新登入。</p><p>如果已經刷卡成功卻一直沒有開通，請按下面的按鈕回報，我們會盡快處理。</p><div class="acts"><button class="btn" data-payreport>回報付款問題</button><button class="btn ghost" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
@@ -2778,6 +2779,7 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
    <section class="g-sec"><h3>其他</h3>
     <div class="g-row"><span><b>朗讀聲音</b><small>選擇英文與中文的朗讀聲音</small></span><button class="g-mini" data-voicepick>選擇</button></div>
     <div class="g-row"><span><b>使用教學</b><small>7 步看懂怎麼用</small></span><button class="g-mini" data-tour>查看</button></div>
+    ${SUBS_UI?'<div class="g-row"><span><b>我的方案</b><small>到期日、續買年票／月票</small></span><button class="g-mini" data-mysub>查看</button></div>':''}
     <div class="g-row"><span><b>進度同步</b><small>${sbUser?'學習進度、生字本已同步到 '+esc(sbUser.email||'帳號'):'登入後，學習進度和生字本會存到帳號，換裝置也能接著讀'}</small></span>${sbUser?'<button class="g-mini" data-pgnow>立即同步</button>':'<button class="g-mini" data-sblogin>登入</button>'}</div>
     <div class="g-row"><span><b>離線閱讀</b><small>${offGet().length?'已下載：'+offGet().map(k=>TRACKS[k]?TRACKS[k].short:k).join('、'):'到「故事」頁按下載，沒網路也能讀'}</small></span>${offGet().length?'<button class="g-mini" data-offclear>清除</button>':''}</div>
     <div class="g-row"><span><b>隱私權政策</b><small>我們收集哪些資料、怎麼使用</small></span><a class="g-mini" href="privacy.html" target="_blank" rel="noopener">查看</a></div>
@@ -2991,7 +2993,7 @@ function devProfile(){let first=dkey(),reads=0;
 /* ---------- 進度雲端同步（2026-11-18）：登入後把閱讀進度、生字本、遊戲紀錄存到帳號 ----------
    iPhone 的主畫面圖示、Safari、Chrome、Android App 各自存資料；登入同一個帳號就會自動合併、同步。
    付費權限、推播、裝置碼、來源追蹤等不同步（這些跟裝置綁定，或由伺服器另外管理）。 */
-const PG_DENY=/^(unlock|unlockMeta|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|who_.*|__.*)$/;
+const PG_DENY=/^(unlock|unlockMeta|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|subui|subNudgeDay|who_.*|__.*)$/;
 /* 這些資料兩邊合併（聯集／取最大），不會因為另一台比較新就蓋掉 */
 const PG_UNION=/(^|\.)(read|days|quiz|coll|seenCounts|gnDays|gmXP|cramGrad|gmBest\..*)$/;
 const pgOK=k=>!PG_DENY.test(k);
@@ -3045,6 +3047,91 @@ document.addEventListener('visibilitychange',()=>{if(!sbUser)return;
   else if(Date.now()-pgAt>60e3)progSync('show')});
 /* 登出不刪本機進度；換帳號登入時，改用新帳號的進度 */
 document.addEventListener('click',e=>{const t=e.target.closest('[data-pgnow]');if(!t)return;t.disabled=true;t.textContent='同步中…';progSync('manual').then(()=>{toast('學習進度已同步');t.disabled=false;t.textContent='立即同步'})});
+/* ---------- 年票／月票方案畫面（2026-11-19，預覽中：只有 ?subui=1 的裝置看得到，尚未上線） ----------
+   綠界一般信用卡一次付清，不自動扣款。主畫面推年票（顯示比月票省幾 %），月票要按「看月票方案」才看得到價格。
+   提早續買，天數接在目前到期日之後。到期前 7 天提醒續買。 */
+const SUBS_UI=(()=>{try{if(/[?&]subui=1/.test(location.search))rawStore.set('subui',1);if(/[?&]subui=0/.test(location.search))rawStore.set('subui',0)}catch(e){}return !window.BZ_APP&&!!rawStore.get('subui',0)})();
+const SUB={year:{price:499,orig:899,name:'年票',days:365,plan:'pass_year'},month:{price:89,orig:129,name:'月票',days:30,bonus:15,plan:'pass_month'}};
+const subSave=()=>Math.round((1-SUB.year.price/(SUB.month.price*12))*100);   /* 年票比買 12 張月票省幾 %（同為試營運價） */
+const subPerMonth=()=>Math.round(SUB.year.price/12);
+const SUB_N=()=>{try{return Math.floor(TOTAL_N()/100)*100}catch(e){return 600}};
+const SUB_FEAT_F=()=>[`超過 ${SUB_N()} 篇霸總小說無限讀到飽，新小說持續更新`,'遊戲間互動背單字遊戲暢玩','新遊戲、新小說上架全部涵蓋','後續更多新功能持續新增'];
+const SUB_RULE='一次付清，到期不會自動扣款。還沒到期就續買，天數直接接在後面，不會浪費。';
+const twDate=s=>{try{const d=new Date(s);return d.toLocaleDateString('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'numeric',day:'numeric'})}catch(e){return s}};
+const subDaysLeft=s=>Math.ceil((Date.parse(s)-Date.now())/864e5);
+function openSubPlans(){gcEvent('sub-view-year','看方案（年票）');
+  openModal(`<span class="kicker">全功能方案</span><h2>一年只要 NT$${SUB.year.price}</h2>
+   <div class="sub-card sub-main">
+     <span class="sub-badge">最划算・比月票省 ${subSave()}%</span>
+     <div class="sub-name">年票 365 天<small>試營運價</small></div>
+     <div class="sub-price"><s>原價 NT$${SUB.year.orig}</s><b>NT$${SUB.year.price}</b><span>／年</span></div>
+     <div class="sub-sub">平均每月只要 ${subPerMonth()} 元</div>
+     <ul class="sub-feat">${SUB_FEAT_F().map(f=>`<li>${f}</li>`).join('')}</ul>
+   </div>
+   <button class="btn" data-subpay="year">購買年票 NT$${SUB.year.price}</button>
+   <p class="pricenote" style="margin:0">${SUB_RULE}</p>
+   <button class="linkbtn sub-more" data-submonth>看月票方案 ›</button>
+   <button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`)}
+function openSubMonth(){gcEvent('sub-view-month','看月票方案');
+  openModal(`<span class="kicker">全功能方案</span><h2>月票方案</h2>
+   <div class="sub-card">
+     <div class="sub-name">月票 30 天<small>試營運價</small></div>
+     <div class="sub-price"><s>原價 NT$${SUB.month.orig}</s><b>NT$${SUB.month.price}</b><span>／30 天</span></div>
+     <div class="sub-sub">第一次買月票加贈 ${SUB.month.bonus} 天</div>
+     <ul class="sub-feat">${SUB_FEAT_F().map(f=>`<li>${f}</li>`).join('')}</ul>
+   </div>
+   <button class="btn" data-subpay="month">購買月票 NT$${SUB.month.price}</button>
+   <p class="pricenote" style="margin:0">${SUB_RULE}</p>
+   <button class="sub-nudge" data-subyear><b>改買年票，每月只要 ${subPerMonth()} 元</b><small>一年 NT$${SUB.year.price}，比月票省 ${subSave()}% ›</small></button>
+   <button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`)}
+/* 我的方案（設定裡） */
+async function openMySub(demo){let d=demo||null;
+  if(!d){try{await sbInit();if(!sbUser){openLoginWhy();return}({data:d}=await sb.rpc('my_pass'))}catch(e){}}
+  if(d&&d.lifetime){openModal(`<span class="kicker">我的方案</span><h2>終身全功能</h2><p>你的帳號是終身全功能，不需要再買票。</p><div class="acts"><button class="btn" data-close>好</button></div>`);return}
+  if(!d||!d.expires_at){openModal(`<span class="kicker">我的方案</span><h2>目前是免費版</h2>
+     <p>買年票或月票，所有故事、語音朗讀和遊戲間都能用。</p>
+     <div class="acts"><button class="btn" data-subplans>看方案</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`);return}
+  const left=subDaysLeft(d.expires_at),soon=left<=7,P=d.last_plan==='pass_month'?SUB.month:SUB.year;
+  openModal(`<span class="kicker">我的方案</span><h2>全功能${P.name}</h2>
+   <div class="sub-info">
+     <div><span>狀態</span><b class="${soon?'sub-warn':'sub-on'}">${soon?'快到期了':'使用中'}</b></div>
+     <div><span>可以用到</span><b>${twDate(d.expires_at)} 23:59</b></div>
+     <div><span>剩下</span><b>${left} 天</b></div>
+   </div>
+   <p class="pricenote" style="margin:0">到期不會自動扣款。現在續買，天數會接在 ${twDate(d.expires_at)} 之後。</p>
+   <button class="btn" data-subpay="year">續買年票 NT$${SUB.year.price}</button>
+   <button class="linkbtn sub-more" data-submonth>改買月票 ›</button>
+   <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
+/* 到期前 7 天提醒續買（每天最多一次） */
+function subRenewNudge(){if(!SUBS_UI||!unlocked)return;const m=rawStore.get('unlockMeta',null);if(!m||!m.exp)return;
+  const left=subDaysLeft(m.exp);if(left>7||left<0)return;const day=new Date().toDateString();if(rawStore.get('subNudgeDay','')===day)return;rawStore.set('subNudgeDay',day);
+  openModal(`<span class="kicker">方案快到期了</span><h2>全功能還剩 ${left<=0?'不到 1':left} 天</h2>
+   <div class="quote">${genderize('「時間到了就想走？……續一下，我還沒教完妳。」')}</div>
+   <p>${twDate(m.exp)} 23:59 到期，之後會回到免費版，閱讀進度和生字本都會保留。現在續買，天數會接在後面。</p>
+   <div class="acts"><button class="btn" data-subplans>續買</button><button class="linkbtn" data-close style="align-self:center">之後再說</button></div>`)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-subplans],[data-submonth],[data-subyear],[data-subpay],[data-mysub]');if(!t)return;
+  if(t.hasAttribute('data-subplans')||t.hasAttribute('data-subyear')){openSubPlans();return}
+  if(t.hasAttribute('data-submonth')){openSubMonth();return}
+  if(t.hasAttribute('data-subpay')){const p=SUB[t.dataset.subpay].plan;gcEvent('sub-start-'+p,'開始購買票券');payStart(p);return}
+  if(t.hasAttribute('data-mysub')){openMySub();return}});
+if(SUBS_UI){
+  /* 購買按鈕改成「看方案」 */
+  buyBtn=function(bare){return `<button class="btn" data-subplans>開通全功能・每月 ${subPerMonth()} 元起</button>`+(bare?'':`<p class="pricenote">年票 NT$${SUB.year.price}（原價 ${SUB.year.orig}）・一次付清不自動扣款<br>霸總小說無限讀到飽＋背單字遊戲暢玩</p>`)+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button><button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`};
+  setTimeout(subRenewNudge,2500);
+}
+{const st=document.createElement('style');st.textContent=`
+ .sub-card{position:relative;width:100%;padding:16px 16px 14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);text-align:left}
+ .sub-card.sub-main{box-shadow:inset 0 0 0 2px var(--wine);padding-top:22px}
+ .sub-badge{position:absolute;top:-11px;left:16px;padding:3px 10px;border-radius:999px;background:var(--wine);color:var(--wine-ink);font-size:12px;font-weight:700;letter-spacing:.04em}
+ .sub-name{font-weight:700;font-size:16px;color:var(--ink)}.sub-name small{margin-left:8px;font-size:12px;font-weight:600;color:var(--wine)}
+ .sub-price{display:flex;align-items:baseline;gap:8px;margin-top:6px;flex-wrap:wrap}.sub-price s{font-size:13px;color:var(--muted)}.sub-price b{font-size:30px;line-height:1.1;color:var(--wine);font-family:inherit}.sub-price span{font-size:14px;color:var(--muted)}
+ .sub-sub{margin-top:2px;font-size:13.5px;font-weight:600;color:var(--mark-ink)}
+ .sub-feat{margin:10px 0 0;padding-left:1.15em;display:flex;flex-direction:column;gap:3px;font-size:13.5px;color:var(--ink)}
+ .sub-more{font-size:14px}
+ .sub-nudge{display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;padding:10px 12px;border-radius:14px;background:var(--soft);color:var(--ink);font-size:14px}.sub-nudge small{font-size:12.5px;color:var(--wine)}
+ .sub-info{width:100%;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;background:var(--soft);font-size:14px}.sub-info div{display:flex;justify-content:space-between;gap:12px}.sub-info span{color:var(--muted)}
+ .sub-on{color:var(--ok)}.sub-warn{color:#B3261E}
+`;document.head.appendChild(st)}
 /* OFF_MOD_END */
 go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
