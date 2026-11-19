@@ -720,9 +720,10 @@ async function openVault(raw){
 /* Meta 像素事件（沒載入就略過） */
 function fbt(ev,p){try{if(window.fbq)fbq('track',ev,p||{})}catch(e){}}
 const fbSeen=new Set();
-function planVal(pl){try{return pl==='game'?GPRICE():pl==='all'?BUNDLE():PRICE()}catch(e){return 0}}
+function planVal(pl){try{if(pl==='pass_year')return 499;if(pl==='pass_month')return 89;return pl==='game'?GPRICE():pl==='all'?BUNDLE():PRICE()}catch(e){return 0}}
 function fbBuy(pl,id){const k='fbBuy_'+(id||pl);if(rawStore.get(k,0))return;rawStore.set(k,1);fbt('Purchase',{value:planVal(pl),currency:'TWD',content_name:pl})}
-document.addEventListener('click',e=>{const a=e.target.closest('a[href*="portaly.cc"],[data-pay]');if(!a)return;
+document.addEventListener('click',e=>{const a=e.target.closest('a[href*="portaly.cc"],[data-pay],[data-subpay]');if(!a)return;
+  if(a.dataset.subpay){fbt('InitiateCheckout',{value:a.dataset.subpay==='month'?89:499,currency:'TWD',content_name:'pass_'+a.dataset.subpay});return}
   const h=a.getAttribute('href')||'',pl=a.dataset.pay||(h.indexOf('6KM5P24S9X')>=0?'all':h.indexOf('5id3GqVW')>=0?'game':'novel');
   fbt('InitiateCheckout',{value:planVal(pl),currency:'TWD',content_name:pl})},true);
 function gcEvent(path,title){try{if(window.goatcounter&&window.goatcounter.count)window.goatcounter.count({path,title,event:true})}catch(e){}}
@@ -1605,7 +1606,7 @@ async function payStart(plan){
   if(!sbUser){rawStore.set('pendingPay',plan);toast('請先用 Google 登入，登入後會自動前往付款');await sbLogin();return}
   toast('正在前往綠界付款頁…');
   let r=null;try{const {data:{session}}=await sb.auth.getSession();
-    r=await fetch(SB_URL+'/functions/v1/ecpay-checkout',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+session.access_token},body:JSON.stringify({plan})}).then(x=>x.json())}catch(e){}
+    r=await fetch(SB_URL+'/functions/v1/ecpay-checkout',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+session.access_token},body:JSON.stringify({plan,src:(()=>{try{const l=rawStore.get('srcL',null),f=rawStore.get('src1',null),s=Object.assign({},(l&&l.src&&l.src!=='direct')?l:(f||l||{}));if(f&&f.src)s.first=f.src;return s}catch(e){return null}})()})}).then(x=>x.json())}catch(e){}
   if(!r||!r.ok){toast(r&&r.err==='login'?'登入已過期，請重新登入後再試':'付款服務暫時無法使用，請稍後再試');return}
   rawStore.set('lastOrder',r.trade_no);gcEvent('ecpay-start-'+plan,'前往綠界付款');
   const f=document.createElement('form');f.method='POST';f.action=r.action;f.style.display='none';
