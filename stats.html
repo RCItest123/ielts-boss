@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>訂單統計</title>
+<style>
+:root{--bg:#faf7f5;--card:#fff;--ink:#2a1f22;--muted:#7a6a6e;--wine:#8e2340;--line:#eadfe2;--ok:#1f7a4a;--warn:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1517;--card:#251d20;--ink:#f3eaec;--muted:#b3a3a7;--wine:#e07a95;--line:#3a2e32;--ok:#6fcf97;--warn:#ff8a80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"PingFang TC","Noto Sans TC",sans-serif;padding:16px}
+h1{font-size:20px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}.k b{display:block;font-size:24px;color:var(--wine)}.k span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px;font-size:14px}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{font-size:12px;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}.today td{font-weight:700}.warn{color:var(--warn)}.muted{color:var(--muted)}
+h2{font-size:15px;margin:16px 0 8px}button{background:var(--wine);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-size:15px;width:100%}
+.err{color:var(--warn);padding:20px 0}
+</style>
+</head>
+<body>
+<h1>訂單統計</h1>
+<div class="sub" id="sub">讀取中…</div>
+<div id="out"></div>
+<button id="re">重新整理</button>
+<script>
+const SB='https://adlvnnaqsilsabvtxuay.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkbHZubmFxc2lsc2FidnR4dWF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MzIxOTYsImV4cCI6MjEwODUwODE5Nn0._2TnsrVvx6VV-dP5nvxig9srPYutuynSY9Vebcai-OE';
+const tok=location.hash.slice(1);const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PL={all:'終身版',pass_year:'年票',pass_month:'月票',novel:'小說版',game:'遊戲通行證',month:'月訂閱',year:'年訂閱'};
+async function load(){const sub=document.getElementById('sub'),out=document.getElementById('out');sub.textContent='讀取中…';
+  let d=null;try{d=await fetch(SB+'/rest/v1/rpc/order_stats',{method:'POST',headers:{'Content-Type':'application/json',apikey:K,Authorization:'Bearer '+K},body:JSON.stringify({p_token:tok})}).then(r=>r.json())}catch(e){}
+  if(!d||!d.ok){sub.textContent='';out.innerHTML='<div class="err">網址不正確或無法連線。</div>';return}
+  const t=d.days[0]||{},w=d.days.reduce((a,x)=>({paid:a.paid+x.paid,amount:a.amount+x.amount,portaly:a.portaly+x.portaly}),{paid:0,amount:0,portaly:0});
+  sub.textContent='更新時間 '+d.now+'（台灣時間）';
+  out.innerHTML=`<div class="kpi"><div class="k"><span>今天綠界成交</span><b>${t.paid}</b><span>NT$${t.amount}</span></div><div class="k"><span>今天 Portaly 碼</span><b>${t.portaly}</b><span>開通次數</span></div><div class="k"><span>今天未完成付款</span><b class="${t.unpaid?'warn':''}">${t.unpaid}</b><span>進了綠界沒付</span></div></div>
+   <div class="kpi"><div class="k"><span>近 7 天綠界</span><b>${w.paid}</b><span>NT$${w.amount}</span></div><div class="k"><span>近 7 天 Portaly</span><b>${w.portaly}</b><span>開通次數</span></div><div class="k"><span>今天新帳號</span><b>${t.signups}</b><span>登入人數</span></div></div>
+   <h2>每日</h2><table><tr><th>日期</th><th>綠界成交</th><th>金額</th><th>未付款</th><th>Portaly</th><th>新帳號</th></tr>
+   ${d.days.map((x,i)=>`<tr class="${i?'':'today'}"><td>${esc(x.day)}</td><td>${x.paid}</td><td>${x.amount}</td><td class="${x.unpaid?'warn':''}">${x.unpaid}</td><td>${x.portaly}</td><td>${x.signups}</td></tr>`).join('')}</table>
+   <h2>最近綠界訂單</h2><table><tr><th>時間</th><th>方案</th><th>金額</th><th>狀態</th><th>來源</th></tr>
+   ${(d.recent||[]).map(x=>`<tr><td>${esc(x.t)}<br><span class="muted">${esc(x.who)}</span></td><td>${esc(PL[x.plan]||x.plan)}</td><td>${x.amount}</td><td class="${x.status==='paid'?'':'muted'}">${x.status==='paid'?'已付款':'已退款'}</td><td>${esc(x.src)||'<span class="muted">—</span>'}</td></tr>`).join('')}</table>`}
+document.getElementById('re').onclick=load;load();
+</script>
+</body>
+</html>
