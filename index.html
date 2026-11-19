@@ -1018,7 +1018,7 @@ function renderHome(){
   <button class="btn block" data-tab-go="${tid&&!isDoneToday()?'plan':'list'}">${tid&&!isDoneToday()?'看今日課表':'開始讀故事'}</button>
   ${IS_STANDALONE?'':`<button class="a2hs" data-a2hs><span class="ic">📲</span><span><b>把 App 加到手機桌面</b><small>像 App 一樣一鍵打開，不用再找網址</small></span><span class="go" aria-hidden="true">›</span></button>`}
   <footer class="author mini" aria-label="其他">
-    <div class="duo two"><a class="fb" href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">逛蝦皮（分潤連結）</a>${unlocked?'<button class="fb" data-report>🛠 問題回報</button>':'<button class="fb" data-report>🛠 問題回報</button>'}</div>
+    <div class="duo">${unlocked?'<button class="fb" data-report>🛠 問題回報</button>':'<button class="fb" data-report>🛠 問題回報</button>'}</div>
     <p style="text-align:center;margin:8px 0 0">${IS_OLD?'<button class="linkbtn" data-mvcode>換瀏覽器或桌面 App？產生搬家碼</button>':'<button class="linkbtn" data-mvin>從舊網址搬家（輸入搬家碼）</button>'}</p>
     <p class="note"><button class="linkbtn" data-tour style="font-size:13px">📖 使用教學</button></p>
     <p class="note">金流客服信箱：<a href="mailto:xiaodianup@gmail.com">xiaodianup@gmail.com</a><br>（僅接受金流問題反映，其他問題請透過問題回報按鈕）</p>
@@ -1087,7 +1087,7 @@ function renderStats(){
 }
 /* ---------- modal ---------- */
 const modal=document.getElementById('modal'),modalBox=document.getElementById('modalBox');
-function miniLinks(){return `<nav class="minilinks" aria-label="其他連結"><a href="https://s.shopee.tw/AAI9Xyk2R2" target="_blank" rel="noopener sponsored">蝦皮分潤</a>${IS_OLD?'<button class="linkbtn" data-mvcode>產生搬家碼</button>':'<button class="linkbtn" data-mvin>從舊網址搬家</button>'}</nav><p class="ml-shop"><a href="https://xiaodianup.com/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="" width="16" height="16">APP製作｜小店上線交給我</a></p>`}
+function miniLinks(){return `<nav class="minilinks" aria-label="其他連結">${IS_OLD?'<button class="linkbtn" data-mvcode>產生搬家碼</button>':'<button class="linkbtn" data-mvin>從舊網址搬家</button>'}</nav><p class="ml-shop"><a href="https://xiaodianup.com/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="" width="16" height="16">APP製作｜小店上線交給我</a></p>`}
 function typeBtn(){return `<button class="typebtn" data-typepick aria-label="切換小說類型"><span>類型</span><b>${TRACKS[track].short}</b><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>`}
 function trackRead(t){return Object.keys(rawStore.get(t==='ielts'?'read':t+'.read',{})).length}
 const COMBO={boss:{toeic:'toeic',ielts:'ielts',gre:'gre'},bl:{toeic:'bl',ielts:'blielts',gre:'blgre'},bad:{toeic:'bad',ielts:'badielts',gre:'badgre'},ph:{toeic:'phtoeic',ielts:'phielts',gre:'phgre'},serial:{toeic:'serial',ielts:'serialielts'},rebirth:{ielts:'rebirth',toeic:'rebirthtoeic'}};
@@ -1278,7 +1278,7 @@ function dailyPrompt(){
    <div class="acts"><button class="btn" data-close data-go-intro="${tid}" data-from="plan">現在就讀</button><button class="btn ghost" data-close>等等再說</button></div>`);
 }
 function openPaywall(reason){openModal(`<span class="kicker">${ICON.lock} 完整版</span><h2>解鎖全部霸總故事</h2>${reason?`<p>${esc(reason)}</p>`:''}
-   <ul class="paylist"><li>雅思、多益、GRE 版及 BL 版：第 11 篇起全部<small>（雅思 ${TRACKS.ielts.stories.length} 篇、多益 ${TRACKS.toeic.stories.length} 篇、GRE ${TRACKS.gre.stories.length} 篇，BL 版各 50 篇）</small></li><li>壞壞隱藏版（多益・雅思・GRE 共 ${BAD_N()} 篇）：壁咚、車咚、強吻……</li><li>片語版（多益・雅思・GRE 共 ${PH_N()} 篇）</li><li>閱讀闖關・10 張霸總收藏卡全部可收集</li><li>語音朗讀全文</li><li>霸總遊戲間：全部遊戲無限玩、訂製霸總情人、錯字補習班</li></ul>
+   <ul class="paylist">${featList().map(f=>`<li>${f}</li>`).join('')}</ul>
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>輸入解鎖碼</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
 /* ---------- 帳號（Supabase + Google 登入） ---------- */
 const SB_URL='https://adlvnnaqsilsabvtxuay.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkbHZubmFxc2lsc2FidnR4dWF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MzIxOTYsImV4cCI6MjEwODUwODE5Nn0._2TnsrVvx6VV-dP5nvxig9srPYutuynSY9Vebcai-OE',SB_LS='sb-adlvnnaqsilsabvtxuay-auth-token';
@@ -1418,8 +1418,8 @@ function openPlans(){
    ['之後新增的遊戲',N,N,Y,Y],
    ['綁定 Google 帳號<br>換手機也能用',N,Y,Y,Y]];
   openModal(`<span class="kicker">方案</span><h2>免費版和全功能付費版</h2>
-   <div class="pl-wrap"><table class="pl"><thead><tr><th></th><th>免費版</th><th class="pl-hl">${lifeOn()?'<span class="pl-rec">終身版特價</span>':''}全功能</th></tr>
-    <tr class="pl-price"><th>價格</th><td>0 元</td><td class="pl-hl"><b>${LIFE}</b></td></tr></thead>
+   <div class="pl-wrap"><table class="pl"><thead><tr><th></th><th>免費版</th><th class="pl-hl">${SUBS_UI?'<span class="pl-rec">年票</span>':lifeOn()?'<span class="pl-rec">終身版特價</span>':''}全功能</th></tr>
+    <tr class="pl-price"><th>價格</th><td>0 元</td><td class="pl-hl">${SUBS_UI?`<s style="font-size:12px;color:var(--muted)">${SUB.year.orig}</s> <b>${SUB.year.price}</b><small>／年</small>`:`<b>${LIFE}</b>`}</td></tr></thead>
     <tbody>${rows.map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td><td class="pl-hl">${r[4]}</td></tr>`).join('')}</tbody></table></div>
    ${LIFE_NOTE?`<p class="lifenote">${LIFE_NOTE}</p>`:''}
    <div class="acts">${unlocked&&gamePass?'':buyBtn(true).replace(/<button class="linkbtn pl-link"[^>]*>[^<]*<\/button>/,'').replace(/<p class="lifenote">.*?<\/p>/,'')}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`);
@@ -2284,10 +2284,12 @@ function fillList(){
   }
   el.innerHTML=html||'<p class="empty">找不到符合的故事，換個關鍵字試試。</p>';
 }
+/* 付費內容清單（11/19 定稿）：總篇數自動取整到百位 */
+function featList(){let n=600;try{n=Math.floor(TOTAL_N()/100)*100}catch(e){}return [`超過 ${n} 篇霸總小說無限讀到飽，新小說持續更新`,'遊戲間互動背單字遊戲暢玩','新遊戲、新小說上架全部涵蓋','後續更多新功能持續新增']}
 function paywallBlock(){return `<section class="paywall">
    <span class="kicker">${ICON.lock} 完整版篇章</span>
    <h3>解鎖後就能讀這篇</h3>
-   <ul><li>雅思、多益、GRE 版及 BL 版：第 11 篇起全部<small>（雅思 ${TRACKS.ielts.stories.length} 篇、多益 ${TRACKS.toeic.stories.length} 篇、GRE ${TRACKS.gre.stories.length} 篇，BL 版各 50 篇）</small></li><li>壞壞隱藏版（多益・雅思・GRE 共 ${BAD_N()} 篇）：壁咚、車咚、強吻……</li><li>片語版（多益・雅思・GRE 共 ${PH_N()} 篇）</li><li>閱讀闖關・10 張霸總收藏卡全部可收集</li><li>語音朗讀全文</li><li>霸總遊戲間：全部遊戲無限玩、訂製霸總情人、錯字補習班</li></ul>
+   <ul>${featList().map(f=>`<li>${f}</li>`).join('')}</ul>
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>輸入解鎖碼</button></div></section>`}
 const FREE_DAILY=2;
 function readsToday(){return rawStore.get('rd.'+dkey(),[])}
@@ -2298,16 +2300,16 @@ function openLimit(){openModal(`${bossPic([genderize('今天的 2 篇已經讀�
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="btn ghost" data-close data-quiz>先去做單字挑戰</button><button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`)}
 const EARLY_END='2026-11-05';const isEarly=()=>dkey()<=EARLY_END;const LIFE_END='2026-11-30';const lifeOn=()=>dkey()<=LIFE_END;const LIFE=299;const LIFE_ORIG=LIFE;const PRICE=()=>LIFE;const GPRICE=()=>LIFE;const PTAG=()=>lifeOn()?'特價':'';const ORIG={novel:LIFE_ORIG,game:LIFE_ORIG,all:LIFE_ORIG};
 const lifeLeft=()=>Math.max(0,Math.round((new Date(LIFE_END+'T00:00:00')-new Date(dkey()+'T00:00:00'))/864e5));
-const LIFE_NOTE=lifeOn()?`終身版特價 299 只到 11/30${lifeLeft()?`（還剩 ${lifeLeft()+1} 天）`:'（今天最後一天）'}，11/30 之後將改訂閱制。現在買一次付清、終身有效。`:'';
+const LIFE_NOTE=lifeOn()?`終身版特價 299 只到 11/30${lifeLeft()?`（還剩 ${lifeLeft()+1} 天）`:'（今天最後一天）'}，11/30 之後將改為年費制。現在買一次付清、終身有效。`:'';
 function buyBtn(bare){const on=lifeOn();return payLink('all',BUNDLE_URL,'',`終身全功能・${on?'特價 ':''}NT$${LIFE}`)+(bare?'':`<p class="pricenote"><b>${on?'特價 ':''}${LIFE} 元</b>・一次付清、終身有效<br>全部故事＋語音朗讀＋遊戲間全部遊戲</p>`)+(LIFE_NOTE?`<p class="lifenote">${LIFE_NOTE}</p>`:'')+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button><button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`}
 /* 終身版特價倒數：只對免費用戶跳一次（付費用戶、App 版都不跳） */
 function lifeAnn(){if(window.BZ_APP||unlocked||gamePass||rawStore.get('paidSeen',0)||!lifeOn()||firstVisit||rawStore.get('lifeAnnDay','')===dkey())return;if(!modal.hidden){setTimeout(lifeAnn,4000);return}
   if(hasSbHint()&&!lifeAnn.w){lifeAnn.w=1;setTimeout(lifeAnn,6000);return}
   rawStore.set('lifeAnnDay',dkey());gcEvent('life-ann','終身版倒數公告');
-  const LL=[['299，只到 11/30。過了這天，別來求我。','霸總的最後通牒'],['我給妳的特權，不會一直都在。','終身版倒數中'],['還在猶豫？我的耐心是有期限的。','11/30 之後改訂閱制'],['女人，錯過今天，又少一天。','終身版倒數中'],['最後機會。我不會再說第二次。','終身版只到 11/30']];const ll=lifeLeft()===0?['今天是最後一天。過了午夜，就沒有終身版了。','最後一天']:LL[(new Date().getDate())%LL.length];
+  const LL=[['299，只到 11/30。過了這天，別來求我。','霸總的最後通牒'],['我給妳的特權，不會一直都在。','終身版倒數中'],['還在猶豫？我的耐心是有期限的。','11/30 之後改年費制'],['女人，錯過今天，又少一天。','終身版倒數中'],['最後機會。我不會再說第二次。','終身版只到 11/30']];const ll=lifeLeft()===0?['今天是最後一天。過了午夜，就沒有終身版了。','最後一天']:LL[(new Date().getDate())%LL.length];
   openModal(`${bossPic([genderize(ll[0]),ll[1]])}<span class="kicker">終身全功能・限時公告</span><h2>特價 299，只到 11/30</h2>
    <p>一次付清、終身有效：全部 ${TOTAL_N()} 篇故事、語音朗讀、遊戲間全部遊戲，之後新增的故事和遊戲也包含。</p>
-   <p class="lifenote" style="margin:0">11/30 之後將改訂閱制。${lifeLeft()?`還剩 ${lifeLeft()+1} 天。`:'今天是最後一天。'}</p>
+   <p class="lifenote" style="margin:0">11/30 之後將改為年費制。${lifeLeft()?`還剩 ${lifeLeft()+1} 天。`:'今天是最後一天。'}</p>
    <div class="acts">${buyBtn(true).replace(/<p class="lifenote">.*?<\/p>/,'')}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
 setTimeout(lifeAnn,3500);
 /* 這台裝置曾經是付費狀態（之後登出也一樣）就不再跳任何價格公告 */
@@ -2779,7 +2781,7 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
    <section class="g-sec"><h3>其他</h3>
     <div class="g-row"><span><b>朗讀聲音</b><small>選擇英文與中文的朗讀聲音</small></span><button class="g-mini" data-voicepick>選擇</button></div>
     <div class="g-row"><span><b>使用教學</b><small>7 步看懂怎麼用</small></span><button class="g-mini" data-tour>查看</button></div>
-    ${SUBS_UI?'<div class="g-row"><span><b>我的方案</b><small>到期日、續買年票／月票</small></span><button class="g-mini" data-mysub>查看</button></div>':''}
+    ${SUBS_UI?'<div class="g-row"><span><b>我的方案</b><small>到期日、續買年票</small></span><button class="g-mini" data-mysub>查看</button></div>':''}
     <div class="g-row"><span><b>進度同步</b><small>${sbUser?'學習進度、生字本已同步到 '+esc(sbUser.email||'帳號'):'登入後，學習進度和生字本會存到帳號，換裝置也能接著讀'}</small></span>${sbUser?'<button class="g-mini" data-pgnow>立即同步</button>':'<button class="g-mini" data-sblogin>登入</button>'}</div>
     <div class="g-row"><span><b>離線閱讀</b><small>${offGet().length?'已下載：'+offGet().map(k=>TRACKS[k]?TRACKS[k].short:k).join('、'):'到「故事」頁按下載，沒網路也能讀'}</small></span>${offGet().length?'<button class="g-mini" data-offclear>清除</button>':''}</div>
     <div class="g-row"><span><b>隱私權政策</b><small>我們收集哪些資料、怎麼使用</small></span><a class="g-mini" href="privacy.html" target="_blank" rel="noopener">查看</a></div>
@@ -3048,21 +3050,22 @@ document.addEventListener('visibilitychange',()=>{if(!sbUser)return;
 /* 登出不刪本機進度；換帳號登入時，改用新帳號的進度 */
 document.addEventListener('click',e=>{const t=e.target.closest('[data-pgnow]');if(!t)return;t.disabled=true;t.textContent='同步中…';progSync('manual').then(()=>{toast('學習進度已同步');t.disabled=false;t.textContent='立即同步'})});
 /* ---------- 年票／月票方案畫面（2026-11-19，預覽中：只有 ?subui=1 的裝置看得到，尚未上線） ----------
-   綠界一般信用卡一次付清，不自動扣款。主畫面推年票（顯示比月票省幾 %），月票要按「看月票方案」才看得到價格。
+   11/19 決定暫時只賣年票（月票畫面保留但不再有入口）。綠界一般信用卡一次付清，不自動扣款。主畫面推年票（顯示比月票省幾 %），月票要按「看月票方案」才看得到價格。
    提早續買，天數接在目前到期日之後。到期前 7 天提醒續買。 */
 const SUBS_UI=(()=>{try{if(/[?&]subui=1/.test(location.search))rawStore.set('subui',1);if(/[?&]subui=0/.test(location.search))rawStore.set('subui',0)}catch(e){}return !window.BZ_APP&&!!rawStore.get('subui',0)})();
 const SUB={year:{price:499,orig:899,name:'年票',days:365,plan:'pass_year'},month:{price:89,orig:129,name:'月票',days:30,bonus:15,plan:'pass_month'}};
 const subSave=()=>Math.round((1-SUB.year.price/(SUB.month.price*12))*100);   /* 年票比買 12 張月票省幾 %（同為試營運價） */
 const subPerMonth=()=>Math.round(SUB.year.price/12);
 const SUB_N=()=>{try{return Math.floor(TOTAL_N()/100)*100}catch(e){return 600}};
-const SUB_FEAT_F=()=>[`超過 ${SUB_N()} 篇霸總小說無限讀到飽，新小說持續更新`,'遊戲間互動背單字遊戲暢玩','新遊戲、新小說上架全部涵蓋','後續更多新功能持續新增'];
+const SUB_FEAT_F=()=>featList();
+const subOff=()=>Math.round((1-SUB.year.price/SUB.year.orig)*100);   /* 年票比原價省幾 % */
 const SUB_RULE='一次付清，到期不會自動扣款。還沒到期就續買，天數直接接在後面，不會浪費。';
 const twDate=s=>{try{const d=new Date(s);return d.toLocaleDateString('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'numeric',day:'numeric'})}catch(e){return s}};
 const subDaysLeft=s=>Math.ceil((Date.parse(s)-Date.now())/864e5);
 function openSubPlans(){gcEvent('sub-view-year','看方案（年票）');
   openModal(`<span class="kicker">全功能方案</span><h2>一年只要 NT$${SUB.year.price}</h2>
    <div class="sub-card sub-main">
-     <span class="sub-badge">最划算・比月票省 ${subSave()}%</span>
+     <span class="sub-badge">試營運特價・比原價省 ${subOff()}%</span>
      <div class="sub-name">年票 365 天<small>試營運價</small></div>
      <div class="sub-price"><s>原價 NT$${SUB.year.orig}</s><b>NT$${SUB.year.price}</b><span>／年</span></div>
      <div class="sub-sub">平均每月只要 ${subPerMonth()} 元</div>
@@ -3070,7 +3073,6 @@ function openSubPlans(){gcEvent('sub-view-year','看方案（年票）');
    </div>
    <button class="btn" data-subpay="year">購買年票 NT$${SUB.year.price}</button>
    <p class="pricenote" style="margin:0">${SUB_RULE}</p>
-   <button class="linkbtn sub-more" data-submonth>看月票方案 ›</button>
    <button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`)}
 function openSubMonth(){gcEvent('sub-view-month','看月票方案');
   openModal(`<span class="kicker">全功能方案</span><h2>月票方案</h2>
@@ -3089,10 +3091,10 @@ async function openMySub(demo){let d=demo||null;
   if(!d){try{await sbInit();if(!sbUser){openLoginWhy();return}({data:d}=await sb.rpc('my_pass'))}catch(e){}}
   if(d&&d.lifetime){openModal(`<span class="kicker">我的方案</span><h2>終身全功能</h2><p>你的帳號是終身全功能，不需要再買票。</p><div class="acts"><button class="btn" data-close>好</button></div>`);return}
   if(!d||!d.expires_at){openModal(`<span class="kicker">我的方案</span><h2>目前是免費版</h2>
-     <p>買年票或月票，所有故事、語音朗讀和遊戲間都能用。</p>
+     <p>買年票，所有故事、語音朗讀和遊戲間都能用。</p>
      <div class="acts"><button class="btn" data-subplans>看方案</button><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`);return}
   const left=subDaysLeft(d.expires_at),soon=left<=7,P=d.last_plan==='pass_month'?SUB.month:SUB.year;
-  openModal(`<span class="kicker">我的方案</span><h2>全功能${P.name}</h2>
+  openModal(`<span class="kicker">我的方案</span><h2>全功能年票</h2>
    <div class="sub-info">
      <div><span>狀態</span><b class="${soon?'sub-warn':'sub-on'}">${soon?'快到期了':'使用中'}</b></div>
      <div><span>可以用到</span><b>${twDate(d.expires_at)} 23:59</b></div>
@@ -3100,7 +3102,6 @@ async function openMySub(demo){let d=demo||null;
    </div>
    <p class="pricenote" style="margin:0">到期不會自動扣款。現在續買，天數會接在 ${twDate(d.expires_at)} 之後。</p>
    <button class="btn" data-subpay="year">續買年票 NT$${SUB.year.price}</button>
-   <button class="linkbtn sub-more" data-submonth>改買月票 ›</button>
    <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
 /* 到期前 7 天提醒續買（每天最多一次） */
 function subRenewNudge(){if(!SUBS_UI||!unlocked)return;const m=rawStore.get('unlockMeta',null);if(!m||!m.exp)return;
@@ -3111,12 +3112,12 @@ function subRenewNudge(){if(!SUBS_UI||!unlocked)return;const m=rawStore.get('unl
    <div class="acts"><button class="btn" data-subplans>續買</button><button class="linkbtn" data-close style="align-self:center">之後再說</button></div>`)}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-subplans],[data-submonth],[data-subyear],[data-subpay],[data-mysub]');if(!t)return;
   if(t.hasAttribute('data-subplans')||t.hasAttribute('data-subyear')){openSubPlans();return}
-  if(t.hasAttribute('data-submonth')){openSubMonth();return}
+  if(t.hasAttribute('data-submonth')){openSubPlans();return}
   if(t.hasAttribute('data-subpay')){const p=SUB[t.dataset.subpay].plan;gcEvent('sub-start-'+p,'開始購買票券');payStart(p);return}
   if(t.hasAttribute('data-mysub')){openMySub();return}});
 if(SUBS_UI){
   /* 購買按鈕改成「看方案」 */
-  buyBtn=function(bare){return `<button class="btn" data-subplans>開通全功能・每月 ${subPerMonth()} 元起</button>`+(bare?'':`<p class="pricenote">年票 NT$${SUB.year.price}（原價 ${SUB.year.orig}）・一次付清不自動扣款<br>霸總小說無限讀到飽＋背單字遊戲暢玩</p>`)+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button><button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`};
+  buyBtn=function(bare){return `<button class="btn" data-subplans>開通全功能・平均每月 ${subPerMonth()} 元</button>`+(bare?'':`<p class="pricenote">年票 NT$${SUB.year.price}（原價 ${SUB.year.orig}）・一次付清不自動扣款<br>霸總小說無限讀到飽＋背單字遊戲暢玩</p>`)+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button><button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`};
   setTimeout(subRenewNudge,2500);
 }
 {const st=document.createElement('style');st.textContent=`
