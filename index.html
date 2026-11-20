@@ -141,6 +141,8 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3
 .row small{color:var(--muted);font-size:12.5px}
 .badge{font-size:11.5px;padding:3px 9px;border-radius:999px;background:var(--mark);color:var(--mark-ink);white-space:nowrap}
 .hit{font-size:12.5px;color:var(--mark-ink)}
+.lk-box{margin:4px 0 12px}.lk-in{display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:14px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line);color:var(--muted)}.lk-in input{flex:1;min-width:0;border:0;background:transparent;padding:13px 0;font-size:16px;color:var(--ink);outline:none}.lk-res{display:grid;gap:4px;margin-top:6px}.lk-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;width:100%;text-align:left;padding:10px 12px;border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer}.lk-row .en{font-family:var(--f-en);font-weight:700;font-size:16px}.lk-row .zh{font-size:13.5px;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lk-sv{font-size:12px;color:var(--ok);font-weight:700}.lk-add{font-size:12px;color:var(--wine);font-weight:700}
+.wb-cram{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;padding:12px 14px;border-radius:14px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--gold,#c9a45c);text-align:left;color:var(--ink)}.wb-cram>span:first-child{font-size:22px}.wb-cram b{display:block;font-size:15px}.wb-cram small{font-size:12.5px;opacity:.7}.wb-note{margin:8px 2px 16px;font-size:12.5px;line-height:1.7;color:var(--muted)}
 .empty{padding:30px 6px;color:var(--muted);text-align:center}
 
 /* Theme / intro page */
@@ -1678,12 +1680,12 @@ function gmFinish(game,score,line,review,again){
    ${up?`<div class="gm-up">升級！Lv.${after.lv}「${after.title}」</div>`:''}
    ${review&&review.length?`<div class="gm-review">${review.map(w=>`<span><b>${esc(w[0])}</b>${esc(w[1])}</span>`).join('')}</div>`:''}
    <div class="gm-row">${game==='cram'?(again==='cram'?`<button class="btn" data-gstart="cram">繼續複習</button>`:`<button class="btn" data-gopen="cram">回補習班</button>`):game==='call'?(callLeft()?`<button class="btn" data-gstart="call">再接一通</button>`:''):gmCanPlay()?`<button class="btn" data-gstart="${again}">${gamePass?'再玩一局':`再玩一局（試玩剩 ${gmLeft()} 次）`}</button>`:''}<button class="btn ghost" data-ghome>回遊戲間</button></div>
-   ${gamePass?'':game==='cram'?`<p class="pricenote">免費版每天可以翻 ${CRAM_FREE} 張單字卡，今天還剩 ${cramFreeLeft()} 張。開通全功能，單字卡無限複習。</p>${passBuy()}`:game==='call'?`<p class="pricenote">免費版每天可以接 1 通。開通全功能，霸總隨時打給妳，所有遊戲無限玩。</p>${passBuy()}`:`<p class="pricenote">${gmCanPlay()?`試玩還剩 ${gmLeft()} 次。`:'免費試玩次數用完了。'}開通全功能，所有遊戲無限玩。</p>${passBuy()}`}</div>`}
+   ${gamePass?'':game==='cram'?'':game==='call'?`<p class="pricenote">免費版每天可以接 1 通。開通全功能，霸總隨時打給妳，所有遊戲無限玩。</p>${passBuy()}`:`<p class="pricenote">${gmCanPlay()?`試玩還剩 ${gmLeft()} 次。`:'免費試玩次數用完了。'}開通全功能，所有遊戲無限玩。</p>${passBuy()}`}</div>`}
 const GM_GAMES=[
+ {id:'cram',ic:'✎',name:'錯字補習班',desc:'依遺忘曲線安排複習：答錯的字、生字本自動變成單字卡，快忘記時再出現，越記越牢',nw:1},
  {id:'custom',ic:'♥',name:'訂製霸總情人',desc:'填入你或朋友的名字，成為壞霸總小說的主角，還能匯出圖卡',teaser:1},
  {id:'call',ic:'☎',name:'霸總來電',desc:'霸總打電話來考妳單字，答對 3 題才准掛電話・每天免費接 1 通',nw:1},
  {id:'scene',ic:'找',name:'情境找物品',desc:'在總裁的辦公室、豪宅、晚宴、精品百貨、海邊兜風等 11 個場景找出指定物品',lv:0},
- {id:'cram',ic:'✎',name:'錯字補習班',desc:'Anki 式翻卡複習：答錯的字、生字本自動變成單字卡，越熟隔越久再出現・免費每天 10 張',nw:1},
  {id:'quote',ic:'句',name:'霸總金句翻譯',desc:'霸總說英文金句，選出正確的中文翻譯，順便記住句子裡的關鍵單字',lv:0,nw:1},
  {id:'quiz',ic:'⚡',name:'霸總每日單字挑戰',desc:'從讀過的故事出 10 題，答錯霸總會罵人',lv:0},
  {id:'link',ic:'連',name:'中英連連看',desc:'左邊英文、右邊中文，點一點把它們連起來',lv:1,soon:1},
@@ -1695,8 +1697,7 @@ function renderGames(){
   const left=gmLeft();let si=0;
   app.innerHTML=`<div class="view gm">
    <div class="gm-topbar"><button class="gm-exit" data-tab-go="home">‹ 回到小說</button><span class="gm-tool">GAME ZONE</span></div>
-   <div class="section-h"><h1 style="font-size:26px">霸總遊戲間${gamePass?'<span class="gm-hot">通行證 ✓</span>':''}</h1></div>
-   ${gamePass?`<div class="gm-pass"><b>✓ 遊戲間已開通</b>・所有遊戲無限玩，之後的新遊戲也能玩</div>`:''}
+   <div class="section-h"><h1 style="font-size:26px">霸總遊戲間${gamePass?'<span class="gm-hot">無限使用 ✓</span>':''}</h1></div>
    ${gmRankCard()}
    ${cramBanner()}
    ${gamePass?'':`<div class="gm-trial${left?'':' used'}"><div class="gt-l">${left?'免費試玩 <b>'+GM_TRIAL+'</b> 次，先玩玩看':'免費試玩已用完'}<small>全功能 ${PTAG()} <b>${LIFE} 元</b>・終身無限玩</small></div>
@@ -1713,7 +1714,7 @@ function renderGames(){
      <li><b>單字挑戰</b>：從你讀過的故事出題，答錯的字一鍵存進生字本</li>
      <li><b>中英連連看、掉落打字、聽力測驗</b>：從配對、拼字、聽音不同角度加深印象</li>
      <li><b>霸總來電</b>：霸總打電話來考妳，答對 3 題才准掛</li>
-     <li><b>錯字補習班</b>：Anki 式單字卡，答錯的字和生字本自動收集，依妳記得的程度安排下次複習</li>
+     <li><b>錯字補習班</b>：依遺忘曲線安排複習的單字卡，在快忘記前再看一次，越記越牢</li>
      <li><b>訂製霸總情人</b>：用你的名字生成霸總小說，邊玩邊學新單字</li></ul>
     <p class="muted" style="margin:0">建議用法：每天讀完一篇故事，再來玩一局，把今天的單字鎖進腦子裡。</p></section>
    ${miniLinks()}</div>`;
@@ -1958,7 +1959,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-coll],[dat
 
 /* ---------- 錯字補習班（遊戲通行證）：遊戲答錯的字自動收集，照記憶曲線複習 ---------- */
 const CRAM_GAP=[0,1,3,7];/* 舊版盒子對應天數（舊資料轉換用） */
-/* 錯字補習班＝Anki 式單字卡：翻面後依熟悉度（忘了／有點難／記得／太簡單）排下次複習，間隔到 30 天畢業 */
+/* 錯字補習班＝遺忘曲線單字卡：翻面後依熟悉度（忘了／有點難／記得／太簡單）排下次複習，間隔到 30 天畢業 */
 const CRAM_FREE=10,CRAM_DONE=30;
 const dplus=n=>dkey(new Date(Date.now()+n*864e5));
 function cramGet(){return rawStore.get('cram',{})||{}}
@@ -1980,27 +1981,29 @@ function cramFreeLeft(){if(gamePass)return 999;const r=rawStore.get('cramDay',{}
 function cramUse(){if(gamePass)return;const r=rawStore.get('cramDay',{})||{},td=dkey();rawStore.set('cramDay',{d:td,n:(r.d===td?r.n:0)+1})}
 function cramNote(n){if(!n)return '';return `<p class="cram-note">📒 答錯的 <b>${n}</b> 個字已收進「錯字補習班」，明天用單字卡翻卡複習</p>`}
 function cramBanner(){const C=cramGet(),all=Object.keys(C).length;if(!all)return '';const due=cramDue().length;
-  return `<button class="cram-ban" data-gopen="cram"><span>📒</span><span><b>${due?`今天有 ${due} 張單字卡該複習`:'今天的單字卡都複習完了'}</b><small>錯字補習班・共 ${all} 張${gamePass?'':'・免費每天 '+CRAM_FREE+' 張'}</small></span><span aria-hidden="true">›</span></button>`}
+  return `<button class="cram-ban" data-gopen="cram"><span>📒</span><span><b>${due?`今天有 ${due} 張單字卡該複習`:'今天的單字卡都複習完了'}</b><small>錯字補習班・共 ${all} 張單字卡</small></span><span aria-hidden="true">›</span></button>`}
 function cramTeaser(){const due=cramDue().length;
   openModal(`<span class="kicker">錯字補習班</span><h2>今天的免費複習用完了</h2>
    <p>免費版每天可以翻 <b>${CRAM_FREE}</b> 張單字卡${due?`，還有 <b>${due}</b> 張在等妳`:''}。開通全功能，單字卡無限複習、所有遊戲無限玩。</p>
    <div class="acts">${passBuy()}<button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`)}
-function cramSavedNew(){const C=cramGet();try{return gmPersonal(gmLevel()).saved.filter(x=>!C[norm(x[0])])}catch(e){return []}}
+function cramSavedNew(){const C=cramGet(),out=[];try{for(const k in saved){if(C[k])continue;const d=D[k]||D2[k]||IELTS_D[k]||D3[k];const z=d&&d.z&&d.z[0];if(z)out.push([saved[k].w||k,z])}}catch(e){}return out}
 function cramImport(){const n=cramAdd(cramSavedNew().map(x=>[x[0],x[1]]));toast(n?'已從生字本加入 '+n+' 張單字卡':'生字本的字都已經在補習班了');cramHome()}
-document.addEventListener('click',e=>{if(e.target.closest('[data-cramimp]'))cramImport()});
+document.addEventListener('click',e=>{if(e.target.closest('[data-cramimp]'))cramImport();const y=e.target.closest('[data-cramtry]');if(y)cramStart(y.dataset.cramtry)});
+function cramIntro(){return `<div class="gm-panel"><b style="font-size:16px">先把想背的字加入生字本</b><p class="muted" style="margin:0;font-size:13.5px;line-height:1.7">單字卡會用妳生字本裡的字和遊戲答錯的字出題。讀故事時點單字，或到生字本「查單字」，就能加入。</p><button class="btn ghost" data-tab-go="book">去生字本</button><p style="margin:4px 0 0;font-size:13.5px;font-weight:700">想先試玩？選一個單字範圍，隨機出 10 張：</p><div class="gm-lvrow">${GM_LV.map(([k,n])=>`<button data-cramtry="${k}">${n}</button>`).join('')}</div></div>`}
 function cramHome(){gmStopAll();gm.cur='cram';const C=cramGet(),L=Object.values(C).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0),due=cramDue().length,grad=rawStore.get('cramGrad',0)||0,td=dkey(),sv=cramSavedNew().length,fl=cramFreeLeft();
-  const when=d=>d<=td?'今天':d===dplus(1)?'明天':d.slice(5).replace('-','/');const nn=gamePass?Math.min(due,20):Math.min(due,fl);
+  const when=d=>d<=td?'今天':d===dplus(1)?'明天':d.slice(5).replace('-','/');const nn=Math.min(due,20);
   gmScreen('錯字補習班',`<div class="cram-kpi"><div><b>${due}</b><span>今天要複習</span></div><div><b>${L.length}</b><span>還在補習</span></div><div><b>${grad}</b><span>已畢業</span></div></div>
+   ${L.length<5?cramIntro():''}
    <div class="gm-panel">${gmSay(due?'今天的單字卡，一張都不准漏。':L.length?'今天的份做完了。明天準時報到。':'還沒有單字卡？去玩一局，或把生字本的字加進來。')}
     ${due?`<button class="btn" data-gstart="cram">${nn?'開始翻卡（'+nn+' 張）':'開始翻卡'}</button>`:`<button class="btn ghost" data-ghome>回遊戲間</button>`}
     ${sv?`<button class="btn ghost" data-cramimp>從生字本加入 ${sv} 個字</button>`:''}
-    <p class="muted" style="margin:0;font-size:13px;line-height:1.7">像 Anki 一樣翻卡複習：先想意思再翻面，照妳記得的程度按「忘了／有點難／記得／太簡單」。越熟隔越久才再出現，間隔到 30 天就畢業。${gamePass?'':`免費版每天可以翻 ${CRAM_FREE} 張（今天還剩 ${fl} 張）。`}</p></div>
+    <p class="muted" style="margin:0;font-size:13px;line-height:1.7">依「遺忘曲線」安排複習：先想意思再翻面，照妳記得的程度按「忘了／有點難／記得／太簡單」。剛學的字隔天就複習，越熟隔越久，在快忘記前再看一次，記憶最牢；間隔拉到 30 天就畢業。</p></div>
    ${L.length?`<div class="cram-list">${L.map(x=>{const b=cramB(cramIv(x));return `<div class="cram-row"><span class="en">${esc(x.w)}</span><span class="zh">${esc(x.z)}</span><span class="cram-b" aria-label="熟悉度 ${b}/4">${[0,1,2,3].map(i=>`<i${i<b?' class="on"':''}></i>`).join('')}</span><small>${when(x.d)}</small></div>`}).join('')}</div>`:''}`)}
-function cramStart(){const lim=gamePass?20:cramFreeLeft();if(!lim){cramTeaser();return}
-  const Q=gshuf(cramDue()).slice(0,lim);if(!Q.length){cramHome();return}gmStopAll();gm.cur='cram';
-  const lv=gmLevel(),cnt=[0,0,0,0],wrong=[],again=new Set();let i=0;const GL=['忘了','有點難','記得','太簡單'];
+function cramStart(trial){const lim=gamePass?(trial?10:20):Math.min(10,cramFreeLeft());if(!lim){cramTeaser();return}
+  const Q=trial?gshuf(gmPool(trial).slice()).slice(0,lim).map(x=>({w:x[0],z:x[1]})):gshuf(cramDue()).slice(0,lim);if(!Q.length){cramHome();return}gmStopAll();gm.cur='cram';
+  const lv=trial||gmLevel(),cnt=[0,0,0,0],wrong=[],again=new Set();let i=0;const GL=['忘了','有點難','記得','太簡單'];
   function q(){const it=Q[i];const c0=cramGet()[norm(it.w)]||it;
-    gmScreen('錯字補習班',`<div class="hud gm-hud"><span>第 ${i+1} / ${Q.length} 張</span><span>${gamePass?'單字卡':'免費今天剩 '+cramFreeLeft()+' 張'}</span></div>
+    gmScreen('錯字補習班',`<div class="hud gm-hud"><span>第 ${i+1} / ${Q.length} 張</span><span>單字卡</span></div>
      <div class="ak-card"><small>先想想這個字的意思，再翻面</small><b class="en">${esc(it.w)}</b><button class="iconbtn" id="crs" aria-label="朗讀">${ICON.speak}</button>
       <div class="ak-back" id="akb" hidden><div class="ak-zh">${esc(it.z)}</div>${gmWordInfo(lv,it.w)}</div></div>
      <div id="akx"><button class="btn" id="akflip" style="width:100%">翻面看答案</button></div>`);
@@ -2009,15 +2012,16 @@ function cramStart(){const lim=gamePass?20:cramFreeLeft();if(!lim){cramTeaser();
       const rs=again.has(norm(it.w)),O=[0,1,2,3].map(g=>rs?{iv:1,ef:c0.ef||2.5}:cramNext(c0,g));
       document.getElementById('akx').innerHTML=`<div class="ak-grade">${O.map((o,g)=>`<button class="ak-g g${g}" data-akg="${g}"><b>${GL[g]}</b><small>${g===0?'明天':cramLbl(o.iv)}</small></button>`).join('')}</div>`;
       document.querySelector('.ak-grade').onclick=ev=>{const b=ev.target.closest('[data-akg]');if(!b)return;grade(+b.dataset.akg,O[+b.dataset.akg])}}}
-  function grade(g,o){const it=Q[i],C=cramGet(),k=norm(it.w),c=C[k];cnt[g]++;if(!again.has(k))cramUse();
-    if(c){if(g===0){c.n=(c.n||1)+1;wrong.push([it.w,it.z]);if(!again.has(k)){again.add(k);Q.push(it)}}
+  function grade(g,o){const it=Q[i],C=cramGet(),k=norm(it.w),c=trial?null:C[k];cnt[g]++;if(!again.has(k))cramUse();
+    if(g===0&&!again.has(k))wrong.push([it.w,it.z]);
+    if(c){if(g===0){c.n=(c.n||1)+1;if(!again.has(k)){again.add(k);Q.push(it)}}
       if(g>=2&&o.iv>=CRAM_DONE){delete C[k];rawStore.set('cramGrad',(rawStore.get('cramGrad',0)||0)+1);toast('「'+it.w+'」畢業了')}
       else{c.iv=o.iv;c.ef=o.ef;c.b=cramB(o.iv);c.d=dplus(o.iv)}
       rawStore.set('cram',C)}
     i++;i<Q.length?q():end()}
   function end(){const left=cramDue().length,tot=cnt.reduce((a,b)=>a+b,0),good=cnt[2]+cnt[3];
     const line=!cnt[0]?'一張都沒忘。今天的補習，准妳下課。':cnt[0]<=tot/4?'還有幾個不熟，明天繼續盯妳。':'忘了這麼多？明天提早到。';
-    gmScreen('錯字補習班',`<div class="hud gm-hud"><span>翻了 ${tot} 張</span><span>忘了 ${cnt[0]}・記得 ${good}</span>${left?`<span>還有 ${left} 張待複習</span>`:''}</div>`+gmFinish('cram',good*12+cnt[1]*6,line,wrong,left?'cram':'cramhome'))}
+    const tn=trial?cramAdd(wrong):0;gmScreen('錯字補習班',`<div class="hud gm-hud"><span>翻了 ${tot} 張</span><span>忘了 ${cnt[0]}・記得 ${good}</span>${left?`<span>還有 ${left} 張待複習</span>`:''}</div>`+(trial?`<p class="cram-note">這是試玩的隨機單字${tn?`，忘了的 <b>${tn}</b> 個已收進補習班`:''}。想背自己的字？讀故事時點單字加入生字本，或到生字本「查單字」加入。</p>`:'')+gmFinish('cram',good*12+cnt[1]*6,line,wrong,left?'cram':'cramhome'));if(!gamePass&&!cramFreeLeft())setTimeout(cramTeaser,900)}
   q()}
 
 /* ---------- 霸總來電：不用語音，用對話考單字；答對 3 題才准掛電話 ---------- */
@@ -2048,7 +2052,7 @@ function callStart(){
     const later=(f,ms)=>{const h=setTimeout(f,ms);gm.stop.push(()=>clearTimeout(h))};
     document.getElementById('cend').onclick=()=>{if(ok>=3)return;say(['想掛我電話？答對三題再說。','我還沒說完，誰准妳掛的？'][qi%2])};
     const OPEN=['在哪？……算了，先考妳單字。','我在開會，但我想聽妳的聲音。順便考考妳。','剛下飛機，第一通電話打給妳。別讓我失望。','聽說妳今天又在偷懶？三題，答對才准掛。'];
-    const GOOD=['……還算聰明。','嗯，這才是我的人。','答對了。別得意，下一題。','不錯，今晚准妳早點睡。'];
+    const GOOD=['……還算聰明。','嗯，這才是我的人。','答對了。別得意。','不錯，今晚准妳早點睡。'];
     const BAD=['錯了。給我記清楚：','這都不會？我親自教妳：','妳是故意惹我生氣嗎？答案是：'];
     say(OPEN[Math.floor(Math.random()*OPEN.length)]);later(ask,900);
     function ask(){if(qi>=W.length||qi>=6){fin();return}const w=W[qi],zh2en=qi%2===0;
@@ -2058,8 +2062,9 @@ function callStart(){
       opt.innerHTML=opts.map((o,k)=>`<button class="call-o${zh2en?' en':''}" data-co="${k}">${esc(zh2en?o[0]:o[1])}</button>`).join('');busy=false;
       opt.onclick=ev=>{const b=ev.target.closest('.call-o');if(!b||busy)return;busy=true;const pick=opts[+b.dataset.co];say(zh2en?pick[0]:pick[1],true);opt.innerHTML='';
         const right=pick[0]===w[0];qi++;try{speak(w[0],.85)}catch(e){}
-        if(right){ok++;later(()=>{say(GOOD[(ok+qi)%GOOD.length]+(ok<3?` 還差 ${3-ok} 題。`:''));later(ok>=3?fin:ask,900)},600)}
-        else{wrong.push(w);later(()=>{say(BAD[qi%BAD.length]+`${w[0]}＝${w[1]}。`+(qi<6?'再來一題。':''));later(ask,1100)},600)}}}
+        const last=qi>=Math.min(6,W.length);
+        if(right){ok++;later(()=>{say(ok>=3?['三題都過了。……算妳厲害。','很好，三題全對，這才是我的人。'][qi%2]:GOOD[(ok+qi)%GOOD.length]+(last?'':`還差 ${3-ok} 題，下一題。`));later(ok>=3||last?fin:ask,900)},600)}
+        else{wrong.push(w);later(()=>{say(BAD[qi%BAD.length]+`${w[0]}＝${w[1]}。`+(last?'':'再來一題。'));later(last?fin:ask,1100)},600)}}}
     function fin(){clearInterval(tm);const s=Math.floor((Date.now()-t0)/1000),dur=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
       const END=ok>=3?['准妳掛電話了。……晚安。','今天表現不錯。明天這個時間，等我電話。','記住，下次我打來，不准讓我等。']:['今天先放過妳。明天，我要聽到全對。'];
       say(END[Math.floor(Math.random()*END.length)]);const n=cramAdd(wrong);
@@ -2442,11 +2447,28 @@ function renderRead(){
    </div>${miniLinks()}</div>`;
   onScroll();
 }
+/* 生字本：查單字（四個字庫，英文字首或中文）＋單字卡入口 */
+let lkQ='';
+function lkSearch(q){q=(q||'').trim().toLowerCase();if(!q)return [];const out=[],seen=new Set(),cjk=/[一-鿿]/.test(q);
+  for(const Dd of [D,D2,IELTS_D,D3]){if(!Dd)continue;for(const k in Dd){if(seen.has(k))continue;const d=Dd[k];if(!d||!d.z||!d.z.length)continue;
+    if(cjk?d.z.some(z=>z.includes(q)):k.startsWith(q)){seen.add(k);out.push([k,d])}}}
+  out.sort((a,b)=>a[0]===q?-1:b[0]===q?1:a[0].length-b[0].length||(a[0]<b[0]?-1:1));return out.slice(0,8)}
+function lkHtml(q){if(!q.trim())return '';const L=lkSearch(q);if(!L.length)return `<p class="muted" style="margin:6px 4px;font-size:13.5px">找不到「${esc(q)}」，試試其他拼法或中文</p>`;
+  return L.map(([k,d])=>`<button class="lk-row" data-lk="${esc(k)}"><span class="en">${esc(k)}</span><span class="zh">${esc(d.z.slice(0,3).join('、'))}</span>${saved[k]?'<span class="lk-sv">已加入</span>':'<span class="lk-add">＋查看</span>'}</button>`).join('')}
+function lkOpen(k){if(!D[k]){const s=[D2,IELTS_D,D3].find(x=>x&&x[k]);if(s)D[k]=s[k]}openWord(k)}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='lkq'){lkQ=e.target.value;const r=document.getElementById('lkr');if(r)r.innerHTML=lkHtml(lkQ)}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-lk]');if(b){e.stopPropagation();lkOpen(b.dataset.lk)}},true);
+function bookTools(){for(const k in saved)if(!D[k]){const s=[D2,IELTS_D,D3].find(x=>x&&x[k]);if(s)D[k]=s[k]}
+  const due=cramDue().length;
+  return `<div class="lk-box"><label class="lk-in"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="lkq" type="search" value="${esc(lkQ)}" placeholder="查單字：輸入英文或中文" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="查單字"></label><div id="lkr" class="lk-res">${lkHtml(lkQ)}</div></div>
+   <button class="wb-cram" data-gopen="cram"><span aria-hidden="true">📒</span><span><b>單字卡複習${due?'・今天 '+due+' 張':''}</b><small>把生字本的字變成單字卡，翻卡複習</small></span><span aria-hidden="true">›</span></button>
+   <p class="wb-note">單字卡依「遺忘曲線」安排複習：剛學的字隔天就複習，記得越牢、間隔越長（1 天、3 天、1 週、1 個月），在快忘記前再看一次，最能把單字留在長期記憶。</p>`}
 function renderBook(){
   const keys=Object.keys(saved).sort((a,b)=>(saved[b].t||0)-(saved[a].t||0));
   app.innerHTML=`<div class="view">
     <div class="section-h"><h1 style="font-size:26px">${isPh()?'片語本':'生字本'}</h1><span class="muted">${keys.length} 個${isPh()?'收藏片語':'單字'}</span></div>
-    ${keys.length?`<div>${keys.map(k=>{const d=D[k]||{};const sv=saved[k],trT=TRACKS[sv.tr||track],st=sv.s!=null&&trT?trT.stories.find(x=>x.id===sv.s):null;return `<div class="wb-row"><button class="main" data-k="${esc(k)}"><span class="en">${esc(saved[k].w||k)}</span><span class="zh">${esc((d.z||[]).join('、'))}</span><span class="from">${d.i?esc(d.i)+'・':''}${st?'出自〈'+esc(st.title)+'〉':''}</span></button><button class="iconbtn" data-speak="${esc(saved[k].w||k)}" aria-label="朗讀">${ICON.speak}</button></div>`}).join('')}</div>`
+    ${isPh()?'':bookTools()}
+    ${keys.length?`<div>${keys.map(k=>{const d=D[k]||D2[k]||IELTS_D[k]||D3[k]||{};const sv=saved[k],trT=TRACKS[sv.tr||track],st=sv.s!=null&&trT?trT.stories.find(x=>x.id===sv.s):null;return `<div class="wb-row"><button class="main" data-k="${esc(k)}"><span class="en">${esc(saved[k].w||k)}</span><span class="zh">${esc((d.z||[]).join('、'))}</span><span class="from">${d.i?esc(d.i)+'・':''}${st?'出自〈'+esc(st.title)+'〉':''}</span></button><button class="iconbtn" data-speak="${esc(saved[k].w||k)}" aria-label="朗讀">${ICON.speak}</button></div>`}).join('')}</div>`
     :`<div class="empty"><p class="bossline" style="margin:0 0 8px;font-family:var(--f-display);font-weight:900;font-size:20px;color:var(--ink)">${genderize(isPh()?'「妳的片語本空空的，是在挑戰我的耐心？」':'「妳的生字本空空的，是在挑戰我的耐心？」')}</p><p style="margin:0">讀故事時點任何畫線的英文字，在解釋卡右上角按書籤就會收進這裡。</p></div><button class="btn block" data-tab-go="list">去讀故事</button>`}
     ${miniLinks()}
   </div>`;
@@ -3230,7 +3252,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261120e',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261120f',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
