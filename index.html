@@ -1249,7 +1249,7 @@ function announce(){if(dkey()>ANN_UNTIL||rawStore.get('annIelts2',0))return fals
    <p class="muted">造成不便請見諒，謝謝支持原創！</p>
    <div class="acts"><button class="btn" data-close data-settrack="ielts">看全新雅思版</button>${unlocked?'':`<button class="btn ghost" data-unlock>解鎖付費版（NT$${PRICE()} 永久）</button>`}<button class="btn ghost" data-close>知道了</button></div>`);return true}
 /* ---------- 遊戲間更新通知：每人最多 3 天、每天第一次開啟跳一次（到 GN_UNTIL 為止） ---------- */
-const GN_UNTIL='2026-11-14';
+const GN_UNTIL='2026-11-30';
 /* 早鳥最後機會：11/4、11/5 未解鎖者每天一次（若當天已跳遊戲更新，就併在裡面） */
 const lcOn=()=>!unlocked&&!gamePass&&isEarly()&&dkey()>='2026-11-04';
 const lcTxt=()=>dkey()===EARLY_END?'今天早鳥特價就結束了！':'明天早鳥特價就結束了！';
@@ -1259,17 +1259,15 @@ function lastChance(){if(!lcOn()||rawStore.get('lcDay','')===dkey())return false
    <div class="lc-tb"><div><small>小說付費版</small><b>99</b><s>199</s></div><div class="hl"><small>全功能（小說＋遊戲）</small><b>188</b><s>249</s></div></div>
    <p style="margin:0">11/6 起改為限時優惠價：小說 199、全功能 249。一次買斷、永久有效，之後新增的故事和遊戲也包含。</p>
    <div class="acts">${buyBtn(true)}<button class="linkbtn" data-close style="align-self:center">我再想想</button></div>`);return true}
-function gameNews(){const k=dkey();if(k>GN_UNTIL)return false;const d=rawStore.get('gnDays',[])||[];if(d.length>=3||d.includes(k))return false;rawStore.set('gnDays',d.concat(k));
-  const full=(typeof CB_BOSSES!=='undefined'&&CB_BOSSES.length)?CB_BOSSES[Math.floor(Math.random()*CB_BOSSES.length)]:'傅寒州';
-  openModal(`<span class="kicker">霸總遊戲間・今天更新了</span>
-   <div class="gn-phone" aria-hidden="true"><img class="call-av" src="${nextBossImg()}" alt=""><b>${esc(full)}</b><span>來電中…</span>
-    <p class="gn-bub">${esc(genderize('「妳敢不接我電話？三題單字，答對才准掛。」'))}</p>
-    <div class="gn-btns"><i class="no">✕</i><i class="yes">✆</i></div></div>
-   ${lcBar()}<h2>霸總打電話來考妳了</h2>
+function gameNews(){const k=dkey();if(k>GN_UNTIL)return false;const d=rawStore.get('gnDays2',[])||[];if(d.length>=2||d.includes(k))return false;rawStore.set('gnDays2',d.concat(k));
+  openModal(`${bossPic([genderize('新功能都給妳準備好了。從今天起，一個字都不准忘。'),'霸總教你背單字・新功能上線'])}<span class="kicker">新功能上線</span><h2>背單字更有效率了</h2>
    <ul class="annl" style="text-align:left;margin:0 0 6px;padding-left:20px;line-height:1.8">
-    <li><b>☎ 霸總來電</b>：用對話考單字，答錯會被罵，<b>每天免費接 1 通</b></li>
-    <li><b>📒 生字補習班</b>：答錯的字自動收集，隔 1、3、7 天複習到畢業</li></ul>
-   <div class="acts"><button class="btn" data-close data-gncall>接聽試玩</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`);gm.gnName=full;return true}
+    <li><b>📒 生字補習班</b>：依「遺忘曲線」安排的單字卡，在快忘記前提醒妳複習；加入生字的字會自動排進來</li>
+    <li><b>🔍 生字&amp;字典</b>：隨時查單字（英文、中文都能查），一次看多個中文意思，一鍵加入生字</li>
+    <li><b>🎲 隨機出題</b>：選多益、雅思或 GRE，隨機抽 10 張單字卡馬上練</li>
+    <li><b>💬 霸總金句翻譯</b>：看霸總的英文金句選中文，搭配情境插圖</li>
+    <li><b>🔎 情境找物品</b>：新增晚宴、精品百貨、海岸兜風等 5 個場景</li></ul>
+   <div class="acts"><button class="btn" data-close data-gopen="cram">去生字補習班</button><button class="btn ghost" data-close data-tab-go="book">看生字&amp;字典</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`);return true}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-gncall]');if(!t)return;setTimeout(()=>{go('games');callStart()},120)});
 function dailyQuote(){const k=dkey();if(rawStore.get('quoteDay','')===k)return false;rawStore.set('quoteDay',k);
   qIdx=Math.abs(dayIdx())%BOSS_QUOTES.length;const q=curQuote();const tid=todayLesson();const s=tid!=null&&!readSet[tid]&&!isLocked(byId[tid])?byId[tid]:null;if(s)store.set('prompted',k);
@@ -3259,7 +3257,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261120i',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261120j',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
