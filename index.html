@@ -2453,17 +2453,25 @@ function renderRead(){
   onScroll();
 }
 /* 生字本：查單字（四個字庫，英文字首或中文）＋單字卡入口 */
-let lkQ='';
+let lkQ='',GEN=null,genP=null;
+/* 一般常用字（ECDICT 常用字，約 2 萬字＋字形變化對照），查不到考試字時才載入 */
+function genLoad(){if(GEN||genP)return genP;genP=fetch('data/gen.json?v=cdc4aa45').then(r=>r.json()).then(j=>{GEN=j;const r=document.getElementById('lkr');if(r&&lkQ)r.innerHTML=lkHtml(lkQ);if(state.view==='book'&&Object.keys(saved).some(k=>!D[k]))renderBook()}).catch(()=>{genP=null});return genP}
+function genEntry(k){const g=GEN&&GEN.w[k];return g?{i:g[0]?'/'+g[0]+'/':'',p:g[1],z:g[2].split('、'),s:[],a:[],e:[]}:null}
 function lkSearch(q){q=(q||'').trim().toLowerCase();if(!q)return [];const out=[],seen=new Set(),cjk=/[一-鿿]/.test(q);
   for(const Dd of [D,D2,IELTS_D,D3]){if(!Dd)continue;for(const k in Dd){if(seen.has(k))continue;const d=Dd[k];if(!d||!d.z||!d.z.length)continue;
     if(cjk?d.z.some(z=>z.includes(q)):k.startsWith(q)){seen.add(k);out.push([k,d])}}}
-  out.sort((a,b)=>a[0]===q?-1:b[0]===q?1:a[0].length-b[0].length||(a[0]<b[0]?-1:1));return out.slice(0,8)}
-function lkHtml(q){if(!q.trim())return '';const L=lkSearch(q);if(!L.length)return `<p class="muted" style="margin:6px 4px;font-size:13.5px">找不到「${esc(q)}」，試試其他拼法或中文</p>`;
+  if(GEN&&!cjk){for(const k in GEN.w){if(seen.has(k)||!k.startsWith(q))continue;seen.add(k);out.push([k,genEntry(k)])}}
+  if(GEN&&cjk){for(const k in GEN.w){if(seen.has(k)||!GEN.w[k][2].includes(q))continue;seen.add(k);out.push([k,genEntry(k)])}}
+  const rk=x=>cjk?(x[1].z[0]===q?0:x[1].z.includes(q)?1:2):(x[0]===q?0:1);out.sort((a,b)=>rk(a)-rk(b)||a[0].length-b[0].length||(a[0]<b[0]?-1:1));
+  const lm=GEN&&!cjk&&GEN.x[q];if(lm&&!out.some(x=>x[0]===lm)){const d=[D,D2,IELTS_D,D3].map(x=>x&&x[lm]).find(Boolean)||genEntry(lm);if(d)out.unshift([lm,d])}
+  return out.slice(0,8)}
+function lkHtml(q){if(!q.trim())return '';const L=lkSearch(q);if(!GEN){genLoad();if(!L.length)return '<p class="muted" style="margin:6px 4px;font-size:13.5px">查詢中…</p>'}if(!L.length)return `<p class="muted" style="margin:6px 4px;font-size:13.5px">找不到「${esc(q)}」，試試其他拼法或中文</p>`;
   return L.map(([k,d])=>`<button class="lk-row" data-lk="${esc(k)}"><span class="en">${esc(k)}</span><span class="zh">${esc(d.z.slice(0,3).join('、'))}</span>${saved[k]?'<span class="lk-sv">已加入</span>':'<span class="lk-add">＋查看</span>'}</button>`).join('')}
-function lkOpen(k){if(!D[k]){const s=[D2,IELTS_D,D3].find(x=>x&&x[k]);if(s)D[k]=s[k]}openWord(k)}
+function lkOpen(k){if(!D[k]){const s=[D2,IELTS_D,D3].find(x=>x&&x[k]);if(s)D[k]=s[k];else{const g=genEntry(k);if(g)D[k]=g}}openWord(k)}
+document.addEventListener('focusin',e=>{if(e.target&&e.target.id==='lkq')genLoad()});
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='lkq'){lkQ=e.target.value;const r=document.getElementById('lkr');if(r)r.innerHTML=lkHtml(lkQ)}});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-lk]');if(b){e.stopPropagation();lkOpen(b.dataset.lk)}},true);
-function bookTools(){cramSync();for(const k in saved)if(!D[k]){const s=[D2,IELTS_D,D3].find(x=>x&&x[k]);if(s)D[k]=s[k]}
+function bookTools(){for(const k in saved)if(!D[k]){const s=[D2,IELTS_D,D3].find(x=>x&&x[k]);if(s)D[k]=s[k];else{const g=genEntry(k);if(g)D[k]=g;else genLoad()}}cramSync();
   const due=cramDue().length;
   return `<div class="lk-box"><label class="lk-in"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="lkq" type="search" value="${esc(lkQ)}" placeholder="查單字：輸入英文或中文" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="查單字"></label><div id="lkr" class="lk-res">${lkHtml(lkQ)}</div></div>
    <button class="wb-cram" data-gopen="cram"><span aria-hidden="true">📒</span><span><b>單字卡複習${due?'・今天 '+due+' 張':''}</b><small>把生字本的字變成單字卡，翻卡複習</small></span><span aria-hidden="true">›</span></button>
@@ -3257,7 +3265,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261120j',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261120k',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
