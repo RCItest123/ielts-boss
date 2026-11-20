@@ -491,6 +491,8 @@ body.gm-mode{--paper:#17121C;--card:#221A28;--ink:#F1E9F0;--muted:#A99BAA;--line
 .gm-play.pulse{animation:gmpl 1s ease-in-out infinite}@keyframes gmpl{50%{transform:scale(1.07)}}
 .gm-winfo{font-family:var(--f-body,inherit);font-size:15px;font-weight:400;text-align:left;margin-top:10px;display:grid;gap:8px}.gm-winfo .pos{font-size:13px;color:var(--muted)}.gm-winfo .gw-r{display:grid;gap:4px}.gm-winfo .tag{font-size:14px;padding:3px 10px}.gm-winfo .ex .en{font-size:15px}
 .gm-reveal{font-family:var(--f-en);font-size:26px;font-weight:600;min-height:36px}.gm-reveal small{font-family:var(--f-ipa);font-size:14px;color:var(--muted);font-weight:400}
+.gm-qt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:16px;border-radius:16px;background:var(--ink);color:var(--paper);margin-bottom:12px}.gm-qt small{opacity:.7;font-size:12.5px}.gm-qt b{font-family:var(--f-en);font-size:21px;line-height:1.45}.gm-qt button{background:transparent;color:inherit;box-shadow:inset 0 0 0 1.5px currentColor;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700}
+.gm-qk{margin-top:12px;padding:10px 14px;border-radius:14px;background:var(--mark);font-size:15px}.gm-qk b{font-family:var(--f-en);font-size:18px;margin-right:8px}
 .gm-opts{display:grid;gap:8px}.gm-opt{padding:14px 16px;border-radius:14px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line);font-weight:700;font-size:16px;text-align:left;color:var(--ink)}
 .gm-opt.ok{color:var(--ok);box-shadow:inset 0 0 0 2px var(--ok)}.gm-opt.ng{color:var(--wine);box-shadow:inset 0 0 0 2px var(--wine);background:var(--mark)}
 .gm-ask{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:16px;background:var(--ink);color:var(--paper)}
@@ -1545,7 +1547,44 @@ const GM_SCENES=[
   ['grille','水箱罩',[[0,812,128,988]]],['mirror','後照鏡',[[642,552,738,608]]],['necktie','領帶',[[812,298,858,402]]],
   ['suit','西裝',[[665,275,935,640]]],['shoes','皮鞋',[[832,932,972,1010]]],['watch','手錶',[[726,502,772,548]]],
   ['flowers','花',[[1228,396,1332,504]]],['door','門',[[1000,120,1330,780]]],['counter','櫃台',[[1196,510,1536,694]]],
-  ['ceiling','天花板',[[800,0,1536,118]]],['floor','地板',[[770,800,1536,1024]]],['pillar','柱子',[[320,0,562,462]]],['hair','頭髮',[[808,162,902,242]]]]}];
+  ['ceiling','天花板',[[800,0,1536,118]]],['floor','地板',[[770,800,1536,1024]]],['pillar','柱子',[[320,0,562,462]]],['hair','頭髮',[[808,162,902,242]]]]},
+ {name:'總裁的晚宴',own:'這場晚宴',img:'img/scene7.jpg?v=cbfde28f',w:1200,h:1200,hs:[
+  ['wine glass','酒杯',[[270,515,412,800]]],['champagne','香檳',[[40,375,145,530]]],['ice bucket','冰桶',[[0,500,155,680]]],
+  ['steak','牛排',[[495,735,720,820]]],['lobster','龍蝦',[[480,940,1180,1120]]],['lemon','檸檬',[[750,765,815,830],[890,1025,980,1100],[405,980,465,1050]]],
+  ['oyster','生蠔',[[705,785,1010,880]]],['caviar','魚子醬',[[180,795,320,850],[525,855,580,890]]],['scallop','干貝',[[1040,800,1200,870]]],
+  ['bread','麵包',[[1080,665,1200,740]]],['chandelier','水晶吊燈',[[740,0,1200,110],[960,90,1100,200]]],['wristwatch','手錶',[[800,360,880,430]]],
+  ['glasses','眼鏡',[[595,200,750,280]]],['necktie','領帶',[[555,400,640,590]]],['tie clip','領帶夾',[[570,505,640,530]]],
+  ['pocket square','口袋巾',[[740,490,790,520]]],['waiter','服務生',[[25,40,215,480]]],['gloves','手套',[[165,320,235,375]]],
+  ['flowers','花',[[0,655,195,920]]],['candle','蠟燭',[[75,910,220,1110]]],['tablecloth','桌巾',[[1000,520,1200,690]]]]},
+ {name:'精品百貨',own:'整間百貨',img:'img/scene8.jpg?v=7897ddaa',w:1200,h:1200,hs:[
+  ['shopping bag','購物袋',[[350,650,890,900],[900,590,1000,710],[195,690,295,840],[130,560,190,640]]],['sunglasses','太陽眼鏡',[[575,265,650,295],[0,940,140,1000]]],
+  ['bodyguard','保鑣',[[775,310,950,850],[255,310,420,850],[150,340,255,640]]],['suitcase','行李箱',[[1075,520,1200,840]]],['luggage cart','行李推車',[[990,240,1200,980]]],
+  ['latte','拿鐵',[[115,820,240,905]]],['macaron','馬卡龍',[[50,740,110,780],[25,825,125,880]]],['strawberry','草莓',[[25,860,100,905]]],
+  ['smartphone','手機',[[150,940,315,985]]],['belt','皮帶',[[545,545,645,565]]],['leather shoes','皮鞋',[[560,1010,620,1095]]],
+  ['chandelier','吊燈',[[400,0,520,300]]],['railing','欄杆',[[440,40,800,95]]],['tree','樹',[[800,0,1200,150]]],['cushion','抱枕',[[60,690,200,820]]],
+  ['vase','花瓶',[[0,665,65,780]]],['handbag','手提包',[[15,270,140,500]]],['gift box','禮盒',[[1105,770,1200,890]]],['armchair','扶手椅',[[100,630,345,900]]]]},
+ {name:'林蔭大道',own:'這條街',img:'img/scene9.jpg?v=58648faf',w:1200,h:1200,hs:[
+  ['streetlamp','路燈',[[560,140,640,300],[1065,355,1100,420]]],['hanging basket','吊掛花籃',[[145,240,380,440],[400,365,510,450]]],['hydrangea','繡球花',[[0,745,300,1150]]],
+  ['chalkboard','黑板',[[320,670,465,870]]],['coffee cup','咖啡杯',[[385,740,430,780],[200,725,230,745]]],['chair','椅子',[[205,705,345,965]]],
+  ['parasol','遮陽傘',[[460,500,630,560]]],['banner','旗幟',[[520,305,580,420],[575,445,605,500]]],['car','車子',[[920,555,1200,800]]],
+  ['tree trunk','樹幹',[[1010,60,1085,950]]],['grate','鐵格柵',[[905,925,1165,970]]],['sunglasses','太陽眼鏡',[[668,515,700,535]]],
+  ['belt','皮帶',[[645,655,712,668]]],['sneakers','球鞋',[[665,840,697,885]]],['balcony','陽台',[[470,60,545,135],[1140,300,1200,345]]],
+  ['chandelier','吊燈',[[80,290,140,360],[75,410,155,495]]],['croissant','可頌',[[222,730,258,752]]],['pedestrian','路人',[[555,570,595,670]]],['sidewalk','人行道',[[300,900,1000,1200]]]]},
+ {name:'海岸兜風',own:'這台車',img:'img/scene10.jpg?v=d5858697',w:1159,h:1358,hs:[
+  ['steering wheel','方向盤',[[920,500,1159,960]]],['sunglasses','太陽眼鏡',[[220,250,465,365]]],['wristwatch','手錶',[[1015,395,1095,500]]],
+  ['necklace','項鍊',[[320,550,400,640]]],['coffee cup','咖啡杯',[[945,1095,1150,1300]]],['headrest','頭枕',[[0,250,185,510]]],
+  ['sunroof','天窗',[[0,0,650,40]]],['gear shift','排檔桿',[[740,1140,865,1260]]],['armrest','扶手',[[140,1130,670,1300]]],
+  ['belt','皮帶',[[590,940,700,1000]]],['sea','海',[[430,450,920,540]]],['villa','別墅',[[400,345,525,450]]],['cliff','懸崖',[[560,370,790,470]]],
+  ['sky','天空',[[500,210,1159,320]]],['collar','衣領',[[190,480,330,580]]],['trousers','長褲',[[700,720,1159,1150]]],['seat','座椅',[[0,970,250,1358]]]]},
+ {name:'海灘度假屋',own:'這片海灘',img:'img/scene11.jpg?v=98750aa4',w:1159,h:1358,hs:[
+  ['surfboard','衝浪板',[[105,360,255,670]]],['yacht','遊艇',[[735,505,895,560]]],['sunset','夕陽',[[1010,490,1110,560]]],
+  ['palm tree','棕櫚樹',[[240,270,450,500],[600,0,1100,270]]],['lantern','燈籠',[[285,115,400,270],[215,925,315,1040],[365,1160,550,1358],[990,670,1075,790],[0,30,100,140]]],
+  ['light bulb','燈泡',[[110,105,140,155],[170,130,195,180],[240,125,265,170],[405,155,430,205]]],['straw hat','草帽',[[20,890,200,1000]]],['camera','相機',[[15,990,150,1075]]],
+  ['sunglasses','太陽眼鏡',[[160,1035,285,1080]]],['cocktail','雞尾酒',[[300,860,410,1030]]],['whiskey','威士忌',[[800,740,855,800],[855,670,930,800]]],
+  ['lily','百合',[[900,600,1010,700]]],['vase','花瓶',[[930,700,995,790]]],['champagne','香檳',[[1030,835,1135,950]]],['ice bucket','冰桶',[[975,910,1159,1180]]],
+  ['mango','芒果',[[810,1095,905,1165]]],['flip-flops','夾腳拖',[[725,840,865,900],[680,1065,815,1110]]],['wicker chair','藤椅',[[275,690,740,1040]]],
+  ['cushion','抱枕',[[0,640,110,770],[85,655,210,770]]],['curtain','窗簾',[[30,180,140,640]]],['hibiscus','扶桑花',[[10,1205,145,1310]]],
+  ['crate','木箱',[[20,1010,485,1250]]],['book','書',[[895,785,1040,820]]],['blanket','毯子',[[210,665,290,900]]]]}];
 const GM_LV=[['toeic','多益'],['ielts','雅思'],['gre','GRE']];
 const GM_RANK=[[0,'實習生'],[300,'小秘書'],[800,'特別助理'],[1600,'經理'],[3000,'總監'],[5000,'副總裁'],[8000,'總裁的人']];
 let gm={cur:null,stop:[]},gmPools={};
@@ -1642,8 +1681,9 @@ function gmFinish(game,score,line,review,again){
 const GM_GAMES=[
  {id:'custom',ic:'♥',name:'訂製霸總情人',desc:'填入你或朋友的名字，成為壞霸總小說的主角，還能匯出圖卡',teaser:1},
  {id:'call',ic:'☎',name:'霸總來電',desc:'霸總打電話來考妳單字，答對 3 題才准掛電話・每天免費接 1 通',nw:1},
+ {id:'scene',ic:'找',name:'情境找物品',desc:'在總裁的辦公室、豪宅、晚宴、精品百貨、海邊兜風等 11 個場景找出指定物品',lv:0},
  {id:'cram',ic:'✎',name:'錯字補習班',desc:'遊戲裡答錯的字自動收進來，隔 1、3、7 天複習，答對 4 次就畢業',teaser:1},
- {id:'scene',ic:'找',name:'情境找物品',desc:'在總裁的辦公室、廚房、客廳、浴室、臥室、公司門口找出指定物品',lv:0,hot:1},
+ {id:'quote',ic:'句',name:'霸總金句翻譯',desc:'霸總說英文金句，選出正確的中文翻譯，順便記住句子裡的關鍵單字',lv:0,nw:1},
  {id:'quiz',ic:'⚡',name:'霸總每日單字挑戰',desc:'從讀過的故事出 10 題，答錯霸總會罵人',lv:0},
  {id:'link',ic:'連',name:'中英連連看',desc:'左邊英文、右邊中文，點一點把它們連起來',lv:1,soon:1},
  {id:'fall',ic:'Aa',name:'掉落打字',desc:'中文往下掉，在掉到底之前打出英文',lv:1,soon:1},
@@ -1668,6 +1708,7 @@ function renderGames(){
    <section class="gm-why" style="margin-top:16px"><h3>遊戲間怎麼幫你記單字？</h3>
     <p>讀故事是「第一次認識」單字，遊戲是「再見幾次面」。學過的單字在幾天內反覆<b>主動回想</b>，最能從短期記憶搬進長期記憶。</p>
     <ul><li><b>情境找物品</b>：把單字和畫面連在一起，用圖像記憶</li>
+     <li><b>霸總金句翻譯</b>：整句英文看懂意思，單字放在句子裡更好記</li>
      <li><b>單字挑戰</b>：從你讀過的故事出題，答錯的字一鍵存進生字本</li>
      <li><b>中英連連看、掉落打字、聽力測驗</b>：從配對、拼字、聽音不同角度加深印象</li>
      <li><b>霸總來電</b>：霸總打電話來考妳，答對 3 題才准掛</li>
@@ -1684,6 +1725,7 @@ function gmIntro(id){
   const rules={link:'每局 3 輪、每輪 5 組。先點左邊的英文，再點右邊對應的中文。越快、錯越少，分數越高。',
     fall:'中文意思會往下掉，下面有字首、字尾和字母數提示。在下方輸入英文按送出，打對就消失；掉到底扣一條命，3 條命用完結束。',
     listen:'共 10 題。按播放鍵聽英文，選出正確的中文。可以慢速再聽。',
+    quote:'共 10 句。霸總會說一句英文金句，從 4 個選項選出正確的中文翻譯，可以按喇叭聽發音。每句會教你一個關鍵單字，答錯的字自動收進錯字補習班。',
     scene:'看著總裁的照片，找出上方指定的英文物品，點一下它。點錯會告訴你那是什麼。照片可以放大、左右滑動。',
     quiz:'從你讀過的故事（不夠的話從這個類型的故事）出 10 題：看英文選中文、看中文選英文。答錯霸總會罵人，答錯的字可以一鍵加入生字本。'}[id];
   gmScreen(g.name,`${g.lv?`<div class="gm-step"><span class="gm-lbl">單字等級</span>${gmLevelChips()}</div><div id="gmSrc">${gmSrcNote(gmLevel())}</div>`:''}${speed}
@@ -1710,7 +1752,7 @@ function gmStart(id){
   if(g.teaser){cbOpen();return}
   if(!gmCanPlay()){gmIntro(id);return}
   if(!gamePass)rawStore.set('gmTrial',(+rawStore.get('gmTrial',0)||0)+1);
-  gmStopAll();gm.cur=id;if(id==='quiz'){qzStart();return}({link:gmLink,fall:gmFall,listen:gmListen,scene:gmScene})[id]()}
+  gmStopAll();gm.cur=id;if(id==='quiz'){qzStart();return}({link:gmLink,fall:gmFall,listen:gmListen,scene:gmScene,quote:gmQuote})[id]()}
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.gopen==='cram'){gamePass?cramHome():cramTeaser();return}
@@ -1808,28 +1850,47 @@ function gmListen(){
 }
 /* --- 4. 情境找物品 --- */
 function gmScene(){
-  const S=GM_SCENES[Math.floor(Math.random()*GM_SCENES.length)];const targets=gshuf(S.hs).slice(0,8);const sw=[];let ti=0,score=0,tries=0,zoom=false;
+  const S=GM_SCENES[Math.floor(Math.random()*GM_SCENES.length)],W=S.w||1536,H=S.h||1024;const targets=gshuf(S.hs).slice(0,8);const sw=[];let ti=0,score=0,tries=0,zoom=false;
   gmScreen('情境找物品',`<div class="hud gm-hud"><span id="gsp">第 1 / 8 個</span><span id="gss">0 分</span><span>${S.name}</span></div>
    <div class="gm-ask"><span><small>找出這個東西，點一下</small><b id="gsw"></b></span><button id="gssay" aria-label="念出單字">♪</button></div>
-   <div class="gm-scwrap" id="gsw2"><div class="gm-sc" id="gsc"><img src="${S.img}" alt="${S.name}" draggable="false"></div></div>
+   <div class="gm-scwrap" id="gsw2"><div class="gm-sc" id="gsc" style="aspect-ratio:${W}/${H}"><img src="${S.img}" alt="${S.name}" draggable="false"></div></div>
    <div class="gm-row"><button class="btn ghost sm" id="gzoom">放大照片</button><button class="btn ghost sm" id="gskip">跳過這個</button></div><div id="gsend"></div>`);
   const sc=document.getElementById('gsc');
   const inR=(r,x,y)=>x>=r[0]&&x<=r[2]&&y>=r[1]&&y<=r[3],area=r=>(r[2]-r[0])*(r[3]-r[1]);
   const hit=(x,y)=>{let best=null,ba=1e12;for(const h of S.hs)for(const r of h[2])if(inR(r,x,y)&&area(r)<ba){ba=area(r);best=h}return best};
   const center=h=>{const r=h[2][0];return [(r[0]+r[2])/2,(r[1]+r[3])/2]};
-  function mark(h,cls,label,ri){const r=h[2][ri||0];const w=(r[2]-r[0])/1536*100,hh=(r[3]-r[1])/1024*100;
-    sc.insertAdjacentHTML('beforeend',`<span class="gm-mk ${cls}" style="left:${r[0]/1536*100}%;top:${r[1]/1024*100}%;width:${w}%;height:${hh}%"><em>${esc(label)}</em></span>`)}
+  function mark(h,cls,label,ri){const r=h[2][ri||0];const w=(r[2]-r[0])/W*100,hh=(r[3]-r[1])/H*100;
+    sc.insertAdjacentHTML('beforeend',`<span class="gm-mk ${cls}" style="left:${r[0]/W*100}%;top:${r[1]/H*100}%;width:${w}%;height:${hh}%"><em>${esc(label)}</em></span>`)}
   function ask(){const t=targets[ti];document.getElementById('gsw').textContent=t[0];document.getElementById('gsp').textContent=`第 ${ti+1} / 8 個`;tries=0}
   function next(){ti++;if(ti<8)setTimeout(ask,400);else setTimeout(end,500)}
   document.getElementById('gssay').onclick=()=>targets[ti]&&speak(targets[ti][0],.85);
   document.getElementById('gzoom').onclick=ev=>{zoom=!zoom;sc.classList.toggle('z',zoom);ev.target.textContent=zoom?'縮小照片':'放大照片'};
   document.getElementById('gskip').onclick=()=>{if(ti>=8)return;sw.push([targets[ti][0],targets[ti][1]]);mark(targets[ti],'skip',targets[ti][0]+' '+targets[ti][1]);next()};
-  sc.onclick=ev=>{if(ti>=8)return;const r=sc.getBoundingClientRect();const x=(ev.clientX-r.left)/r.width*1536,y=(ev.clientY-r.top)/r.height*1024;const t=targets[ti];const h=t&&t[2].some(r=>inR(r,x,y))?t:hit(x,y);
+  sc.onclick=ev=>{if(ti>=8)return;const r=sc.getBoundingClientRect();const x=(ev.clientX-r.left)/r.width*W,y=(ev.clientY-r.top)/r.height*H;const t=targets[ti];const h=t&&t[2].some(r=>inR(r,x,y))?t:hit(x,y);
     if(h===t){score+=tries?5:10;if(tries)sw.push([t[0],t[1]]);const ri=t[2].findIndex(r=>x>=r[0]&&x<=r[2]&&y>=r[1]&&y<=r[3]);mark(t,'ok',t[0]+' '+t[1],ri<0?0:ri);speak(t[0],.9);document.getElementById('gss').textContent=score+' 分';next()}
-    else{tries++;const tip=document.createElement('span');tip.className='gm-tap';tip.style.left=(x/1536*100)+'%';tip.style.top=(y/1024*100)+'%';tip.innerHTML=`<em>${h?esc(h[0]):'不是這裡'}</em>`;sc.appendChild(tip);setTimeout(()=>tip.remove(),1100)}};
+    else{tries++;const tip=document.createElement('span');tip.className='gm-tap';tip.style.left=(x/W*100)+'%';tip.style.top=(y/H*100)+'%';tip.innerHTML=`<em>${h?esc(h[0]):'不是這裡'}</em>`;sc.appendChild(tip);setTimeout(()=>tip.remove(),1100)}};
   ask();
-  function end(){const line=score>=70?'眼力不錯。這間'+S.name.replace('總裁的','')+'，歸妳管了。':score>=40?'還行，但我的東西妳要記清楚。':'東西就在眼前都找不到？再來。';
+  function end(){const line=score>=70?'眼力不錯。'+(S.own||'這間'+S.name.replace('總裁的',''))+'，歸妳管了。':score>=40?'還行，但我的東西妳要記清楚。':'東西就在眼前都找不到？再來。';
     const cn=cramAdd(sw);document.getElementById('gsend').innerHTML=cramNote(cn)+gmFinish('scene',score,line,targets.map(t=>[t[0],t[1]]),'scene');document.getElementById('gsend').scrollIntoView({behavior:'smooth',block:'start'})}
+}
+
+/* --- 5. 霸總金句翻譯 --- */
+const GQ=[["You belong to me.","妳是屬於我的。","belong","屬於"],["Don't test my patience.","不要考驗我的耐心。","patience","耐心"],["Woman, you're playing with fire.","女人，妳這是在玩火。","fire","火"],["Swipe my card. No limit.","刷我的卡，沒額度限制。","limit","限制"],["I can give you anything you want, except my heart... at least for now.","妳想要的一切我都能給妳，除了我的心……至少現在是這樣。","except","除了"],["I want everything on this woman. You have three minutes!","3分鐘之內，我要這個女人的全部資料！","minute","分鐘"],["Spend this million, or you're not going home tonight.","這一百萬花不完，今晚不准回家。","million","百萬"],["Well, woman, you've caught my attention.","很好，女人，妳已經成功引起我的注意。","attention","注意"],["Who said you could leave?","誰准妳走了？","leave","離開"],["Anyone who touches what's mine will regret being alive.","敢動我的人，我要讓他後悔活在這個世界上！","regret","後悔"],["Listen. You have my permission to like me.","聽著，我允許妳喜歡我。","permission","允許"],["No one touches what is mine.","我的人，誰敢動？","touch","碰"],["From now on, you answer only to me.","從今天起，妳只聽我的。","answer to","聽命於"],["I don't repeat myself.","同樣的話，我不說第二遍。","repeat","重複"],["Take my black card. Don't embarrass me out there.","這張黑卡拿去，別在外面丟我的臉。","embarrass","使丟臉"],["I don't want excuses. I only want results.","我不要聽解釋，我只要看結果。","excuse","藉口"],["Name your price. How much to keep you by my side?","開個價吧，妳要多少錢才肯留在我身邊？","price","價格"],["It's morning. Make sure the Wang Group goes bankrupt by noon.","天亮了，讓王氏集團破產吧。","bankrupt","破產的"],["This island is mine. And now, so are you.","這座島是我的。現在，妳也是。","island","島嶼"],["Workout's done. Now it's your turn to keep me company.","練完了。現在，輪到妳陪我。","company","陪伴"],["Every sunset happens only once. I want to watch this one with you.","日落只有一次，我只想跟妳一起看。","sunset","日落"],["Cold? Take my coat. Take me, too.","冷？外套給妳，人也給妳。","coat","外套"],["Today, this entire resort is open for you alone.","整座度假村今天只營業給妳一個人。","resort","度假村"],["I cleared out the entire restaurant just to wait for you.","整間餐廳都清空了，只為了等妳一個人。","entire","整個的"],["It's this late. Where do you think you're going?","這麼晚了，還想去哪？","late","晚的"],["I have the final say on this contract. And on you.","這份合約，我說了算。妳也是。","contract","合約"],["No one enters my study but you.","我的書房，只有妳能進來。","study","書房"],["I bought the whole building. Now you can't quit.","整棟大樓我買下了，現在妳辭不掉了。","quit","辭職"],["Stay away from him. That's an order.","離他遠一點，這是命令。","order","命令"],["Your tears are more expensive than this company.","妳的眼淚，比這間公司還貴。","expensive","昂貴的"],["Cancel all my meetings. You come first.","取消我所有會議，妳最優先。","cancel","取消"],["Look at me when I'm talking to you.","我在跟妳說話，看著我。","talk","說話"],["I don't share what's mine.","我的東西，我不跟人分享。","share","分享"],["Get in the car. I'm not asking twice.","上車。我不問第二次。","twice","兩次"],["Who allowed you to get hurt?","誰准妳受傷的？","hurt","受傷的"],["You are the only exception to my rules.","妳是我規則裡唯一的例外。","exception","例外"],["I'll handle it. You just stand behind me.","我來處理，妳站在我身後就好。","handle","處理"],["From today, my schedule is yours.","從今天起，我的行程都是妳的。","schedule","行程"],["Sign it. Your name next to mine.","簽吧，把妳的名字寫在我的旁邊。","sign","簽名"],["I don't negotiate. Except with you.","我從不談判，除了跟妳。","negotiate","談判"],["The whole city knows you're mine.","整座城市都知道妳是我的人。","city","城市"],["Eat first. Work can wait.","先吃飯，工作可以等。","wait","等待"],["Fire him. No one yells at you.","把他開除，誰都不准對妳大吼。","yell","大吼"],["You're three minutes late. I counted.","妳遲到了三分鐘，我數過。","count","數"],["I've waited five years for this moment.","這一刻，我等了五年。","moment","時刻"],["Don't thank me. Just don't leave.","不用謝我，別走就好。","thank","感謝"],["I promised to protect you. I keep my promises.","我答應過要保護妳，我說到做到。","promise","承諾"]];
+function gmQuote(){
+  const N=10,all=GQ.map(x=>{const b=bq([x[0],x[1]]);return [b[0],b[1],x[2],x[3]]}),qs=gshuf(all.slice()).slice(0,N);let i=0,score=0;const wrong=[];
+  function q(){const w=qs[i];const opts=gshuf([w,...gshuf(all.filter(x=>x[1]!==w[1])).slice(0,3)]);
+    gmScreen('霸總金句翻譯',`<div class="hud gm-hud"><span>第 ${i+1} / ${N} 句</span><span>答對 ${score}</span></div>
+     <div class="gm-qt"><small>霸總說</small><b>${esc(w[0])}</b><button id="gqs" aria-label="念出這句">♪ 聽發音</button></div>
+     <div class="gm-opts">${opts.map((o,k)=>`<button class="gm-opt" data-go="${k}">${esc(o[1])}</button>`).join('')}</div><div id="gqn"></div>`);
+    document.getElementById('gqs').onclick=()=>speak(w[0],.85);
+    let ans=false;document.querySelector('.gm-opts').onclick=ev=>{const b=ev.target.closest('.gm-opt');if(!b||ans)return;ans=true;const ok=opts[+b.dataset.go][1]===w[1];
+      if(ok)score++;else{b.classList.add('ng');wrong.push([w[2],w[3]])}
+      document.querySelectorAll('.gm-opt').forEach((x,k)=>{if(opts[k][1]===w[1])x.classList.add('ok');x.disabled=true});
+      document.getElementById('gqn').innerHTML=`<div class="gm-qk">關鍵單字　<b>${esc(w[2])}</b>${esc(w[3])}</div>${gmSay(ok?['懂我的意思就好，下一句。','很好，妳聽得懂我。','答對了，別得意。'][i%3]:['我說的話，妳要聽清楚。','翻錯了？這句給我背三遍。'][i%2])}<button class="btn" id="gqgo" style="width:100%;margin-top:10px">${i+1<N?'下一句':'看成績'}</button>`;
+      document.getElementById('gqgo').onclick=()=>{i++;i<N?q():end()}}}
+  function end(){const line=score>=9?'我說的每一句，妳都懂。很好。':score>=6?'還可以。我的話，妳要再聽仔細一點。':'連我在說什麼都不懂？今晚我一句一句教妳。';
+    const cn=cramAdd(wrong);gmScreen('霸總金句翻譯',`<div class="hud gm-hud"><span>答對 ${score} / ${N}</span></div>`+cramNote(cn)+gmFinish('quote',score*15,line,qs.map(w=>[w[2],w[3]]),'quote'))}
+  q();
 }
 
 /* ---------- 霸總收藏卡（閱讀闖關）：讀完的故事篇數（所有類型合計）解鎖；免費版只能收前 3 張，其餘要小說付費版 ---------- */
@@ -2546,6 +2607,7 @@ const GROW_BASE=GROW_TEST?'https://en.bazonglearn.com/':SHARE_URL;
 .qb-prog{display:flex;gap:6px;justify-content:center}
 .qb-prog i{width:26px;height:5px;border-radius:99px;background:var(--line)}.qb-prog i.on{background:var(--wine)}
 .qb-opts{display:flex;flex-direction:column;gap:8px}
+.qb-en{display:block;font-family:var(--f-en);font-size:13px;font-weight:500;line-height:1.45;opacity:.72;margin-top:3px;letter-spacing:0}.qb-res .qb-en,.qb-res q .qb-en{letter-spacing:0}
 .qb-opts button{min-height:50px;padding:10px 14px;border-radius:14px;background:var(--soft);color:var(--ink);font-size:14.5px;line-height:1.5;text-align:left;font-weight:600;cursor:pointer}
 .qb-opts button:active{background:var(--mark)}
 .qb-res{border-radius:18px;overflow:hidden;background:#1a1018;color:#fff;text-align:center}
@@ -2646,24 +2708,24 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-gopen="cus
 
 /* ---------- 命定霸總測驗 ---------- */
 const QB_Q=[
- {q:'下班時間，他傳來一句話。妳最希望是哪一句？',a:[['「十分鐘後樓下，車在等。」','ice'],['「妳在哪？我已經到了。」','hunt'],['「今天累不累？我煮了湯。」','guard'],['「……沒事，只是想知道妳吃了沒。」','regret']]},
- {q:'你們大吵一架之後，他會怎麼做？',a:[['讓秘書送來一份「道歉合約」','ice'],['把妳堵在門口，不准妳走','hunt'],['先低頭，抱著妳說是他的錯','guard'],['冷戰三天，然後淋著雨站在妳家樓下','regret']]},
- {q:'妳在公司被欺負，他的反應是？',a:[['隔天，那間公司被他收購了','ice'],['當眾牽起妳的手，宣示主權','hunt'],['默默把事情全擋下來，不讓妳知道','guard'],['嘴上說妳活該，轉身就去替妳討公道','regret']]},
- {q:'他送妳的禮物，最可能是什麼？',a:[['一張沒有額度上限的卡','ice'],['一枚戴上就拿不下來的戒指','hunt'],['妳只隨口提過一次的小東西','guard'],['三年前就買好、一直沒送出去的項鍊','regret']]},
- {q:'最後一題。妳最想聽他親口說哪一句？',a:[['「我的時間很貴，但對妳免費。」','ice'],['「妳逃到哪，我就追到哪。」','hunt'],['「這一世，換我保護妳。」','guard'],['「我後悔了，回來好不好。」','regret']]}];
+ {q:'下班時間，他傳來一句話。妳最希望是哪一句？',e:"After work, he sends you a message. Which one do you hope it is?",a:[['「十分鐘後樓下，車在等。」','ice',"Downstairs in ten minutes. The car is waiting."],['「妳在哪？我已經到了。」','hunt',"Where are you? I'm already here."],['「今天累不累？我煮了湯。」','guard',"Tired today? I made soup."],['「……沒事，只是想知道妳吃了沒。」','regret',"...Nothing. Just wanted to know if you've eaten."]]},
+ {q:'你們大吵一架之後，他會怎麼做？',e:"After a big fight, what does he do?",a:[['讓秘書送來一份「道歉合約」','ice',"Has his assistant deliver an “apology contract”"],['把妳堵在門口，不准妳走','hunt',"Blocks the door and won't let you leave"],['先低頭，抱著妳說是他的錯','guard',"Gives in first, holds you, and says it was his fault"],['冷戰三天，然後淋著雨站在妳家樓下','regret',"Stays silent for three days, then stands in the rain outside your home"]]},
+ {q:'妳在公司被欺負，他的反應是？',e:"Someone bullies you at work. How does he react?",a:[['隔天，那間公司被他收購了','ice',"The next day, he buys that company"],['當眾牽起妳的手，宣示主權','hunt',"Takes your hand in front of everyone and claims you"],['默默把事情全擋下來，不讓妳知道','guard',"Quietly handles everything without letting you know"],['嘴上說妳活該，轉身就去替妳討公道','regret',"Says you had it coming, then goes to defend you"]]},
+ {q:'他送妳的禮物，最可能是什麼？',e:"What gift is he most likely to give you?",a:[['一張沒有額度上限的卡','ice',"A card with no spending limit"],['一枚戴上就拿不下來的戒指','hunt',"A ring you can never take off"],['妳只隨口提過一次的小東西','guard',"A little thing you mentioned only once"],['三年前就買好、一直沒送出去的項鍊','regret',"A necklace he bought three years ago but never gave you"]]},
+ {q:'最後一題。妳最想聽他親口說哪一句？',e:"Last question. Which line do you most want to hear him say?",a:[['「我的時間很貴，但對妳免費。」','ice',"“My time is expensive, but for you it's free.”"],['「妳逃到哪，我就追到哪。」','hunt',"“Wherever you run, I will follow.”"],['「這一世，換我保護妳。」','guard',"“In this life, it's my turn to protect you.”"],['「我後悔了，回來好不好。」','regret',"“I was wrong. Please come back.”"]]}];
 const QB_T={
- ice:{n:'冰山總裁型',img:7,l:'這份合約，我說了算。妳也是。',d:'話少、效率高，習慣用行動解決一切。他不說喜歡，只會把整個世界安排好放在妳面前。',w:[['dominate','支配'],['contract','合約'],['acquire','收購']],t:'ielts',s:1,st:'經典霸總・雅思'},
- hunt:{n:'強勢掠奪型',img:6,l:'這麼晚了，還想去哪？',d:'佔有慾強，妳退一步他就進三步。你追我逃、插翅難飛，是他最擅長的劇本。',w:[['pursue','追逐'],['possess','擁有'],['escape','逃脫']],t:'serial',s:1,st:'長篇連載《霸總虐戀全餐》・多益'},
- guard:{n:'深情守護型',img:2,l:'日落只有一次，我只想跟妳一起看。',d:'前世沒能護住妳，這一世他什麼都不要，只要妳平安。溫柔是他唯一的手段。',w:[['protect','保護'],['devoted','深情的'],['cherish','珍惜']],t:'rebirth',s:1,st:'重生短劇・雅思'},
- regret:{n:'追妻火葬場型',img:3,l:'冷？外套給妳，人也給妳。',d:'嘴硬心軟，失去之後才知道後悔。從高高在上到放下身段追回妳，是他的必經之路。',w:[['regret','後悔'],['stubborn','固執的'],['reconcile','和好']],t:'serialielts',s:1,st:'長篇連載《霸總追妻火葬場》・雅思'}};
+ ice:{ne:"Ice-Cold CEO",le:"I have the final say on this contract. And on you.",de:"Few words, high efficiency, and he solves everything with action. He never says he likes you. He just arranges the whole world in front of you.",n:'冰山總裁型',img:7,l:'這份合約，我說了算。妳也是。',d:'話少、效率高，習慣用行動解決一切。他不說喜歡，只會把整個世界安排好放在妳面前。',w:[['dominate','支配'],['contract','合約'],['acquire','收購']],t:'ielts',s:1,st:'經典霸總・雅思'},
+ hunt:{ne:"The Possessive Hunter",le:"It's this late. Where do you think you're going?",de:"Possessive to the core: step back once, and he moves three steps closer. A chase you can never escape is his favorite script.",n:'強勢掠奪型',img:6,l:'這麼晚了，還想去哪？',d:'佔有慾強，妳退一步他就進三步。你追我逃、插翅難飛，是他最擅長的劇本。',w:[['pursue','追逐'],['possess','擁有'],['escape','逃脫']],t:'serial',s:1,st:'長篇連載《霸總虐戀全餐》・多益'},
+ guard:{ne:"The Devoted Guardian",le:"Every sunset happens only once. I want to watch this one with you.",de:"He failed to protect you in his past life. In this one, he wants nothing but your safety. Gentleness is his only weapon.",n:'深情守護型',img:2,l:'日落只有一次，我只想跟妳一起看。',d:'前世沒能護住妳，這一世他什麼都不要，只要妳平安。溫柔是他唯一的手段。',w:[['protect','保護'],['devoted','深情的'],['cherish','珍惜']],t:'rebirth',s:1,st:'重生短劇・雅思'},
+ regret:{ne:"The Regretful Chaser",le:"Cold? Take my coat. Take me, too.",de:"Stubborn outside, soft inside, he only learns regret after losing you. Stepping down from his throne to win you back is the path he must walk.",n:'追妻火葬場型',img:3,l:'冷？外套給妳，人也給妳。',d:'嘴硬心軟，失去之後才知道後悔。從高高在上到放下身段追回妳，是他的必經之路。',w:[['regret','後悔'],['stubborn','固執的'],['reconcile','和好']],t:'serialielts',s:1,st:'長篇連載《霸總追妻火葬場》・雅思'}};
 let qb=null;
 function qbStart(){qb={i:0,sc:{ice:0,hunt:0,guard:0,regret:0}};gcEvent('bossquiz-start','命定霸總測驗開始');qbRender()}
-function qbRender(){const Q0=QB_Q[qb.i];openModal(`<span class="kicker">命定霸總測驗・${qb.i+1} / ${QB_Q.length}</span><div class="qb-prog">${QB_Q.map((_,i)=>`<i class="${i<=qb.i?'on':''}"></i>`).join('')}</div><h2 style="font-size:19px;line-height:1.5">${esc(gz(Q0.q))}</h2><div class="qb-opts">${Q0.a.map((a,i)=>`<button data-qbpick="${i}">${esc(gz(a[0]))}</button>`).join('')}</div><button class="linkbtn" data-close style="align-self:center">下次再測</button>`)}
+function qbRender(){const Q0=QB_Q[qb.i];openModal(`<span class="kicker">命定霸總測驗・${qb.i+1} / ${QB_Q.length}</span><div class="qb-prog">${QB_Q.map((_,i)=>`<i class="${i<=qb.i?'on':''}"></i>`).join('')}</div><h2 style="font-size:19px;line-height:1.5">${esc(gz(Q0.q))}<small class="qb-en">${esc(Q0.e)}</small></h2><div class="qb-opts">${Q0.a.map((a,i)=>`<button data-qbpick="${i}">${esc(gz(a[0]))}<small class="qb-en">${esc(a[2])}</small></button>`).join('')}</div><button class="linkbtn" data-close style="align-self:center">下次再測</button>`)}
 function qbPick(i){const a=QB_Q[qb.i].a[i];qb.sc[a[1]]++;qb.last=a[1];qb.i++;if(qb.i<QB_Q.length)qbRender();else qbResult()}
 function qbType(){const o=['ice','hunt','guard','regret'];let best=o[0];for(const k of o)if(qb.sc[k]>qb.sc[best])best=k;const top=o.filter(k=>qb.sc[k]===qb.sc[best]);return top.includes(qb.last)?qb.last:best}
 function qbResult(k){k=k||qbType();const T=QB_T[k];rawStore.set('qbType',k);gcEvent('bossquiz-'+k,'命定霸總：'+T.n);
-  openModal(`<div class="qb-res"><img src="${collSrc(T.img)}" alt="${esc(T.n)}"><div><small>${gz('妳的命定霸總')}</small><b>${esc(T.n)}</b><q>「${esc(gz(T.l))}」</q></div></div>
-   <p style="text-align:left">${esc(gz(T.d))}</p>
+  openModal(`<div class="qb-res"><img src="${collSrc(T.img)}" alt="${esc(T.n)}"><div><small>${gz('妳的命定霸總')}</small><b>${esc(T.n)}</b><small class="qb-en">${esc(T.ne)}</small><q>「${esc(gz(T.l))}」<small class="qb-en">${esc(T.le)}</small></q></div></div>
+   <p style="text-align:left">${esc(gz(T.d))}<small class="qb-en">${esc(T.de)}</small></p>
    <span class="g-note" style="text-align:center">他會陪你背的單字</span><div class="qb-words">${T.w.map(w=>`<span>${w[0]}　${w[1]}</span>`).join('')}</div>
    <div class="acts"><button class="btn" data-qbread="${k}">看他的故事（免費）</button><button class="btn ghost" data-qbshare="${k}">分享我的結果</button><button class="linkbtn" data-qbagain style="align-self:center">再測一次</button></div>
    <p class="g-note" style="text-align:center">推薦：${esc(T.st)}</p>`,true)}
@@ -2827,7 +2889,7 @@ function growHome(){const v=invGet();const c=cgToClaim(),l=cgLeft();
   return `<section class="grow" aria-label="邀請與考試倒數">${invRefBar()}${exCard()}
    <button class="g-inv" data-ginv><span class="ic"><img src="img/custom_teaser.jpg?v=43a0434e" alt=""></span><span><b>邀請好友・送你訂製霸總情人</b><small>${c?'有 '+c+' 次訂製機會可以領取':l&&!gamePass?'還有 '+l+' 次訂製機會・已邀請 '+v.n+' 位':'你和朋友各得 1 次，用自己的名字當霸總小說主角'}</small></span>${c?'<span class="g-dot">領取</span>':'<span class="go" aria-hidden="true">›</span>'}</button>
    ${GROW_TEST?'<button class="g-test" data-gtest>測試工具</button>':''}</section>`}
-GM_GAMES.unshift({id:'bossquiz',ic:'♛',name:'命定霸總測驗<span class="gm-hot gm-new">免費</span>',desc:'5 題測出妳的命定霸總類型，結果可以存成圖卡分享・不扣試玩次數'});
+GM_GAMES.push({id:'bossquiz',ic:'♛',name:'命定霸總測驗<span class="gm-hot gm-new">免費</span>',desc:'5 題測出妳的命定霸總類型，結果可以存成圖卡分享・不扣試玩次數'});
 function growTest(){openModal(`<span class="kicker">測試工具</span><h2>只有測試版看得到</h2>
   <div class="acts">
    <button class="btn ghost" data-gsimfriend>模擬一位朋友用我的連結加入</button>
