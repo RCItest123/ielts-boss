@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="zh-Hant-TW">
 <head>
+<!-- © 2026 霸總教你背單字 (bazonglearn.com). All rights reserved. 本站程式、故事、插圖與單字內容皆受著作權法保護，未經授權禁止轉載、複製、改作或用於其他網站及 App。 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="用原創霸道總裁小說背多益、雅思、GRE 單字。英文單字寫進劇情裡，點單字看音標、發音、同義字與例句。霸總、BL、壞壞版、片語版、長篇連載，還有單字遊戲幫你複習。">
@@ -1079,6 +1080,7 @@ function renderHome(){
     <p class="note">本 App 所有故事皆為原創作品，未經授權請勿轉載或重製。</p>
     <p class="note">本站使用 GoatCounter 匿名統計造訪人數，不使用 cookie。</p>
     <p class="note shoplogo"><a href="https://xiaodianup.com/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="小店上線交給我" width="20" height="20">APP製作｜小店上線交給我</a></p>
+    <p class="note" style="font-size:11px;opacity:.65">© 2026 霸總教你背單字　本站故事、插圖與單字內容皆為原創，受著作權法保護，未經授權禁止轉載、複製或改作。</p>
   </footer>
   </div>`;
 }
@@ -1141,7 +1143,7 @@ function renderStats(){
 }
 /* ---------- modal ---------- */
 const modal=document.getElementById('modal'),modalBox=document.getElementById('modalBox');
-function miniLinks(){return `<nav class="minilinks" aria-label="其他連結">${IS_OLD?'<button class="linkbtn" data-mvcode>產生搬家碼</button>':'<button class="linkbtn" data-mvin>從舊網址搬家</button>'}</nav><p class="ml-shop"><a href="https://xiaodianup.com/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="" width="16" height="16">APP製作｜小店上線交給我</a></p>`}
+function miniLinks(){return `<nav class="minilinks" aria-label="其他連結">${IS_OLD?'<button class="linkbtn" data-mvcode>產生搬家碼</button>':'<button class="linkbtn" data-mvin>從舊網址搬家</button>'}</nav><p class="ml-shop"><a href="https://xiaodianup.com/?source=app#cases" target="_blank" rel="noopener"><img src="img/shop_logo.jpg?v=bd0be21d" alt="" width="16" height="16">APP製作｜小店上線交給我</a></p><p style="font-size:11px;opacity:.55;text-align:center;margin:2px 0 0;line-height:1.5">© 2026 霸總教你背單字・原創內容，未經授權禁止轉載、複製或改作</p>`}
 function typeBtn(){return `<button class="typebtn" data-typepick aria-label="切換小說類型"><span>類型</span><b>${TRACKS[track].short}</b><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>`}
 function trackRead(t){return Object.keys(rawStore.get(t==='ielts'?'read':t+'.read',{})).length}
 const COMBO={boss:{toeic:'toeic',ielts:'ielts',gre:'gre'},bl:{toeic:'bl',ielts:'blielts',gre:'blgre'},bad:{toeic:'bad',ielts:'badielts',gre:'badgre'},ph:{toeic:'phtoeic',ielts:'phielts',gre:'phgre'},serial:{toeic:'serial',ielts:'serialielts'},rebirth:{ielts:'rebirth',toeic:'rebirthtoeic',gre:'rebirthgre'}};
@@ -3395,7 +3397,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261121e',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261122a',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
