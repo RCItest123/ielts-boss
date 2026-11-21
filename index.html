@@ -1616,7 +1616,7 @@ function gmPersonal(lv){const Dd=lv==='toeic'?D2:lv==='ielts'?IELTS_D:D3;const s
 /* 出題：生字本＋已讀文章的字和字庫隨機字交錯混合；最近出過的字排到後面，每次玩都換一批 */
 function gmWords(lv){const p=gmPersonal(lv);const rec=new Set(rawStore.get('gmRecent',[]));
   const fresh=a=>{const s=gshuf(a);return s.filter(x=>!rec.has(x[0])).concat(s.filter(x=>rec.has(x[0])))};
-  const pers=fresh(p.saved).concat(fresh(p.read)),pl=fresh(gmPool(lv)),all=[];
+  const pers=cramGameWords().concat(fresh(p.saved),fresh(p.read)),pl=fresh(gmPool(lv)),all=[];
   for(let i=0;i<Math.max(pers.length,pl.length);i++){if(i<pers.length)all.push(pers[i]);if(i<pl.length)all.push(pl[i])}
   const zs=new Set(),ws=new Set(),out=[];
   for(const x of all){if(zs.has(x[1])||ws.has(x[0]))continue;zs.add(x[1]);ws.add(x[0]);out.push(x)}
@@ -1850,7 +1850,7 @@ function gmListen(){
      <div class="gm-opts">${opts.map((o,k)=>`<button class="gm-opt" data-go="${k}">${esc(o[1])}</button>`).join('')}</div><div id="gln"></div>`);
     const play=r=>{speak(w[0],r);document.getElementById('glp').classList.remove('pulse')};
     document.getElementById('glp').onclick=()=>play(.85);document.getElementById('gls2').onclick=()=>play(.55);if(i>0)setTimeout(()=>play(.85),250);
-    let ans=false;document.querySelector('.gm-opts').onclick=ev=>{const b=ev.target.closest('.gm-opt');if(!b||ans)return;ans=true;const ok=opts[+b.dataset.go][0]===w[0];
+    let ans=false;document.querySelector('.gm-opts').onclick=ev=>{const b=ev.target.closest('.gm-opt');if(!b||ans)return;ans=true;const ok=opts[+b.dataset.go][0]===w[0];cramHit(w[0],ok);
       if(ok)score++;else{b.classList.add('ng');wrong.push(w)}
       document.querySelectorAll('.gm-opt').forEach((x,k)=>{if(opts[k][0]===w[0])x.classList.add('ok');x.disabled=true});
       document.getElementById('glr').innerHTML=`${esc(w[0])} <small>${esc(w[2])}</small>`+gmWordInfo(lv,w[0]);
@@ -1897,7 +1897,7 @@ function gmQuote(){
      <div class="gm-qt"><img class="gm-qbg" src="${gqImg(w[4])}" alt="" aria-hidden="true"><small>霸總說</small><b>${esc(w[0])}</b><button id="gqs" aria-label="念出這句">♪ 聽發音</button></div>
      <div class="gm-opts">${opts.map((o,k)=>`<button class="gm-opt" data-go="${k}">${esc(o[1])}</button>`).join('')}</div><div id="gqn"></div>`);
     document.getElementById('gqs').onclick=()=>speak(w[0],.85);if(qs[i+1]){const pi=new Image();pi.src=gqImg(qs[i+1][4])}
-    let ans=false;document.querySelector('.gm-opts').onclick=ev=>{const b=ev.target.closest('.gm-opt');if(!b||ans)return;ans=true;const ok=opts[+b.dataset.go][1]===w[1];
+    let ans=false;document.querySelector('.gm-opts').onclick=ev=>{const b=ev.target.closest('.gm-opt');if(!b||ans)return;ans=true;const ok=opts[+b.dataset.go][1]===w[1];cramHit(w[2],ok);
       if(ok)score++;else{b.classList.add('ng');wrong.push([w[2],w[3]])}
       document.querySelectorAll('.gm-opt').forEach((x,k)=>{if(opts[k][1]===w[1])x.classList.add('ok');x.disabled=true});
       document.getElementById('gqn').innerHTML=`<div class="gm-qk">關鍵單字　<b>${esc(w[2])}</b>${esc(w[3])}</div>${gmSay(ok?['懂我的意思就好，下一句。','很好，妳聽得懂我。','答對了，別得意。'][i%3]:['我說的話，妳要聽清楚。','翻錯了？這句給我背三遍。'][i%2])}<button class="btn" id="gqgo" style="width:100%;margin-top:10px">${i+1<N?'下一句':'看成績'}</button>`;
@@ -1969,74 +1969,144 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-coll],[dat
 
 /* ---------- 生字補習班（遊戲通行證）：遊戲答錯的字自動收集，照記憶曲線複習 ---------- */
 const CRAM_GAP=[0,1,3,7];/* 舊版盒子對應天數（舊資料轉換用） */
-/* 生字補習班＝遺忘曲線單字卡：翻面後依熟悉度（忘了／有點難／記得／太簡單）排下次複習，間隔到 30 天畢業 */
-const CRAM_FREE=10,CRAM_DONE=30;
+/* 生字補習班＝遺忘曲線單字卡（依研究改版）：
+   1. 忘了的字隔幾張再考一次，答對才算過關（successive relearning）
+   2. 間隔 7 天以上改成看中文選英文、14 天以上改成看中文拼英文（productive retrieval＋客觀判斷）
+   3. 不再畢業，熟的字進入長期記憶；最長間隔依考試日期（約剩餘天數的 1/4）或 120 天
+   4. 間隔依最近答對率自動調整（目標約 85–95% 記得）
+   5. 卡片附上故事原句；忘了 4 次以上標成頑固字
+   6. 每天最多 60 張；該複習的太多時自動少加新字
+   7. 其他遊戲答對「今天該複習」的字，也算完成複習 */
+const CRAM_FREE=10,CRAM_DONE=30,CRAM_DAYMAX=60,CRAM_NEWDAY=20,CRAM_LEECH=5;
 const dplus=n=>dkey(new Date(Date.now()+n*864e5));
 function cramGet(){return rawStore.get('cram',{})||{}}
 function cramAdd(list){if(!list||!list.length)return 0;const C=cramGet(),td=dkey();let n=0;
   list.forEach(x=>{const w=Array.isArray(x)?x[0]:x.w,z=Array.isArray(x)?x[1]:x.z;if(!w||!z)return;const k=norm(w);
     if(C[k]){C[k].b=0;C[k].d=td;C[k].iv=0;C[k].ef=Math.max(1.3,(C[k].ef||2.5)-.2);C[k].n=(C[k].n||1)+1}else{C[k]={w:String(w).toLowerCase(),z,b:0,d:td,n:1,iv:0,ef:2.5,t:Date.now()};n++}});
   rawStore.set('cram',C);return n}
-function cramDue(){const C=cramGet(),td=dkey();return Object.values(C).filter(x=>x.d<=td).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(b.n||1)-(a.n||1))}
+const cramDayGet=key=>{const r=rawStore.get(key,{})||{};return r.d===dkey()?r.n||0:0};
+const cramDayInc=key=>{rawStore.set(key,{d:dkey(),n:cramDayGet(key)+1})};
+const cramIsNew=x=>x.sv&&!x.r;
+/* 舊版已畢業的字改成長期記憶卡，分散在接下來 4 週回來 */
+function cramMig(){if(rawStore.get('cramMig2',0))return;const C=cramGet(),D0=rawStore.get('cramDoneK',[])||[];let j=0;
+  D0.forEach(k=>{if(C[k])return;const d=D2[k]||IELTS_D[k]||D3[k]||(typeof D!=='undefined'&&D[k]);const z=d&&d.z&&d.z[0];if(!z)return;
+    C[k]={w:k,z,b:4,d:dplus(7+(j*3)%28),n:1,iv:CRAM_DONE,ef:2.5,t:Date.now(),r:1,lt:1};j++});
+  rawStore.set('cram',C);rawStore.set('cramMig2',1)}
+function cramDue(){cramMig();const C=cramGet(),td=dkey(),all=Object.values(C).filter(x=>x.d<=td);
+  const rev=all.filter(x=>!cramIsNew(x)).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(b.n||1)-(a.n||1)),nw=all.filter(cramIsNew).sort((a,b)=>(a.t||0)-(b.t||0));
+  const allowNew=Math.max(0,CRAM_NEWDAY-Math.floor(rev.length/2)-cramDayGet('cramNewDay'));
+  return rev.concat(nw.slice(0,allowNew)).slice(0,Math.max(0,CRAM_DAYMAX-cramDayGet('cramCnt')))}
 function cramZh(it){const k=norm(it.w),d=D2[k]||IELTS_D[k]||D3[k]||D[k];return [it.z,...((d&&d.z)||[]).filter(z=>z!==it.z)].slice(0,4).join('；')}
 function cramIv(c){return c.iv!=null?c.iv:(CRAM_GAP[c.b||0]||0)}
-function cramNext(c,g){let iv=cramIv(c),ef=c.ef||2.5;const N=Object.keys(cramGet()).length,m=N>=150?1.5:N>=60?1.25:1,good=Math.round((iv<1?2:iv<3?3:iv*ef)*m);
+/* 最長間隔：有考試日期 → 剩餘天數的 1/4（14–120 天）；沒有或已考完 → 120 天 */
+function cramCap(){try{const e=exGet();if(e&&e.d){const left=gDay(dkey(),e.d);if(left>=0)return Math.max(14,Math.min(120,Math.round(left/4)))}}catch(e){}return 120}
+/* 依最近 40 次複習的答對率調整間隔 */
+function cramAccF(){const L=rawStore.get('cramAcc',[])||[];if(L.length<15)return 1;const a=L.reduce((s,x)=>s+x,0)/L.length;return a>=.95?1.3:a>=.9?1.15:a>=.8?1:a>=.7?.85:.7}
+function cramNext(c,g){let iv=cramIv(c),ef=c.ef||2.5;const N=Object.keys(cramGet()).length,m=cramAccF()*(N>=150?1.2:N>=60?1.1:1),good=Math.round((iv<1?2:iv<3?3:iv*ef)*m);
   if(g===0){ef=Math.max(1.3,ef-.2);iv=1}
   else if(g===1){ef=Math.max(1.3,ef-.15);iv=Math.max(1,Math.min(good-1,Math.round(iv*1.2)))}
-  else if(g===2){iv=good}
-  else{ef=ef+.15;iv=iv<1?Math.round(4*m):Math.max(good+2,Math.round(iv*ef*1.3*m))}
-  return {iv:Math.min(iv,365),ef:Math.round(ef*100)/100}}
+  else if(g===2){iv=Math.max(1,good)}
+  else{ef=ef+.15;iv=iv<1?Math.max(2,Math.round(4*m)):Math.max(good+2,Math.round(iv*ef*1.3*m))}
+  return {iv:Math.min(iv,cramCap()),ef:Math.round(ef*100)/100}}
 const cramB=iv=>iv>=CRAM_DONE?4:iv>=14?3:iv>=7?2:iv>=3?1:0;
-const cramLbl=iv=>iv>=CRAM_DONE?'畢業':iv+' 天後';
+const cramLbl=iv=>iv+' 天後';
+const cramMode=c=>{const iv=cramIv(c);return iv>=14?'type':iv>=7?'pick':'flip'};
 function cramFreeLeft(){if(gamePass)return 999;const r=rawStore.get('cramDay',{})||{};return r.d===dkey()?Math.max(0,CRAM_FREE-r.n):CRAM_FREE}
 function cramUse(){if(gamePass)return;const r=rawStore.get('cramDay',{})||{},td=dkey();rawStore.set('cramDay',{d:td,n:(r.d===td?r.n:0)+1})}
-function cramNote(n){if(!n)return '';return `<p class="cram-note">📒 答錯的 <b>${n}</b> 個字已收進「生字補習班」，明天用單字卡翻卡複習</p>`}
+function cramAccLog(ok){const L=rawStore.get('cramAcc',[])||[];L.push(ok?1:0);rawStore.set('cramAcc',L.slice(-40))}
+/* 其他遊戲答對今天該複習的字＝完成一次複習 */
+function cramHit(w,ok){try{if(!ok||!w)return;const C=cramGet(),k=norm(w),c=C[k];if(!c||c.d>dkey()||!c.r)return;
+  const o=cramNext(c,2);c.iv=o.iv;c.ef=o.ef;c.b=cramB(o.iv);c.d=dplus(o.iv);c.r=(c.r||0)+1;if(o.iv>=CRAM_DONE)c.lt=1;rawStore.set('cram',C)}catch(e){}}
+function cramGameWords(){try{return gshuf(cramDue().filter(c=>c.r).map(c=>[c.w,String(c.z||'').split(/[；、，,]/)[0],''])).filter(x=>x[1]&&x[1].length<=6&&/^[a-z]{3,12}$/i.test(x[0])).slice(0,6)}catch(e){return []}}
+/* 故事原句：找出這個字在故事裡出現的那一句（快取） */
+const cramCtxC=new Map();
+function cramCtx(w){const k=norm(w);if(cramCtxC.has(k))return cramCtxC.get(k);let r=null;
+  try{outer:for(const t of TORDER){const T=TRACKS[t];if(!T)continue;for(const st of T.stories){if(!st.paras)continue;for(const p of st.paras){const j=p.findIndex(x=>typeof x!=='string'&&norm(x[0])===k);if(j<0)continue;
+    let a=j,b=j,head='',tail='';
+    for(a=j-1;a>=0;a--){const x=p[a];if(typeof x==='string'){const m=x.match(/[。！？」][^。！？」]*$/);if(m){head=m[0].slice(1);break}}}
+    for(b=j+1;b<p.length;b++){const x=p[b];if(typeof x==='string'){const m=x.match(/^[^。！？]*[。！？」]?/);if(m&&m[0].length<x.length||/[。！？]$/.test(m[0])){tail=m[0];break}}}
+    const seg=[];if(head)seg.push(head);for(let q=(a<0?0:a+1);q<(b>=p.length?p.length:b);q++)seg.push(p[q]);if(tail)seg.push(tail);
+    if(seg.reduce((s,x)=>s+(typeof x==='string'?x.length:x[0].length),0)>160)continue;
+    r={seg,title:st.title};break outer}}}}catch(e){r=null}
+  cramCtxC.set(k,r);return r}
+function cramCtxHtml(w,cloze){const c=cramCtx(w);if(!c)return '';const k=norm(w);
+  return `<div class="cram-ctx">${c.seg.map(x=>typeof x==='string'?esc(x):norm(x[0])===k?(cloze?'<span class="cram-blank">＿＿＿</span>':`<b>${esc(x[0])}</b>（${esc(x[1])}）`):esc(x[0])).join('')}<small>出自《${esc(c.title)}》</small></div>`}
+function cramNote(n){if(!n)return '';return `<p class="cram-note">答錯的 <b>${n}</b> 個字已收進「生字補習班」，明天用單字卡複習</p>`}
 function cramBanner(){cramSync();const C=cramGet(),all=Object.keys(C).length;if(!all)return '';const due=cramDue().length;if(!due)return '';
-  return `<button class="cram-ban" data-gopen="cram"><span>📒</span><span><b>${due?`今天有 ${due} 張單字卡該複習`:'今天的單字卡都複習完了'}</b><small>生字補習班・共 ${all} 張單字卡</small></span><span aria-hidden="true">›</span></button>`}
+  return `<button class="cram-ban" data-gopen="cram"><span>📒</span><span><b>今天有 ${due} 張單字卡該複習</b><small>生字補習班・共 ${all} 張單字卡</small></span><span aria-hidden="true">›</span></button>`}
 function cramTeaser(){const due=cramDue().length;
   openModal(`<span class="kicker">生字補習班</span><h2>今天的免費複習用完了</h2>
-   <p>免費版每天可以翻 <b>${CRAM_FREE}</b> 張單字卡${due?`，還有 <b>${due}</b> 張在等妳`:''}。開通全功能，單字卡無限複習、所有遊戲無限玩。</p>
+   <p>免費版每天可以複習 <b>${CRAM_FREE}</b> 張單字卡${due?`，還有 <b>${due}</b> 張在等妳`:''}。開通全功能，單字卡無限複習、所有遊戲無限玩。</p>
    <div class="acts">${passBuy()}<button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`)}
-const CRAM_NEWDAY=20;
 function cramSync(){let L;try{L=cramSavedNew()}catch(e){return 0}if(!L.length)return 0;const C=cramGet();let n=0;
-  L.forEach(x=>{const k=norm(x[0]);if(C[k])return;C[k]={w:String(x[0]).toLowerCase(),z:x[1],b:0,d:dplus(Math.floor(n/CRAM_NEWDAY)),n:1,iv:0,ef:2.5,t:Date.now(),sv:1};n++});rawStore.set('cram',C);return n}
+  L.forEach(x=>{const k=norm(x[0]);if(C[k])return;C[k]={w:String(x[0]).toLowerCase(),z:x[1],b:0,d:dkey(),n:1,iv:0,ef:2.5,t:Date.now()+n,sv:1};n++});rawStore.set('cram',C);return n}
 function cramSavedNew(){const C=cramGet(),done=new Set(rawStore.get('cramDoneK',[])||[]),out=[];try{for(const k in saved){if(C[k]||done.has(k))continue;const d=D[k]||D2[k]||IELTS_D[k]||D3[k];const z=d&&d.z&&d.z[0];if(z)out.push([saved[k].w||k,z])}}catch(e){}return out}
 function cramImport(){const n=cramAdd(cramSavedNew().map(x=>[x[0],x[1]]));toast(n?'已從生字本加入 '+n+' 張單字卡':'生字本的字都已經在補習班了');cramHome()}
 document.addEventListener('click',e=>{if(e.target.closest('[data-cramimp]'))cramImport();const y=e.target.closest('[data-cramtry]');if(y)cramStart(y.dataset.cramtry)});
+(function(){try{const s=document.createElement('style');s.textContent='.cram-ctx{font-size:14px;line-height:1.75;color:var(--ink);background:var(--mark);border-radius:12px;padding:10px 12px;text-align:left;margin:6px 0;width:100%}.cram-ctx b{color:var(--wine)}.cram-ctx small{display:block;opacity:.6;font-size:11.5px;margin-top:4px}.cram-blank{color:var(--wine);font-weight:800;letter-spacing:1px}.cram-tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;background:var(--wine);color:#fff;margin-left:6px;vertical-align:middle}.cram-tag.lt{background:var(--ok)}.cram-res{font-weight:800;font-size:15px}.cram-res.ok{color:var(--ok)}.cram-res.ng{color:var(--wine)}#akt{text-transform:none;letter-spacing:1px;text-align:center;font-size:20px;width:100%;margin:4px 0}.ak-grade.g3c{grid-template-columns:repeat(3,1fr)}.ak-grade.g2c{grid-template-columns:repeat(2,1fr)}';document.head.appendChild(s)}catch(e){}})();
 function cramIntro(){return `<div class="gm-panel"><b style="font-size:16px">先把想背的字加入生字本</b><p class="muted" style="margin:0;font-size:13.5px;line-height:1.7">單字卡會用妳生字本裡的字和遊戲答錯的字出題。讀故事時點單字，或到「生字&amp;字典」查單字，就能加入。</p><button class="btn ghost" data-tab-go="book">去生字&amp;字典</button><p class="muted" style="margin:0;font-size:13.5px">想直接開始？用下面的「隨機出題」。</p></div>`}
-function cramHome(){cramSync();gmStopAll();gm.cur='cram';const C=cramGet(),L=Object.values(C).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0),due=cramDue().length,grad=rawStore.get('cramGrad',0)||0,td=dkey(),sv=cramSavedNew().length,fl=cramFreeLeft();
+function cramHome(){cramMig();cramSync();gmStopAll();gm.cur='cram';const C=cramGet(),L=Object.values(C).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0),due=cramDue().length,td=dkey();
+  const lt=L.filter(x=>cramIv(x)>=CRAM_DONE).length+(rawStore.get('cramMig2',0)?0:(rawStore.get('cramGrad',0)||0));
   const when=d=>d<=td?'今天':d===dplus(1)?'明天':d.slice(5).replace('-','/');const nn=Math.min(due,20);
-  gmScreen('生字補習班',`<div class="cram-kpi"><div><b>${due}</b><span>今天要複習</span></div><div><b>${L.length}</b><span>還在補習</span></div><div><b>${grad}</b><span>已畢業</span></div></div>
+  gmScreen('生字補習班',`<div class="cram-kpi"><div><b>${due}</b><span>今天要複習</span></div><div><b>${L.length-L.filter(x=>cramIv(x)>=CRAM_DONE).length}</b><span>還在補習</span></div><div><b>${lt}</b><span>長期記憶</span></div></div>
    ${L.length<5?cramIntro():''}
    <div class="gm-panel">${gmSay(due?'今天的單字卡，一張都不准漏。':L.length?'今天的份做完了。想加練，就再複習一輪。':'還沒有單字卡？去玩一局，或把生字本的字加進來。')}
-    ${due?`<button class="btn" data-gstart="cram">${nn?'開始翻卡（'+nn+' 張）':'開始翻卡'}</button>`:''}
+    ${due?`<button class="btn" data-gstart="cram">開始複習（${nn} 張）</button>`:''}
     ${L.length?`<button class="btn${due?' ghost':''}" data-cramtry="more">再複習一輪</button>`:''}
-    <p class="muted" style="margin:0;font-size:13px;line-height:1.7">依「遺忘曲線」安排複習：先想意思再翻面，照妳記得的程度按「忘了／有點難／記得／太簡單」。剛學的字隔天就複習，越熟隔越久，在快忘記前再看一次，記憶最牢；間隔拉到 30 天就畢業。</p></div>
+    <p class="muted" style="margin:0;font-size:13px;line-height:1.7">依「遺忘曲線」安排複習：剛學的字看英文想中文；熟一點改成看中文選英文，再熟就要自己拼出英文。忘了的字過幾張會再考一次，答對才算過關。間隔會依妳的答對率自動調整，熟的字進入長期記憶，每隔幾週到幾個月再抽考一次${(()=>{try{const e=exGet();return e&&gDay(td,e.d)>=0?'，考試前都會排到複習':''}catch(x){return ''}})()}。</p></div>
    <div class="gm-panel"><b style="font-size:16px">隨機出題</b><p class="muted" style="margin:0;font-size:13.5px">選一個考試範圍，從字庫隨機抽 10 張單字卡。忘了的字會收進補習班。</p><div class="gm-lvrow">${GM_LV.map(([k,n])=>`<button data-cramtry="${k}">${n}</button>`).join('')}</div></div>
-   ${L.length?`<div class="cram-list">${L.map(x=>{const b=cramB(cramIv(x));return `<div class="cram-row"><span class="en">${esc(x.w)}</span><span class="zh">${esc(x.z)}</span><span class="cram-b" aria-label="熟悉度 ${b}/4">${[0,1,2,3].map(i=>`<i${i<b?' class="on"':''}></i>`).join('')}</span><small>${when(x.d)}</small></div>`}).join('')}</div>`:''}`)}
+   ${L.length?`<div class="cram-list">${L.map(x=>{const b=cramB(cramIv(x));return `<div class="cram-row"><span class="en">${esc(x.w)}${(x.n||1)>=CRAM_LEECH?'<span class="cram-tag">頑固字</span>':''}</span><span class="zh">${esc(x.z)}</span><span class="cram-b" aria-label="熟悉度 ${b}/4">${[0,1,2,3].map(i=>`<i${i<b?' class="on"':''}></i>`).join('')}</span><small>${when(x.d)}</small></div>`}).join('')}</div>`:''}`)}
 function cramStart(mode){if(!mode)cramSync();const prac=mode==='more',trial=prac?null:mode;const lim=gamePass?(trial?10:20):Math.min(10,cramFreeLeft());if(!lim){cramTeaser();return}
   const Q=prac?gshuf(Object.values(cramGet())).slice(0,lim):trial?gshuf(gmPool(trial).slice()).slice(0,lim).map(x=>({w:x[0],z:x[1]})):gshuf(cramDue()).slice(0,lim);if(!Q.length){cramHome();return}gmStopAll();gm.cur='cram';
-  const lv=trial||gmLevel(),cnt=[0,0,0,0],wrong=[],again=new Set();let i=0;const GL=['忘了','有點難','記得','太簡單'];
-  function q(){const it=Q[i];const c0=cramGet()[norm(it.w)]||it;
-    gmScreen('生字補習班',`<div class="hud gm-hud"><span>第 ${i+1} / ${Q.length} 張</span><span>單字卡</span></div>
-     <div class="ak-card"><small>先想想這個字的意思，再翻面</small><b class="en">${esc(it.w)}</b><button class="iconbtn" id="crs" aria-label="朗讀">${ICON.speak}</button>
-      <div class="ak-back" id="akb" hidden><div class="ak-zh">${esc(cramZh(it))}</div>${gmWordInfo(lv,it.w)}</div></div>
-     <div id="akx"><button class="btn" id="akflip" style="width:100%">翻面看答案</button></div>`);
-    document.getElementById('crs').onclick=()=>speak(it.w,.85);
-    document.getElementById('akflip').onclick=()=>{document.getElementById('akb').hidden=false;speak(it.w,.9);
-      const rs=again.has(norm(it.w))||prac,O=[0,1,2,3].map(g=>rs?{iv:g&&prac?cramIv(c0):1,ef:c0.ef||2.5,keep:prac&&g>0}:cramNext(c0,g));
-      document.getElementById('akx').innerHTML=`<div class="ak-grade">${O.map((o,g)=>`<button class="ak-g g${g}" data-akg="${g}"><b>${GL[g]}</b><small>${g===0?'明天':o.keep?'照原排程':cramLbl(o.iv)}</small></button>`).join('')}</div>`;
-      document.querySelector('.ak-grade').onclick=ev=>{const b=ev.target.closest('[data-akg]');if(!b)return;grade(+b.dataset.akg,O[+b.dataset.akg])}}}
-  function grade(g,o){const it=Q[i],C=cramGet(),k=norm(it.w),c=trial?null:C[k];cnt[g]++;if(!again.has(k))cramUse();
-    if(g===0&&!again.has(k))wrong.push([it.w,it.z]);
-    if(c){if(g===0){c.n=(c.n||1)+1;if(!again.has(k)){again.add(k);Q.push(it)}}
-      if(o.keep){}else if(g>=2&&o.iv>=CRAM_DONE){delete C[k];rawStore.set('cramGrad',(rawStore.get('cramGrad',0)||0)+1);rawStore.set('cramDoneK',(rawStore.get('cramDoneK',[])||[]).concat(k).slice(-3000));toast('「'+it.w+'」畢業了')}
-      else{c.iv=o.iv;c.ef=o.ef;c.b=cramB(o.iv);c.d=dplus(o.iv)}
-      rawStore.set('cram',C)}
+  const lv=trial||gmLevel(),cnt=[0,0,0,0],wrong=[],again=new Set(),tries={};let i=0;const GL=['忘了','有點難','記得','太簡單'];
+  const deckW=()=>{const s=new Set();Object.values(cramGet()).forEach(x=>s.add(x.w));gmPool(lv).slice(0,400).forEach(x=>s.add(x[0]));return [...s]};
+  function back(it,c0){const leech=c0&&(c0.n||1)>=CRAM_LEECH;
+    return `<div class="ak-zh">${esc(cramZh(it))}</div>${leech?`<p class="cram-note" style="margin:0 0 6px">頑固字：已經忘了 ${(c0.n||1)-1} 次。多看一次原文句子和例句，想一個自己的例句。</p>`:''}${cramCtxHtml(it.w,false)}${gmWordInfo(lv,it.w)}`}
+  function q(){const it=Q[i],k=norm(it.w),c0=cramGet()[k]||it,re=again.has(k),md=trial||re?'flip':cramMode(c0);
+    const hud=`<div class="hud gm-hud"><span>第 ${i+1} / ${Q.length} 張</span><span>${re?'再考一次':md==='type'?'拼出英文':md==='pick'?'選出英文':'單字卡'}</span></div>`;
+    if(md==='flip'){
+      gmScreen('生字補習班',`${hud}
+       <div class="ak-card"><small>${re?'剛剛忘了的字，再想一次':'先想想這個字的意思，再翻面'}</small><b class="en">${esc(it.w)}</b><button class="iconbtn" id="crs" aria-label="朗讀">${ICON.speak}</button>
+        <div class="ak-back" id="akb" hidden>${back(it,c0)}</div></div>
+       <div id="akx"><button class="btn" id="akflip" style="width:100%">翻面看答案</button></div>`);
+      document.getElementById('crs').onclick=()=>speak(it.w,.85);
+      document.getElementById('akflip').onclick=()=>{document.getElementById('akb').hidden=false;speak(it.w,.9);
+        if(re){grades([0,2],['還是忘了','記住了'],['等一下再考','過關'])}else{const O=[0,1,2,3].map(g=>prac?null:cramNext(c0,g));grades([0,1,2,3],GL,O.map((o,g)=>prac?(g?'照原排程':'等一下再考'):g===0?'等一下再考':cramLbl(o.iv)))}}
+      return}
+    const zh=String(it.z||'').split(/[；;]/)[0];
+    const front=`<div class="ak-card"><small>${md==='type'?'看中文，拼出英文單字':'看中文，選出正確的英文'}</small><div class="ak-zh" style="margin:0">${esc(zh)}</div>${cramCtxHtml(it.w,true)}
+      ${md==='type'?`<input id="akt" class="codein" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${esc(it.w[0])}${'＿'.repeat(Math.max(0,it.w.length-1))}（${it.w.length} 個字母）">`:''}
+      <div class="ak-back" id="akb" hidden></div></div>`;
+    if(md==='pick'){const pool=gshuf(deckW().filter(x=>norm(x)!==k&&/^[a-z-]+$/i.test(x))).slice(0,3);const opts=gshuf([it.w,...pool]);
+      gmScreen('生字補習班',`${hud}${front}<div id="akx"><div class="gm-opts">${opts.map((o,j)=>`<button class="gm-opt" data-go="${j}">${esc(o)}</button>`).join('')}</div></div>`);
+      document.querySelector('.gm-opts').onclick=ev=>{const b=ev.target.closest('.gm-opt');if(!b)return;const ok=norm(opts[+b.dataset.go])===k;
+        document.querySelectorAll('.gm-opt').forEach((x,j)=>{if(norm(opts[j])===k)x.classList.add('ok')});if(!ok)b.classList.add('ng');checked(it,c0,ok)}}
+    else{gmScreen('生字補習班',`${hud}${front}<div id="akx"><div class="ak-grade g2c"><button class="ak-g" id="akno"><b>想不起來</b><small>看答案</small></button><button class="ak-g g3" id="akok"><b>確定</b><small>對答案</small></button></div></div>`);
+      const inp=document.getElementById('akt');setTimeout(()=>{try{inp.focus()}catch(e){}},50);
+      const sub=()=>{const v=norm(String(inp.value||'').trim().replace(/[’']/g,"'"));if(!v){inp.focus();return}inp.disabled=true;checked(it,c0,v===k||v.replace(/-/g,'')===k.replace(/-/g,''),inp.value)};
+      inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();sub()}};document.getElementById('akok').onclick=sub;document.getElementById('akno').onclick=()=>{inp.disabled=true;checked(it,c0,false,'')}}}
+  /* 選擇題、拼字題：系統判斷對錯；答錯直接算「忘了」，答對再讓使用者選熟悉度 */
+  function checked(it,c0,ok,typed){const b=document.getElementById('akb');b.hidden=false;speak(it.w,.9);
+    b.innerHTML=`<p class="cram-res ${ok?'ok':'ng'}">${ok?'答對了':'答案是 '+esc(it.w)+(typed?`（妳寫的是 ${esc(typed)}）`:'')}</p><b class="en" style="font-size:24px">${esc(it.w)}</b>${back(it,c0)}`;
+    if(!ok){document.getElementById('akx').innerHTML=`<button class="btn" id="aknext" style="width:100%">等一下再考一次</button>`;document.getElementById('aknext').onclick=()=>grade(0);return}
+    if(prac){grades([1,2,3],GL.slice(1),['照原排程','照原排程','照原排程']);return}
+    grades([1,2,3],GL.slice(1),[1,2,3].map(g=>cramLbl(cramNext(c0,g).iv)))}
+  function grades(G,labels,subs){const x=document.getElementById('akx');x.innerHTML=`<div class="ak-grade${G.length===3?' g3c':G.length===2?' g2c':''}">${G.map((g,j)=>`<button class="ak-g g${g}" data-akg="${g}"><b>${labels[j]}</b><small>${subs[j]}</small></button>`).join('')}</div>`;
+    x.querySelector('.ak-grade').onclick=ev=>{const b=ev.target.closest('[data-akg]');if(!b)return;grade(+b.dataset.akg)}}
+  function grade(g){const it=Q[i],C=cramGet(),k=norm(it.w),c=trial?null:C[k];
+    if(!again.has(k)){cnt[g]++;cramUse();if(!trial&&!prac)cramDayInc('cramCnt');
+      if(g===0)wrong.push([it.w,it.z]);
+      if(c&&!prac){if(c.r)cramAccLog(g>0);if(cramIsNew(c))cramDayInc('cramNewDay');c.r=(c.r||0)+1;
+        if(g===0)c.n=(c.n||1)+1;
+        const o=cramNext(c,g);c.iv=o.iv;c.ef=o.ef;c.b=cramB(o.iv);c.d=dplus(o.iv);
+        if(o.iv>=CRAM_DONE&&!c.lt){c.lt=1;toast('「'+it.w+'」進入長期記憶')}
+        rawStore.set('cram',C)}}
+    if(g===0){tries[k]=(tries[k]||0)+1;if(tries[k]<=3){again.add(k);Q.splice(Math.min(i+5,Q.length),0,it)}}
+    else if(again.has(k))again.delete(k);
     i++;i<Q.length?q():end()}
   function end(){const left=cramDue().length,tot=cnt.reduce((a,b)=>a+b,0),good=cnt[2]+cnt[3];
     const line=!cnt[0]?'一張都沒忘。今天的補習，准妳下課。':cnt[0]<=tot/4?'還有幾個不熟，明天繼續盯妳。':'忘了這麼多？明天提早到。';
-    const tn=trial?cramAdd(wrong):0;gmScreen('生字補習班',`<div class="hud gm-hud"><span>翻了 ${tot} 張</span><span>忘了 ${cnt[0]}・記得 ${good}</span>${left?`<span>還有 ${left} 張待複習</span>`:''}</div>`+(trial?`<p class="cram-note">這是隨機出題的單字${tn?`，忘了的 <b>${tn}</b> 個已收進補習班`:''}。想背自己的字？讀故事時點單字加入生字本，或到「生字&amp;字典」查單字加入。</p>`:'')+gmFinish('cram',good*12+cnt[1]*6,line,wrong,left?'cram':'cramhome'));if(!gamePass&&!cramFreeLeft())setTimeout(cramTeaser,900)}
+    const tn=trial?cramAdd(wrong):0;gmScreen('生字補習班',`<div class="hud gm-hud"><span>複習 ${tot} 張</span><span>忘了 ${cnt[0]}・記得 ${good}</span>${left?`<span>還有 ${left} 張待複習</span>`:''}</div>`+(trial?`<p class="cram-note">這是隨機出題的單字${tn?`，忘了的 <b>${tn}</b> 個已收進補習班`:''}。想背自己的字？讀故事時點單字加入生字本，或到「生字&amp;字典」查單字加入。</p>`:'')+gmFinish('cram',good*12+cnt[1]*6,line,wrong,left?'cram':'cramhome'));if(!gamePass&&!cramFreeLeft())setTimeout(cramTeaser,900)}
   q()}
 
 /* ---------- 霸總來電：不用語音，用對話考單字；答對 3 題才准掛電話 ---------- */
@@ -2078,7 +2148,7 @@ function callStart(){
       opt.onclick=ev=>{const b=ev.target.closest('.call-o');if(!b||busy)return;busy=true;const pick=opts[+b.dataset.co];say(zh2en?pick[0]:pick[1],true);opt.innerHTML='';
         const right=pick[0]===w[0];qi++;try{speak(w[0],.85)}catch(e){}
         const last=qi>=Math.min(6,W.length);
-        if(right){ok++;later(()=>{say(ok>=3?['三題都過了。……算妳厲害。','很好，三題全對，這才是我的人。'][qi%2]:GOOD[(ok+qi)%GOOD.length]+(last?'':`還差 ${3-ok} 題，下一題。`));later(ok>=3||last?fin:ask,900)},600)}
+        cramHit(w[0],right);if(right){ok++;later(()=>{say(ok>=3?['三題都過了。……算妳厲害。','很好，三題全對，這才是我的人。'][qi%2]:GOOD[(ok+qi)%GOOD.length]+(last?'':`還差 ${3-ok} 題，下一題。`));later(ok>=3||last?fin:ask,900)},600)}
         else{wrong.push(w);later(()=>{say(BAD[qi%BAD.length]+`${w[0]}＝${w[1]}。`+(last?'':'再來一題。'));later(last?fin:ask,1100)},600)}}}
     function fin(){clearInterval(tm);const s=Math.floor((Date.now()-t0)/1000),dur=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
       const END=ok>=3?['准妳掛電話了。……晚安。','今天表現不錯。明天這個時間，等我電話。','記住，下次我打來，不准讓我等。']:['今天先放過妳。明天，我要聽到全對。'];
@@ -3275,7 +3345,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261121b',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261121c',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
