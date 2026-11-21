@@ -687,6 +687,7 @@ window.__dxP.then(function(__DX){
 (function(){
 const J=id=>JSON.parse(document.getElementById(id).textContent);
 const T2=J('tracks2'),D2=__DX.toeic,D3=__DX.gre,VAULT=T2.vault,IELTS_D=__DX.ielts,DP=__DX.ph,PHL=J('phl');
+const PAID_SET=(()=>{const s={};try{for(const t in T2.pub){const a=T2.pub[t].filter(x=>x.locked).map(x=>x.id);if(a.length)s[t]=a}}catch(e){}return s})();
 /* 同一個字在多益／雅思／GRE 字典的中文意思合併（最多 5 個），主要意思仍排第一 */
 (function(){const L=[D2,IELTS_D,D3],all={};for(const Dd of L)for(const k in Dd){const z=Dd[k]&&Dd[k].z;if(z)(all[k]=all[k]||[]).push(...z)}for(const Dd of L)for(const k in Dd){const e=Dd[k];if(!e||!e.z)continue;const m=[...new Set(e.z.concat(all[k]))];if(m.length>e.z.length)e.z=m.slice(0,5)}})();
 const PURCHASE_URL='https://portaly.cc/han_s/product/6KM5P24S9XdnlRgNmM5L';  // 只賣終身全功能（舊小說版：rvRimdjJ0XbfsvZhKGyl）   // ← 放 Portaly 商品連結
@@ -717,6 +718,42 @@ const PH_LIVE='2026-11-05';const phLive=()=>{const d=new Date();return d.getFull
 const UNIT=()=>TRACKS[track].unit||'單字';const isPh=()=>!!TRACKS[track].ph;
 /* ---------- paid vault (AES-GCM; key unwrapped by PBKDF2 of the unlock code) ---------- */
 const b64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
+/* ---------- 付費故事改由伺服器依權限提供（2026-11-21）：paid_ver 查各類型版本 → get_paid 取有變動的類型 → 存在本機 IndexedDB，離線也能讀；到期、登出、鎖裝置時清掉 ---------- */
+const pIDB=()=>new Promise((res,rej)=>{try{const r=indexedDB.open('bzpaid',1);r.onupgradeneeded=()=>r.result.createObjectStore('t');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}});
+async function pGet(k){try{const db=await pIDB();return await new Promise(r=>{const q=db.transaction('t').objectStore('t').get(k);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)})}catch(e){return null}}
+async function pPut(k,v){try{const db=await pIDB();return await new Promise(r=>{const tx=db.transaction('t','readwrite');tx.objectStore('t').put(v,k);tx.oncomplete=()=>r(true);tx.onerror=()=>r(false)})}catch(e){return false}}
+async function paidWipe(){try{localStorage.removeItem('dqs.paidMeta')}catch(e){}try{const db=await pIDB();await new Promise(r=>{const tx=db.transaction('t','readwrite');tx.objectStore('t').clear();tx.oncomplete=r;tx.onerror=r})}catch(e){}}
+function paidApply(t,items){const T=TRACKS[t];if(!T||!items)return 0;let n=0;for(const id in items){const st=T.stories.find(x=>x.id==id);if(st){st.paras=items[id];delete st.locked;n++}}return n}
+async function paidLoadCache(){const m=rawStore.get('paidMeta',null);if(!m||!m.t||!m.t.length)return false;
+  if(m.exp&&Date.now()>Date.parse(m.exp)){await paidWipe();return false}
+  let n=0;for(const t of m.t){const c=await pGet(t);if(c&&c.items)n+=paidApply(t,c.items)}if(n)unlocked=true;return n>0}
+let paidBusy=false;
+async function paidSync(){if(paidBusy)return false;paidBusy=true;try{await sbInit();if(!sbUser)return false;
+  const {data}=await sb.rpc('paid_ver',{p_device:devId()});if(data&&data.err==='none')await paidWipe();if(!data||!data.ok)return false;
+  const v=data.v||{};let n=0;
+  for(const t in v){if(!TRACKS[t])continue;let c=await pGet(t);
+    if(!c||c.v!==v[t]){const r=await sb.rpc('get_paid',{p_device:devId(),p_track:t});if(!r.data||!r.data.ok)continue;c={v:v[t],items:r.data.items||{}};await pPut(t,c)}
+    n+=paidApply(t,c.items)}
+  rawStore.set('paidMeta',{exp:data.exp||null,t:Object.keys(v),at:Date.now()});
+  if(n){const was=unlocked;unlocked=true;loadTrack(track);if(!was||state.view==='list'||state.view==='home')render()}return n>0}catch(e){return false}finally{paidBusy=false}}
+/* 管理用：網址加 ?paidadmin=1，把目前已解開的付費故事寫進資料庫（只有管理員帳號能寫） */
+function paidCollect(){const out=[];for(const t in PAID_SET){const T=TRACKS[t];if(!T)continue;for(const id of PAID_SET[t]){const st=T.stories.find(x=>x.id==id);if(st&&st.paras)out.push({track:t,id,paras:st.paras})}}return out}
+function paidTotal(){let n=0;for(const t in PAID_SET)n+=PAID_SET[t].length;return n}
+async function paidAdmin(){try{await sbInit()}catch(e){}if(!sbUser){toast('請先登入管理員帳號');return}
+  let st=null;try{st=(await sb.rpc('admin_paid_stats')).data}catch(e){}
+  if(!st||!st.ok){toast('這個帳號沒有管理權限');return}
+  const db=Object.values(st.t||{}).reduce((a,b)=>a+b,0),have=paidCollect().length;
+  openModal(`<span class="kicker">管理</span><h2>付費故事搬到資料庫</h2>
+   <p style="text-align:left">網站上的付費故事共 <b>${paidTotal()}</b> 篇，這台裝置已解開 <b>${have}</b> 篇；資料庫目前有 <b>${db}</b> 篇。</p>
+   <p class="muted" id="pmMsg" style="text-align:left;font-size:13px">${have<paidTotal()?'還有付費故事沒解開，請等解鎖完成後重新整理再試。':'按下「開始搬移」會把已解開的付費故事寫進資料庫，重複執行也不會重複寫入。'}</p>
+   <div class="acts"><button class="btn" id="pmGo">開始搬移</button><label class="btn ghost" style="cursor:pointer">匯入故事檔<input type="file" id="pmFile" accept=".json" hidden></label><button class="linkbtn" data-close style="align-self:center">關閉</button></div>`);
+  const msg=t=>{const m=document.getElementById('pmMsg');if(m)m.textContent=t};
+  const send=async L=>{let n=0;for(let i=0;i<L.length;i+=30){const r=await sb.rpc('admin_import_paid',{p_items:L.slice(i,i+30)});if(!r.data||!r.data.ok){msg('寫入失敗：'+((r.error&&r.error.message)||(r.data&&r.data.err)||''));return -1}n+=r.data.n;msg('寫入中… '+Math.min(i+30,L.length)+' / '+L.length)}return n};
+  document.getElementById('pmGo').onclick=async ev=>{ev.target.disabled=true;const L=paidCollect();const n=await send(L);if(n<0)return;
+    const s2=(await sb.rpc('admin_paid_stats')).data;msg('完成：送出 '+L.length+' 篇，新寫入／更新 '+n+' 篇。資料庫現在共 '+Object.values((s2&&s2.t)||{}).reduce((a,b)=>a+b,0)+' 篇。')};
+  document.getElementById('pmFile').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const J0=JSON.parse(await f.text());const L=[];for(const t in J0)for(const id in J0[t])L.push({track:t,id:+id,paras:J0[t][id]});
+    const n=await send(L);if(n>=0)msg('匯入完成：'+L.length+' 篇，新寫入／更新 '+n+' 篇。')}catch(e){msg('檔案格式不對：'+e.message)}}}
+if(/[?&]paidadmin=1/.test(location.search))setTimeout(paidAdmin,6000);
 const VAULT2={iv:'Mb55HN/AAGw4JuhX',ctUrl:'data/vault2.bin?v=d0439667'};
 async function vault2(){try{let k=rawStore.get('unlock2',null);
   if(!k){await sbInit();if(!sbUser)return;const {data}=await sb.rpc('get_key2',{p_device:devId()});if(!data||!data.ok||!data.k)return;k=data.k}
@@ -1398,7 +1435,7 @@ function openInAppHint(code){
    <button class="btn ghost shsm" data-copytxt="${esc(siteURL()+_q)}">複製網址，貼到瀏覽器</button>
    <button class="linkbtn" data-close style="align-self:center">關閉</button>`)}
 async function sbLogin(){if(INAPP){openInAppHint(rawStore.get('pendingCode',null));return}try{await sbInit();await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}})}catch(e){toast('無法連線登入服務，請稍後再試')}}
-function lockDevice(limit){try{localStorage.removeItem('dqs.unlock');localStorage.removeItem('dqs.unlock2');localStorage.removeItem('dqs.unlockMeta');localStorage.removeItem('dqs.gpass')}catch(e){}if(limit)rawStore.set('devLimit',1);location.reload()}
+function lockDevice(limit){try{localStorage.removeItem('dqs.paidMeta')}catch(e){}paidWipe();try{localStorage.removeItem('dqs.unlock');localStorage.removeItem('dqs.unlock2');localStorage.removeItem('dqs.unlockMeta');localStorage.removeItem('dqs.gpass')}catch(e){}if(limit)rawStore.set('devLimit',1);location.reload()}
 async function sbLogout(){try{await sbInit();if(sbUser)await sb.rpc('release_device',{p_device:devId()});await sb.auth.signOut()}catch(e){}sbUser=null;try{localStorage.removeItem(SB_LS)}catch(e){}closeModal();
   if(unlocked||gamePass){rawStore.set('paidSeen',1);toast('已登出，這台裝置已回到免費版');setTimeout(()=>lockDevice(false),600)}else{toast('已登出帳號');if(state.view==='home')render()}}
 async function openAccount(){let em='';try{await sbInit();em=sbUser&&sbUser.email||''}catch(e){}
@@ -1477,6 +1514,7 @@ async function syncAccount(){
     if(data&&data.game&&!gamePass){gamePass=true;rawStore.set('gpass',1);toast('遊戲通行證已開通')}
     if(data&&data.ok&&data.key&&!unlocked){if(await applyKeyResp(data))toast('已登入 '+(sbUser.email||'')+'，完整版已解鎖')}
     else if(data&&data.ok&&unlocked){const m=rawStore.get('unlockMeta',{})||{};rawStore.set('unlockMeta',Object.assign({},m,{exp:data.exp||null}))}}
+  paidSync();
   gmPull();if(state.view==='games'||state.view==='stats')render()
 }
 /* ---------- 付費用戶：問題回報 ---------- */
@@ -3148,7 +3186,7 @@ const DEL_Q=/[?&]del=1/.test(location.search);
 (()=>{const k=rawStore.get('unlock',null),g=rawStore.get('gpass',0);
   if((k||g)&&!hasSbHint()){
     if(k&&!rawStore.get('legacyKey',null))rawStore.set('legacyKey',k);
-    try{localStorage.removeItem('dqs.unlock');localStorage.removeItem('dqs.unlock2');localStorage.removeItem('dqs.gpass')}catch(e){}
+    try{localStorage.removeItem('dqs.unlock');localStorage.removeItem('dqs.unlock2');localStorage.removeItem('dqs.gpass');localStorage.removeItem('dqs.paidMeta')}catch(e){}
     gamePass=false;rawStore.set('needLogin',1);rawStore.set('paidSeen',1)}})();
 function needLoginModal(){if(sbUser||hasSbHint()||!rawStore.get('needLogin',0))return;if(!modal.hidden){setTimeout(needLoginModal,4000);return}
   if(rawStore.get('needLoginDay','')===dkey())return;rawStore.set('needLoginDay',dkey());
@@ -3205,7 +3243,7 @@ function devProfile(){let first=dkey(),reads=0;
 /* ---------- 進度雲端同步（2026-11-18）：登入後把閱讀進度、生字本、遊戲紀錄存到帳號 ----------
    iPhone 的主畫面圖示、Safari、Chrome、Android App 各自存資料；登入同一個帳號就會自動合併、同步。
    付費權限、推播、裝置碼、來源追蹤等不同步（這些跟裝置綁定，或由伺服器另外管理）。 */
-const PG_DENY=/^(unlock|unlock2|unlockMeta|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|subui|subNudgeDay|vid|hitDay|who_.*|__.*)$/;
+const PG_DENY=/^(unlock|unlock2|unlockMeta|paidMeta|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|subui|subNudgeDay|vid|hitDay|who_.*|__.*)$/;
 /* 這些資料兩邊合併（聯集／取最大），不會因為另一台比較新就蓋掉 */
 const PG_UNION=/(^|\.)(read|days|quiz|coll|seenCounts|gnDays|gmXP|cramGrad|gmBest\..*)$/;
 const pgOK=k=>!PG_DENY.test(k);
@@ -3347,8 +3385,9 @@ if(SUBS_UI){
 go(location.hash==='#stories'?'list':'home');
 document.addEventListener('visibilitychange',()=>{document.title=document.hidden?genderize('霸總在等妳背單字…'):(window._title||document.title)});
 (()=>{const sp=document.getElementById('splash');if(sp){sp.classList.add('out');setTimeout(()=>sp.remove(),450)}})();
-(async()=>{const um=rawStore.get('unlockMeta',null);if(um&&um.exp&&Date.now()>Date.parse(um.exp)){try{['unlock','unlock2','unlockMeta','gpass'].forEach(x=>localStorage.removeItem('dqs.'+x))}catch(e){}gamePass=false}
+(async()=>{const um=rawStore.get('unlockMeta',null);if(um&&um.exp&&Date.now()>Date.parse(um.exp)){try{['unlock','unlock2','unlockMeta','gpass'].forEach(x=>localStorage.removeItem('dqs.'+x))}catch(e){}gamePass=false;paidWipe()}
   const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
+  try{if(await paidLoadCache()){loadTrack(track);render()}}catch(e){}
   if(hasSbHint()||PAID_NO||PAYGO)syncAccount().then(()=>{invSync();srcSync()}).catch(()=>{});
   if(DEL_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(async()=>{try{await sbInit()}catch(e){}delAcctOpen()},700)}
   setTimeout(()=>{if(window.__mvWait)return;if(GROW_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}if(firstVisit)rawStore.set('tour1',0);go('games');setTimeout(qbStart,300);return}if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!cramExplain()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
@@ -3356,7 +3395,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261121d',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261121e',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
