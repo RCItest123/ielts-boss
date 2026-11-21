@@ -1268,6 +1268,17 @@ function lastChance(){if(!lcOn()||rawStore.get('lcDay','')===dkey())return false
    <div class="lc-tb"><div><small>小說付費版</small><b>99</b><s>199</s></div><div class="hl"><small>全功能（小說＋遊戲）</small><b>188</b><s>249</s></div></div>
    <p style="margin:0">11/6 起改為限時優惠價：小說 199、全功能 249。一次買斷、永久有效，之後新增的故事和遊戲也包含。</p>
    <div class="acts">${buyBtn(true)}<button class="linkbtn" data-close style="align-self:center">我再想想</button></div>`);return true}
+/* 生字補習班說明（11/22 起，每台裝置一次，到 12/6） */
+function cramExplain(){const k=dkey();if(k<'2026-11-22'||k>'2026-12-06'||rawStore.get('cramExp1',0))return false;rawStore.set('cramExp1',1);
+  openModal(`${bossPic([genderize('想忘記我教的字？在妳忘記之前，我會先出現。'),'霸總教你背單字・生字補習班'])}<span class="kicker">生字補習班</span><h2>讀完故事，為什麼還要翻單字卡？</h2>
+   <p style="text-align:left">心理學家艾賓浩斯發現，剛學的東西一天內就會忘掉一大半，這就是「遺忘曲線」。但只要在快忘記的時候再回想一次，忘記的速度就會變慢，記得一次比一次久。生字補習班就是照這個原理排複習：</p>
+   <ul class="annl" style="text-align:left;margin:0 0 6px;padding-left:20px;line-height:1.8">
+    <li><b>越熟隔越久</b>：剛學的字隔天就考，記得了就拉長到幾天、幾週，最後每隔幾個月抽考一次</li>
+    <li><b>答對才過關</b>：忘了的字過幾張會再考一次，不讓妳帶著不會的字下課</li>
+    <li><b>從認得到會用</b>：熟了之後改成看中文選英文，再進一步自己拼出來</li>
+    <li><b>用劇情記單字</b>：每張卡都附上故事裡的原句，想起情節就想起單字</li>
+    <li><b>考前排好複習</b>：設定考試日期，考試前都會排到複習</li></ul>
+   <div class="acts"><button class="btn" data-close data-gopen="cram">去生字補習班</button><button class="linkbtn" data-close style="align-self:center">知道了</button></div>`);return true}
 function gameNews(){const k=dkey();if(k>GN_UNTIL)return false;const d=rawStore.get('gnDays3',[])||[];if(d.length>=1||d.includes(k))return false;rawStore.set('gnDays3',d.concat(k));
   openModal(`${bossPic([genderize('新功能都給妳準備好了。從今天起，一個字都不准忘。'),'霸總教你背單字・新功能上線'])}<span class="kicker">新故事＋新功能上線</span><h2>100 篇新故事來了</h2>
    <ul class="annl" style="text-align:left;margin:0 0 6px;padding-left:20px;line-height:1.8">
@@ -3340,12 +3351,12 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
   const k=rawStore.get('unlock',null);if(k){try{await openVault(b64(k));loadTrack(track);render()}catch(e){}}
   if(hasSbHint()||PAID_NO||PAYGO)syncAccount().then(()=>{invSync();srcSync()}).catch(()=>{});
   if(DEL_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(async()=>{try{await sbInit()}catch(e){}delAcctOpen()},700)}
-  setTimeout(()=>{if(window.__mvWait)return;if(GROW_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}if(firstVisit)rawStore.set('tour1',0);go('games');setTimeout(qbStart,300);return}if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
+  setTimeout(()=>{if(window.__mvWait)return;if(GROW_Q){try{history.replaceState(null,'',location.pathname)}catch(e){}if(firstVisit)rawStore.set('tour1',0);go('games');setTimeout(qbStart,300);return}if(DL){try{history.replaceState(null,'',location.pathname)}catch(e){}if(byId[DL.s]){if(DL.m&&!isLocked(byId[DL.s])&&canRead(DL.s)){noteRead(DL.s);go('read',{id:DL.s,mode:DL.m,from:'list'})}else go('intro',{id:DL.s,from:'list'})}if(firstVisit){rawStore.set('tour1',0)}return}if(mvStartup())return;if(firstVisit){checkNew();openTypePicker(true)}else if(!announce()&&!checkNew()&&!cramExplain()&&!gameNews()&&!lastChance()&&!dailyQuote())dailyPrompt()},500)})();
 })();
 });
 </script>
 
-<script>(function(){var V='20261121c',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261121d',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
