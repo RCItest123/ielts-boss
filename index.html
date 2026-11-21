@@ -1118,9 +1118,9 @@ function renderPicker(){
   const t=COMBO[pk.st][pk.ex];const T=t&&TRACKS[t];
   const seg=(list,cur,attr,avail)=>`<div class="pkseg">${list.map(([k,l])=>{const ok=avail?avail(k):true;return `<button class="pkbtn${k===cur?' on':''}" ${attr}="${k}"${ok?'':' disabled'}>${k==='bad'||k==='ph'?lockTag():''}${ok?l:l.replace(/<small>.*<\/small>/,'')+'<small>即將推出</small>'}</button>`}).join('')}</div>`;
   let card='';
-  if(pk.st==='serial'&&T){const n=T.stories.length;card=`<div class="pkcard"><b>${esc(T.name)}・長篇連載</b><small>${T.exam}單字・壞壞版・全 ${SERIAL_TOTAL} 集・已更新到第 ${n} 集</small><p>${T.intro}</p><p class="pricenote" style="margin:4px 0 0">第 1、2 集免費看，第 3 集起為付費版內容，陸續更新中</p><button class="btn" data-settrack="${t}">${track===t?'繼續追劇':'開始追劇'}</button></div>`}
+  if(pk.st==='serial'&&T){const n=T.stories.length;card=`<div class="pkcard"><b>${esc(T.name)}・長篇連載</b><small>${T.exam}單字・壞壞版・全 ${SERIAL_TOTAL} 集・已更新到第 ${n} 集</small><p>${T.intro}</p>${unlocked?'':'<p class="pricenote" style="margin:4px 0 0">第 1、2 集免費看，第 3 集起為付費版內容，陸續更新中</p>'}<button class="btn" data-settrack="${t}">${track===t?'繼續追劇':'開始追劇'}</button></div>`}
   if(T&&pk.st!=='serial'){const n=T.stories.length,r=trackRead(t),free=T.stories.filter(x=>!x.locked).length;
-    card=`<div class="pkcard"><b>${esc(T.name)}・${T.sub}</b><small>${n} 篇${free&&free<n?`・前 ${free} 篇免費`:free===0&&!unlocked?'・完整版限定':''}${r?`・已讀 ${r}`:''}</small><p>${T.intro}</p>
+    card=`<div class="pkcard"><b>${esc(T.name)}・${T.sub}</b><small>${n} 篇${free&&free<n&&!unlocked?`・前 ${free} 篇免費`:free===0&&!unlocked?'・完整版限定':''}${r?`・已讀 ${r}`:''}</small><p>${T.intro}</p>
     ${PH_SET.has(t)&&!phLive()?`<p class="pricenote" style="margin:4px 0 0">🚧 建置中・<b>11/5 上線</b><br>多益、雅思、GRE 各 20 篇＋片語本 150 個片語，小說付費版可看</p><button class="btn" disabled style="opacity:.55">11/5 上線</button>`:`<button class="btn" data-settrack="${t}">${t===track?'繼續閱讀':'開始閱讀'}</button>`}</div>`}
   openModal(`<span class="kicker">${pk.first?'歡迎':'切換類型'}</span><h2>選擇小說類型</h2>
    <div class="pkstep"><span class="pklabel">1・選風格</span>${seg(STYLES,pk.st,'data-pkst')}</div>
@@ -1271,7 +1271,7 @@ function lastChance(){if(!lcOn()||rawStore.get('lcDay','')===dkey())return false
 function gameNews(){const k=dkey();if(k>GN_UNTIL)return false;const d=rawStore.get('gnDays3',[])||[];if(d.length>=1||d.includes(k))return false;rawStore.set('gnDays3',d.concat(k));
   openModal(`${bossPic([genderize('新功能都給妳準備好了。從今天起，一個字都不准忘。'),'霸總教你背單字・新功能上線'])}<span class="kicker">新故事＋新功能上線</span><h2>100 篇新故事來了</h2>
    <ul class="annl" style="text-align:left;margin:0 0 6px;padding-left:20px;line-height:1.8">
-    <li><b>新故事 100 篇</b>：BL 30 篇、壞壞隱藏版 60 篇、GRE 重生短劇 10 篇（前 2 篇免費看），長篇連載《霸總虐戀全餐》第 6 章上線</li>
+    <li><b>新故事 100 篇</b>：BL 30 篇、壞壞隱藏版 60 篇、GRE 重生短劇 10 篇${unlocked?'':'（前 2 篇免費看）'}，長篇連載《霸總虐戀全餐》第 6 章上線</li>
     <li><b>生字補習班</b>：依「遺忘曲線」安排的單字卡，在快忘記前提醒妳複習；加入生字的字會自動排進來</li>
     <li><b>生字&amp;字典</b>：隨時查單字（英文、中文都能查），一次看多個中文意思，一鍵加入生字</li>
     <li><b>隨機出題</b>：選多益、雅思或 GRE，隨機抽 10 張單字卡馬上練</li>
@@ -1716,7 +1716,7 @@ function renderGames(){
    <div class="gm-list">${GM_GAMES.map(g=>{
      if(g.soon&&!gamePass){si++;return `<button class="gm-g gm-soon" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${ICON.lock}</span><span class="gm-tx"><b>神秘遊戲 ${si}</b><small>全功能限定</small></span></button>`}
      const tz=g.teaser&&!gamePass;const b=rawStore.get('gmBest.'+g.id,0);
-     return `<button class="gm-g${g.hot?' hot':''}${tz?' teaser':''}" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${g.ic}</span><span class="gm-tx"><b>${g.name}${g.hot?'<span class="gm-hot">推薦</span>':''}${g.nw?'<span class="gm-hot gm-new">NEW</span>':''}${g.teaser?`<span class="gm-hot gm-new">${gamePass?'NEW':'全功能限定'}</span>`:''}${g.id==='cram'&&cramDue().length?`<span class="gm-hot">今天 ${cramDue().length} 個</span>`:''}</b><small>${g.desc}</small>${b?`<em>最高 +${b} 分</em>`:''}</span>${tz?`<span aria-hidden="true" class="gm-go">${ICON.lock}</span>`:'<span aria-hidden="true" class="gm-go">›</span>'}</button>`}).join('')}</div>
+     return `<button class="gm-g${g.hot?' hot':''}${tz?' teaser':''}" data-gopen="${g.id}"><span class="gm-ic" aria-hidden="true">${g.ic}</span><span class="gm-tx"><b>${gamePass?g.name.replace(/<span class="gm-hot gm-new">免費<\/span>/,''):g.name}${g.hot?'<span class="gm-hot">推薦</span>':''}${g.nw?'<span class="gm-hot gm-new">NEW</span>':''}${g.teaser?`<span class="gm-hot gm-new">${gamePass?'NEW':'全功能限定'}</span>`:''}${g.id==='cram'&&cramDue().length?`<span class="gm-hot">今天 ${cramDue().length} 個</span>`:''}</b><small>${gamePass?g.desc.replace(/・(每天免費接 1 通|不扣試玩次數)/,''):g.desc}</small>${b?`<em>最高 +${b} 分</em>`:''}</span>${tz?`<span aria-hidden="true" class="gm-go">${ICON.lock}</span>`:'<span aria-hidden="true" class="gm-go">›</span>'}</button>`}).join('')}</div>
    <section class="gm-why" style="margin-top:16px"><h3>遊戲間怎麼幫你記單字？</h3>
     <p>讀故事是「第一次認識」單字，遊戲是「再見幾次面」。學過的單字在幾天內反覆<b>主動回想</b>，最能從短期記憶搬進長期記憶。</p>
     <ul><li><b>情境找物品</b>：把單字和畫面連在一起，用圖像記憶</li>
@@ -2359,7 +2359,7 @@ function renderList(){
   app.innerHTML=`<div class="view">
    <div class="section-h"><h1 style="font-size:26px">故事書架</h1>${typeBtn()}</div>
    <span class="muted" style="margin-top:-12px">${esc(TRACKS[track].name)}・${TRACKS[track].sub}・${Object.keys(readSet).length} / ${S.length} 已讀</span>
-   ${SERIAL_SET.has(track)?`<p class="pricenote" style="margin:0;text-align:left">連載中：已更新到第 ${S.length} 集（全 ${SERIAL_TOTAL} 集），第 1、2 集免費，第 3 集起付費版限定，下一集即將上線。</p>`:''}
+   ${SERIAL_SET.has(track)?`<p class="pricenote" style="margin:0;text-align:left">連載中：已更新到第 ${S.length} 集（全 ${SERIAL_TOTAL} 集）${unlocked?'':'，第 1、2 集免費，第 3 集起付費版限定'}，下一集即將上線。</p>`:''}
    ${offBar()}
    <label class="search">${ICON.search}<input id="q" type="search" placeholder="搜尋故事標題或英文單字" value="${esc(query)}" autocomplete="off"></label>
    <div class="chips" role="group" aria-label="篩選">
@@ -2789,7 +2789,7 @@ function qbResult(k){k=k||qbType();const T=QB_T[k];rawStore.set('qbType',k);gcEv
   openModal(`<div class="qb-res"><img src="${collSrc(T.img)}" alt="${esc(T.n)}"><div><small>${gz('妳的命定霸總')}</small><b>${esc(T.n)}</b><small class="qb-en">${esc(T.ne)}</small><q>「${esc(gz(T.l))}」<small class="qb-en">${esc(T.le)}</small></q></div></div>
    <p style="text-align:left">${esc(gz(T.d))}<small class="qb-en">${esc(T.de)}</small></p>
    <span class="g-note" style="text-align:center">他會陪你背的單字</span><div class="qb-words">${T.w.map(w=>`<span>${w[0]}　${w[1]}</span>`).join('')}</div>
-   <div class="acts"><button class="btn" data-qbread="${k}">看他的故事（免費）</button><button class="btn ghost" data-qbshare="${k}">分享我的結果</button><button class="linkbtn" data-qbagain style="align-self:center">再測一次</button></div>
+   <div class="acts"><button class="btn" data-qbread="${k}">看他的故事${unlocked?'':'（免費）'}</button><button class="btn ghost" data-qbshare="${k}">分享我的結果</button><button class="linkbtn" data-qbagain style="align-self:center">再測一次</button></div>
    <p class="g-note" style="text-align:center">推薦：${esc(T.st)}</p>`,true)}
 function qbRead(k){const T=QB_T[k];closeModal();if(!TRACKS[T.t])return;loadTrack(T.t);const s=byId[T.s];if(!s){go('list');return}
   if(!isLocked(s)&&canRead(T.s)){noteRead(T.s);go('read',{id:T.s,mode:'learn',from:'list'})}else go('intro',{id:T.s,from:'list'})}
@@ -3275,7 +3275,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261121a',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261121b',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
