@@ -1219,7 +1219,7 @@ function showCoachType(btn){rawStore.set('coachType',1);const r=btn.getBoundingC
   requestAnimationFrame(()=>el.classList.add('on'));
   const bye=()=>{el.classList.remove('on');setTimeout(()=>el.remove(),300);document.removeEventListener('click',bye,true)};
   setTimeout(()=>document.addEventListener('click',bye,true),50);setTimeout(bye,6500)}
-function closeModal(){if(pendingPromo){pendingPromo=false;setTimeout(openTtsPromo,320)}modal.classList.remove('on');setTimeout(()=>{if(!modal.classList.contains('on'))modal.hidden=true},220)}
+function closeModal(){if(pendingPromo){const pp=pendingPromo;pendingPromo=false;setTimeout(pp===true?openTtsPromo:()=>upsellModal(pp),320)}modal.classList.remove('on');setTimeout(()=>{if(!modal.classList.contains('on'))modal.hidden=true},220)}
 modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('[data-close]'))closeModal()});
 const CHEERS=[
  ['女人，妳成功引起了我的注意。','今天的單字，一個都別想逃。'],
@@ -2515,6 +2515,13 @@ const FREE_DAILY=2;
 function readsToday(){return rawStore.get('rd.'+dkey(),[])}
 function canRead(id){if(unlocked)return true;const k=track+':'+id,L=readsToday();return L.includes(k)||L.length<FREE_DAILY}
 function noteRead(id){if(unlocked)return;const k=track+':'+id,L=readsToday();if(!L.includes(k)){L.push(k);rawStore.set('rd.'+dkey(),L)}}
+/* 免費用戶付費提醒：第 3 天讀完、累積讀完第 8 篇時各跳一次（付費用戶不跳） */
+function upsellModal(p){if(unlocked)return;const dn=Object.keys(days).filter(d=>(days[d]||[]).length).length,tot=TORDER.reduce((a,t)=>a+trackRead(t),0);
+  gcEvent(p==='up3'?'upsell-d3':'upsell-r8',p==='up3'?'第3天付費提醒':'第8篇付費提醒');
+  const L=p==='up3'?[genderize('第 '+dn+' 天了。妳比我想的還認真。'),genderize('堅持的人，值得全部的故事。')]:[genderize(tot+' 篇了。我開始捨不得放妳走了。'),genderize('剩下的故事，都在等妳。')];
+  openModal(`${bossPic(L)}<span class="kicker">${p==='up3'?'連續學習第 '+dn+' 天':'已經讀完 '+tot+' 篇'}</span><h2>${p==='up3'?'妳已經讀了 '+dn+' 天':'妳已經讀完 '+tot+' 篇故事'}</h2>
+   <p>${p==='up3'?'每天讀一點，單字就這樣一個一個記住了。':'照這個速度，一個月就能多記好幾百個單字。'}開通全功能，全部 ${TOTAL_N()} 篇霸總故事無限讀、語音朗讀、遊戲間全部遊戲，想讀幾篇就讀幾篇。</p>
+   <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
 function openLimit(){openModal(`${bossPic([genderize('今天的 2 篇已經讀完了。想要更多？'),genderize('不要考驗我的耐心，女人。')])}<span class="kicker">免費版每日上限</span><h2>今天的免費額度用完了</h2>
    <p>免費版每天可以讀 2 篇不同的故事（已讀過的可以重讀）。明天再來，或解鎖完整版無限暢讀。</p>
    <div class="acts">${buyBtn()}<button class="btn ghost" data-unlock>我有解鎖碼</button><button class="btn ghost" data-close data-quiz>先去做單字挑戰</button><button class="linkbtn" data-close style="align-self:center">明天再來</button></div>`)}
@@ -2733,7 +2740,10 @@ document.addEventListener('click',e=>{
     const back=state.from==='plan'||state.from==='stats'?state.from:(id===plan.assign[k]?'plan':'list');
     const total=TORDER.reduce((a,t)=>a+trackRead(t),0);let promo=false;
     if(!unlocked){const n=rawStore.get('ttsPromo',0);if((total>=1&&n===0)||(total>=5&&n===1)){promo=true;rawStore.set('ttsPromo',n+1)}}
-    go(back);if(promo)pendingPromo=true;if(collAfterRead())return;if(firstToday){celebrate(id)}else{moreCheer(id,days[k].length)}return}
+    if(!unlocked){const dn=Object.keys(days).filter(d=>(days[d]||[]).length).length;
+      if(firstToday&&dn>=3&&!rawStore.get('up3',0)){rawStore.set('up3',1);promo='up3'}
+      else if(total>=8&&!rawStore.get('up8',0)){rawStore.set('up8',1);promo='up8'}}
+    go(back);if(promo)pendingPromo=promo;if(collAfterRead())return;if(firstToday){celebrate(id)}else{moreCheer(id,days[k].length)}return}
   if(t.hasAttribute('data-reveal')){const was=t.classList.contains('show');t.classList.toggle('show');
     if(!was){const now=Date.now();if(now-(window._lastNag||0)>25000&&Math.random()<0.2){window._lastNag=now;bossToast('「這個字都記不住？給我再背三遍。」')}}return}
   if(t.dataset.k){const pi=t.dataset.p,ii=t.dataset.i;let ctx=null;
@@ -3397,7 +3407,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261122a',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261122b',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
