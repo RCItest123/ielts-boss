@@ -2443,7 +2443,7 @@ function buildQueue(){const st=byId[state.id],mode=state.mode,q=[];
 function ttsBar(){let b=document.getElementById('ttsbar');if(!b){b=document.createElement('div');b.id='ttsbar';b.className='ttsbar';document.body.appendChild(b)}
   b.innerHTML=`<div class="in"><button class="tb-main" data-tts-toggle aria-label="${tts.on?'暫停':'播放'}">${tts.on?ICON.pause:ICON.play}</button><div class="tb-txt"><b>語音朗讀</b><span>${tts.q.length?`第 ${Math.min(tts.i+1,tts.q.length)} / ${tts.q.length} 句`:''}</span></div><button class="tb-rate" data-tts-rate>${tts.rate}x</button><button class="tb-rate" data-voicepick>聲音</button><button class="iconbtn" data-tts-stop aria-label="停止朗讀">${ICON.stop}</button></div>`;b.hidden=false}
 function markPara(p){if(p===tts.cur)return;tts.cur=p;document.querySelectorAll('#story p').forEach((el,i)=>el.classList.toggle('reading',i===p));const el=document.querySelectorAll('#story p')[p];if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}
-function speakNext(){const g=tts.gen;if(!tts.on)return;if(tts.i>=tts.q.length){ttsStop();toast('朗讀完畢');return}
+function speakNext(){const g=tts.gen;if(!tts.on)return;if(tts.i>=tts.q.length){if(ttsAutoNext())return;ttsStop();toast('朗讀完畢');return}
   const it=tts.q[tts.i];markPara(it.p);
   try{const u=new SpeechSynthesisUtterance(it.t);if(it.l==='en'){u.lang='en-US';if(voice)u.voice=voice;u.rate=tts.rate*.82;u.pitch=voice&&MALE_EN.test(voice.name)?.9:1}else{u.lang=zhVoice?zhVoice.lang:'zh-TW';if(zhVoice)u.voice=zhVoice;u.rate=tts.rate*.9;u.pitch=zhVoice&&MALE_ZH.test(zhVoice.name)?.9:1}
    u.onend=()=>{if(g!==tts.gen)return;tts.fail=0;tts.i++;ttsBar();setTimeout(()=>{if(g===tts.gen)speakNext()},it.l==='en'?260:180)};u.onerror=(ev)=>{if(g!==tts.gen)return;if(ev&&/interrupt|cancel/.test(ev.error||''))return;tts.fail=(tts.fail||0)+1;if(tts.fail>2){ttsStop();toast('這個裝置無法播放語音，請確認系統語音設定');return}tts.i++;speakNext()};speechSynthesis.speak(u)}catch(e){toast('這個裝置不支援語音朗讀');ttsStop()}}
@@ -2473,12 +2473,23 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-voicepick]
   if(t.dataset.vptry){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.dataset.vptry==='en'?'Nice to meet you. This contract is confidential.':'女人，妳已經成功引起我的注意。');if(v){u.voice=v;u.lang=v.lang}u.rate=t.dataset.vptry==='en'?.85:.9;speechSynthesis.speak(u)}catch(_){}return}
   if(t.dataset.vpuse){if(t.dataset.vpuse==='en'){rawStore.set('vEn',t.dataset.vn);if(v)voice=v}else{rawStore.set('vZh',t.dataset.vn);if(v)zhVoice=v}toast('已換成這個聲音');openVoicePicker();return}
   if(t.hasAttribute('data-vpreset')){rawStore.set('vEn','');rawStore.set('vZh','');pickVoice();pickZh();toast('已恢復自動選擇');openVoicePicker()}});
-function ttsStart(){if(!unlocked){openPaywall('語音朗讀全文是完整版功能。');return}noEnVoiceTip();voiceTip();
+/* 朗讀：螢幕常亮（Screen Wake Lock）、念完自動播下一篇（最多連播 10 篇） */
+let ttsWL=null;
+async function wakeOn(){if(!rawStore.get('ttsAwake',1)||!('wakeLock' in navigator))return;try{if(!ttsWL){ttsWL=await navigator.wakeLock.request('screen');ttsWL.addEventListener('release',()=>{ttsWL=null})}}catch(e){}}
+function wakeOff(){try{if(ttsWL)ttsWL.release()}catch(e){}ttsWL=null}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&tts.on)wakeOn()});
+const TTS_CHAIN=10;
+function ttsAutoNext(){if(!rawStore.get('ttsAuto',0)||state.view!=='read')return false;tts.chain=(tts.chain||0)+1;if(tts.chain>=TTS_CHAIN){tts.chain=0;return false}
+  const i=S.findIndex(s=>s.id===state.id);const nx=S.slice(i+1).find(s=>s.paras&&!isLocked(s));if(!nx)return false;
+  const mode=state.mode,from=state.from,ch=tts.chain;ttsStop();toast('接著播下一篇：'+nx.title);go('read',{id:nx.id,mode,from});
+  setTimeout(()=>{if(state.view==='read'&&state.id===nx.id){tts.chain=ch;ttsStart(true)}},900);return true}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-ttsset]');if(!t)return;const k=t.dataset.ttsset==='awake'?'ttsAwake':'ttsAuto';const v=!rawStore.get(k,k==='ttsAwake'?1:0);rawStore.set(k,v?1:0);t.setAttribute('aria-checked',String(v));if(k==='ttsAwake'){if(v&&tts.on)wakeOn();else wakeOff()}});
+function ttsStart(auto){if(!unlocked){openPaywall('語音朗讀全文是完整版功能。');return}noEnVoiceTip();voiceTip();
   if(!('speechSynthesis' in window)){toast('這個裝置不支援語音朗讀');return}
   if(!tts.q.length||tts.sid!==state.id+state.mode){tts.q=buildQueue();tts.i=0;tts.sid=state.id+state.mode;tts.cur=-1}
-  tts.on=true;tts.gen++;speechSynthesis.cancel();ttsBar();speakNext()}
-function ttsPause(){tts.on=false;tts.gen++;try{speechSynthesis.cancel()}catch(e){}ttsBar()}
-function ttsStop(){tts.on=false;tts.gen++;tts.q=[];tts.i=0;tts.cur=-1;try{speechSynthesis.cancel()}catch(e){}const b=document.getElementById('ttsbar');if(b)b.hidden=true;document.querySelectorAll('#story p.reading').forEach(el=>el.classList.remove('reading'))}
+  if(!auto)tts.chain=0;tts.on=true;tts.gen++;speechSynthesis.cancel();ttsBar();wakeOn();speakNext()}
+function ttsPause(){tts.on=false;tts.gen++;wakeOff();try{speechSynthesis.cancel()}catch(e){}ttsBar()}
+function ttsStop(){tts.on=false;tts.gen++;wakeOff();tts.q=[];tts.i=0;tts.cur=-1;try{speechSynthesis.cancel()}catch(e){}const b=document.getElementById('ttsbar');if(b)b.hidden=true;document.querySelectorAll('#story p.reading').forEach(el=>el.classList.remove('reading'))}
 let filter='all',query='';
 function renderList(){
   app.innerHTML=`<div class="view">
@@ -3040,6 +3051,8 @@ function setOpen(){const p=pushGet(),c=exGet();const sw=(k,t,s,dis)=>`<button cl
    </section>
    <section class="g-sec"><h3>其他</h3>
     <div class="g-row"><span><b>朗讀聲音</b><small>選擇英文與中文的朗讀聲音</small></span><button class="g-mini" data-voicepick>選擇</button></div>
+    <button class="g-sw" role="switch" aria-checked="${!!rawStore.get('ttsAwake',1)}" data-ttsset="awake"><span><b>朗讀時螢幕常亮</b><small>朗讀時螢幕不會自動休眠，暫停或停止就恢復</small></span><i></i></button>
+    <button class="g-sw" role="switch" aria-checked="${!!rawStore.get('ttsAuto',0)}" data-ttsset="auto"><span><b>念完自動播下一篇</b><small>朗讀完自動接著念同一類型的下一篇，最多連播 ${TTS_CHAIN} 篇</small></span><i></i></button>
     <div class="g-row"><span><b>使用教學</b><small>7 步看懂怎麼用</small></span><button class="g-mini" data-tour>查看</button></div>
     ${SUBS_UI?'<div class="g-row"><span><b>我的方案</b><small>到期日、續買年票</small></span><button class="g-mini" data-mysub>查看</button></div>':''}
     <div class="g-row"><span><b>進度同步</b><small>${sbUser?'學習進度、生字本已同步到 '+esc(sbUser.email||'帳號'):'登入後，學習進度和生字本會存到帳號，換裝置也能接著讀'}</small></span>${sbUser?'<button class="g-mini" data-pgnow>立即同步</button>':'<button class="g-mini" data-sblogin>登入</button>'}</div>
@@ -3411,7 +3424,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261123a',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261123b',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
