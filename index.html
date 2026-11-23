@@ -1520,7 +1520,7 @@ async function syncAccount(){
     if(data&&data.game&&!gamePass){gamePass=true;rawStore.set('gpass',1);toast('遊戲通行證已開通')}
     if(data&&data.ok&&data.key&&!unlocked){if(await applyKeyResp(data))toast('已登入 '+(sbUser.email||'')+'，完整版已解鎖')}
     else if(data&&data.ok&&unlocked){const m=rawStore.get('unlockMeta',{})||{};rawStore.set('unlockMeta',Object.assign({},m,{exp:data.exp||null}))}}
-  paidSync();
+  paidSync();payTryCheck();
   gmPull();if(state.view==='games'||state.view==='stats')render()
 }
 /* ---------- 付費用戶：問題回報 ---------- */
@@ -1707,6 +1707,28 @@ if(PAID_NO)window.__mvWait=1;
 const PAYGO=(q=>payOn()&&/^(novel|game|all)$/.test(q)?q:null)(new URLSearchParams(location.search).get('pay')||'');
 if(PAYGO)window.__mvWait=1;
 function payLink(plan,url,cls,label){return payOn()?`<button class="btn${cls}" data-pay="${plan}">${label}</button>`:url?`<a class="btn${cls}" href="${url}" target="_blank" rel="noopener">${label}</a>`:`<button class="btn${cls}" data-buyinfo>${label}</button>`}
+/* 付款沒完成小問卷：去綠界付款後回到網站卻沒付款成功，問一次原因（每筆訂單最多一次） */
+const PFR=[['card','刷卡失敗或被拒'],['otp','沒收到驗證簡訊（3D 驗證）'],['method','想用其他付款方式'],['price','想再考慮看看'],['other','其他問題']];
+function payTryCheck(){const t=rawStore.get('payTry',null);if(!t||!t.no)return;const age=Date.now()-(t.at||0);
+  if(age>2*864e5||(unlocked&&t.plan!=='game')||(gamePass&&t.plan==='game')){rawStore.set('payTry',null);return}
+  if(age<15000||PAID_NO||!sbUser)return;if(!modal.hidden){setTimeout(payTryCheck,4000);return}
+  sb.rpc('my_order',{p_trade_no:t.no}).then(({data:d})=>{rawStore.set('payTry',null);if(d&&d.status==='paid')return;payFailAsk(t)}).catch(()=>{})}
+function payFailAsk(t){gcEvent('payfail-ask','付款未完成問卷');
+  openModal(`<span class="kicker">付款沒有完成嗎？</span><h2>遇到什麼問題了嗎？</h2><p>選一個最接近的狀況，我們會用來改善付款流程。</p>
+   <div class="pfr-list" data-pfrno="${esc(t.no)}" data-pfrplan="${esc(t.plan||'all')}">${PFR.map(([k,l])=>`<button class="btn ghost" data-pfr="${k}">${l}</button>`).join('')}</div>
+   <button class="linkbtn" data-close style="align-self:center">略過</button>`)}
+function payFailTip(k,plan){const retry=`<button class="btn" data-pay="${esc(plan)}">再試一次付款</button>`,rep=`<button class="btn ghost" data-payreport>回報付款問題</button>`;
+  const M={card:['刷卡沒有成功','常見原因是卡片還沒開通網路交易、額度不足，或銀行擋下了這筆交易。可以換一張卡，或打給發卡銀行確認後再試一次。',retry+rep],
+   otp:['沒收到驗證簡訊','驗證簡訊有時會延遲 1–2 分鐘，請確認手機收得到簡訊、號碼是發卡銀行登記的號碼。若一直收不到，可以換一張卡或聯絡發卡銀行。',retry+rep],
+   method:['謝謝這個意見','目前只能用信用卡付款，我們正在申請 TWQR（用各家銀行 App 掃碼付款），開放後會第一時間通知。',rep],
+   price:['謝謝回覆','想清楚再決定沒關係，免費的故事和遊戲都可以繼續用。',''],
+   other:['告訴我們發生了什麼','按下面的按鈕回報，我們看到後會盡快回覆。',rep]};const m=M[k]||M.other;
+  openModal(`<span class="kicker">付款</span><h2>${m[0]}</h2><p>${m[1]}</p><div class="acts">${m[2]}<button class="linkbtn" data-close style="align-self:center">關閉</button></div>`)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-pfr]');if(!b)return;const box=b.closest('[data-pfrno]'),k=b.dataset.pfr,no=box?box.dataset.pfrno:'',plan=box?box.dataset.pfrplan:'all';
+  gcEvent('payfail-'+k,'付款未完成：'+k);try{sb.rpc('pay_feedback_add',{p_trade_no:no,p_reason:k}).then(()=>{},()=>{})}catch(_){}payFailTip(k,plan)});
+window.addEventListener('pageshow',e=>{if(e.persisted)setTimeout(payTryCheck,800)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(payTryCheck,800)});
+{const st=document.createElement('style');st.textContent='.pfr-list{display:flex;flex-direction:column;gap:8px;width:100%}.pfr-list .btn{width:100%}';document.head.appendChild(st)}
 async function payStart(plan){
   if(INAPP){openInAppHint(null);return}
   try{await sbInit()}catch(e){toast('無法連線，請稍後再試');return}
@@ -1715,7 +1737,7 @@ async function payStart(plan){
   let r=null;try{const {data:{session}}=await sb.auth.getSession();
     r=await fetch(SB_URL+'/functions/v1/ecpay-checkout',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+session.access_token},body:JSON.stringify({plan,src:(()=>{try{const l=rawStore.get('srcL',null),f=rawStore.get('src1',null),s=Object.assign({},(l&&l.src&&l.src!=='direct')?l:(f||l||{}));if(f&&f.src)s.first=f.src;return s}catch(e){return null}})()})}).then(x=>x.json())}catch(e){}
   if(!r||!r.ok){toast(r&&r.err==='login'?'登入已過期，請重新登入後再試':'付款服務暫時無法使用，請稍後再試');return}
-  rawStore.set('lastOrder',r.trade_no);gcEvent('ecpay-start-'+plan,'前往綠界付款');
+  rawStore.set('lastOrder',r.trade_no);rawStore.set('payTry',{no:r.trade_no,plan,at:Date.now()});gcEvent('ecpay-start-'+plan,'前往綠界付款');
   const f=document.createElement('form');f.method='POST';f.action=r.action;f.style.display='none';
   for(const k in r.params){const i=document.createElement('input');i.type='hidden';i.name=k;i.value=r.params[k];f.appendChild(i)}
   document.body.appendChild(f);f.submit()}
@@ -1728,7 +1750,7 @@ async function payReturn(no){
       if(k&&k.game&&!gamePass){gamePass=true;rawStore.set('gpass',1)}
       if(k&&k.ok&&k.key&&!unlocked)await applyKeyResp(k);
       else if(k&&k.ok&&unlocked){const m=rawStore.get('unlockMeta',{})||{};rawStore.set('unlockMeta',Object.assign({},m,{exp:k.exp||null}))}
-      gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();return}
+      rawStore.set('payTry',null);gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();return}
     await new Promise(r=>setTimeout(r,2000))}
   openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>付款結果有時會晚幾分鐘送達，請稍後重新整理頁面，或用同一個 Google 帳號重新登入。</p><p>如果已經刷卡成功卻一直沒有開通，請按下面的按鈕回報，我們會盡快處理。</p><div class="acts"><button class="btn" data-payreport>回報付款問題</button><button class="btn ghost" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
 const BUNDLE=()=>LIFE;
@@ -3272,7 +3294,7 @@ function devProfile(){let first=dkey(),reads=0;
 /* ---------- 進度雲端同步（2026-11-18）：登入後把閱讀進度、生字本、遊戲紀錄存到帳號 ----------
    iPhone 的主畫面圖示、Safari、Chrome、Android App 各自存資料；登入同一個帳號就會自動合併、同步。
    付費權限、推播、裝置碼、來源追蹤等不同步（這些跟裝置綁定，或由伺服器另外管理）。 */
-const PG_DENY=/^(unlock|unlock2|unlockMeta|paidMeta|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|subui|subNudgeDay|vid|hitDay|who_.*|__.*)$/;
+const PG_DENY=/^(unlock|unlock2|unlockMeta|paidMeta|payTry|gpass|legacyKey|pendingCode|pendingPay|paytest|devid|devLimit|needLogin|needLoginDay|paidSeen|push|pushEp|pushIdx|exam|offT|offAt|appInst|appDay|src1|srcL|srcSent|srcQ|fbReg|inv|cbGift|ref|refDone|movedTo|mvDone|mvSeen|a2hsNew|a2hsHide|prompted|lifeAnn|lifeAnnDay|lastOrder|subui|subNudgeDay|vid|hitDay|who_.*|__.*)$/;
 /* 這些資料兩邊合併（聯集／取最大），不會因為另一台比較新就蓋掉 */
 const PG_UNION=/(^|\.)(read|days|quiz|coll|seenCounts|gnDays|gmXP|cramGrad|gmBest\..*)$/;
 const pgOK=k=>!PG_DENY.test(k);
@@ -3424,7 +3446,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261123b',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261124a',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
