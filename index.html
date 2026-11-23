@@ -4,6 +4,10 @@
 <!-- © 2026 霸總教你背單字 (bazonglearn.com). All rights reserved. 本站程式、故事、插圖與單字內容皆受著作權法保護，未經授權禁止轉載、複製、改作或用於其他網站及 App。 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>/* 手機開了「電腦版網站」時，Chrome 會忽略 viewport 用 980px 排版，畫面變成小小一欄：偵測後用 zoom 放大回手機寬度 */
+(function(){function fit(){try{var de=document.documentElement;de.style.zoom='';var sw=Math.min(screen.width,screen.height)<720?(window.matchMedia&&matchMedia('(orientation: landscape)').matches?Math.max(screen.width,screen.height):Math.min(screen.width,screen.height)):0,iw=window.innerWidth;
+ if(sw&&iw>sw*1.25&&window.matchMedia&&matchMedia('(pointer: coarse)').matches){de.style.zoom=(iw/sw).toFixed(3);de.classList.add('dzoom')}else de.classList.remove('dzoom')}catch(e){}}
+ fit();window.addEventListener('orientationchange',function(){setTimeout(fit,300)})})();</script>
 <meta name="description" content="用原創霸道總裁小說背多益、雅思、GRE 單字。英文單字寫進劇情裡，點單字看音標、發音、同義字與例句。霸總、BL、壞壞版、片語版、長篇連載，還有單字遊戲幫你複習。">
 <meta name="theme-color" content="#9A2B4A">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3407,7 +3411,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261122b',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261123a',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
