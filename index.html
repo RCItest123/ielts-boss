@@ -555,7 +555,8 @@ a.btn{text-decoration:none}
 .ttsbtn{color:var(--wine)}
 .story p.reading{background:var(--soft);border-radius:10px;box-shadow:0 0 0 8px var(--soft)}
 .ttsbar{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:30;padding:0 max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px))}
-.ttsbar .in{max-width:620px;margin:0 auto;display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);border-radius:999px;padding:6px 8px 6px 6px;box-shadow:var(--shadow)}
+.ttsbar .tb-seekrow{flex-basis:100%;padding:0 12px 2px}.ttsbar .in:has(.tb-seekrow:not([hidden])){border-radius:22px!important}.ttsbar .tb-seek{width:100%;accent-color:var(--wine);height:18px;margin:0}
+.ttsbar .in{max-width:620px;margin:0 auto;display:flex;flex-wrap:wrap;row-gap:2px;align-items:center;gap:10px;background:var(--ink);color:var(--paper);border-radius:999px;padding:6px 8px 6px 6px;box-shadow:var(--shadow)}
 .ttsbar .tb-main{width:44px;height:44px;border-radius:50%;background:var(--wine);color:var(--wine-ink);display:grid;place-items:center;flex:none}
 .ttsbar .tb-txt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
 .ttsbar .tb-txt b{font-size:14px}.ttsbar .tb-txt span{font-size:12px;opacity:.75}
@@ -2462,8 +2463,16 @@ try{pickZh();speechSynthesis.addEventListener&&speechSynthesis.addEventListener(
 function buildQueue(){const st=byId[state.id],mode=state.mode,q=[];
   const push=(t,l,p)=>{t=t.replace(/["「」]/g,'').trim();if(!t)return;const last=q[q.length-1];if(l==='zh'&&last&&last.l==='zh'&&last.p===p&&last.t.length<8){last.t+=t}else q.push({t,l,p})};
   st.paras.forEach((para,pi)=>para.forEach(x=>{if(typeof x==='string')(x.match(/[^。！？]+[。！？]*|[。！？]+/g)||[]).forEach(t=>push(t,'zh',pi));else{push(x[0],'en',pi);if(mode==='learn')push('，'+x[1]+'，','zh',pi)}}));return q}
-function ttsBar(){let b=document.getElementById('ttsbar');if(!b){b=document.createElement('div');b.id='ttsbar';b.className='ttsbar';document.body.appendChild(b)}
-  b.innerHTML=`<div class="in"><button class="tb-main" data-tts-toggle aria-label="${tts.on?'暫停':'播放'}">${tts.on?ICON.pause:ICON.play}</button><div class="tb-txt"><b>語音朗讀</b><span>${tts.q.length?`第 ${Math.min(tts.i+1,tts.q.length)} / ${tts.q.length} 句`:''}</span></div><button class="tb-rate" data-tts-rate>${tts.rate}x</button><button class="tb-rate" data-voicepick>聲音</button><button class="iconbtn" data-tts-stop aria-label="停止朗讀">${ICON.stop}</button></div>`;b.hidden=false}
+function ttsBar(){let b=document.getElementById('ttsbar');if(!b){b=document.createElement('div');b.id='ttsbar';b.className='ttsbar';document.body.appendChild(b);
+    b.innerHTML=`<div class="in"><button class="tb-main" data-tts-toggle></button><div class="tb-txt"><b>語音朗讀</b><span class="tb-pos"></span></div><button class="tb-rate" data-tts-rate></button><button class="tb-rate" data-voicepick>聲音</button><button class="iconbtn" data-tts-stop aria-label="停止朗讀">${ICON.stop}</button><div class="tb-seekrow"><input type="range" class="tb-seek" min="0" step="1" value="0" aria-label="朗讀進度，拖曳可以跳到任何位置"></div></div>`;
+    const sk=b.querySelector('.tb-seek');sk.addEventListener('input',()=>{tts.drag=true;const v=+sk.value,it=tts.q[v];b.querySelector('.tb-pos').textContent=it?`跳到第 ${it.p+1} 段・第 ${v+1} / ${tts.q.length} 句`:''});
+    sk.addEventListener('change',()=>{tts.drag=false;ttsSeek(+sk.value)})}
+  const mb=b.querySelector('.tb-main');mb.innerHTML=tts.on?ICON.pause:ICON.play;mb.setAttribute('aria-label',tts.on?'暫停':'播放');b.querySelector('.tb-rate').textContent=tts.rate+'x';
+  const n=tts.q.length,sk=b.querySelector('.tb-seek'),it=tts.q[Math.min(tts.i,n-1)];
+  if(!tts.drag){b.querySelector('.tb-pos').textContent=n?`第 ${it?it.p+1:1} 段・第 ${Math.min(tts.i+1,n)} / ${n} 句`:'';sk.max=Math.max(0,n-1);sk.value=Math.min(tts.i,Math.max(0,n-1))}
+  b.querySelector('.tb-seekrow').hidden=!n;b.hidden=false}
+/* 拖曳進度軸：跳到指定的句子繼續念（暫停中就只移動位置） */
+function ttsSeek(v){if(!tts.q.length)return;v=Math.max(0,Math.min(tts.q.length-1,v|0));tts.gen++;try{speechSynthesis.cancel()}catch(e){}tts.i=v;tts.cur=-1;markPara(tts.q[v].p);ttsBar();if(tts.on){const g=tts.gen;setTimeout(()=>{if(g===tts.gen)speakNext()},80)}}
 function markPara(p){if(p===tts.cur)return;tts.cur=p;document.querySelectorAll('#story p').forEach((el,i)=>el.classList.toggle('reading',i===p));const el=document.querySelectorAll('#story p')[p];if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}
 function speakNext(){const g=tts.gen;if(!tts.on)return;if(tts.i>=tts.q.length){if(ttsAutoNext())return;ttsStop();toast('朗讀完畢');return}
   const it=tts.q[tts.i];markPara(it.p);
@@ -2567,6 +2576,16 @@ const lifeLeft=()=>Math.max(0,Math.round((new Date(LIFE_END+'T00:00:00')-new Dat
 const LIFE_NOTE=lifeOn()?`終身版特價 299 只到 11/30${lifeLeft()?`（還剩 ${lifeLeft()+1} 天）`:'（今天最後一天）'}，11/30 之後將改為年費制。現在買一次付清、終身有效。`:'';
 function buyBtn(bare){const on=lifeOn();return payLink('all',BUNDLE_URL,'',`終身全功能・${on?'特價 ':''}NT$${LIFE}`)+(bare?'':`<p class="pricenote"><b>${on?'特價 ':''}${LIFE} 元</b>・一次付清、終身有效<br>全部故事＋語音朗讀＋遊戲間全部遊戲</p>`)+(LIFE_NOTE?`<p class="lifenote">${LIFE_NOTE}</p>`:'')+`<button class="linkbtn pl-link" data-plans>免費版和全功能差在哪 ›</button><button class="linkbtn payrep-link" data-payreport>付款遇到問題？回報給我們</button>`}
 /* 終身版特價倒數：只對免費用戶跳一次（付費用戶、App 版都不跳） */
+/* 終身版停售倒數（11/26 起，只給免費用戶；可按 × 今天不再顯示） */
+const LIFE_DEADLINE=new Date('2026-11-30T23:59:59+08:00').getTime();
+function lifeCdOn(){try{return !window.BZ_APP&&!unlocked&&!gamePass&&dkey()>='2026-11-26'&&Date.now()<=LIFE_DEADLINE&&rawStore.get('lcdHide','')!==dkey()}catch(e){return false}}
+const lifeCdFmt=ms=>{const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60,p=n=>String(n).padStart(2,'0');return (d?d+' 天 ':'')+p(h)+':'+p(m)+':'+p(x)};
+function lifeCdModal(){gcEvent('lifecd-click','終身版倒數點擊');const left=lifeCdFmt(LIFE_DEADLINE-Date.now());
+  openModal(`${bossPic([genderize('只剩 '+left+'。過了 11/30，就沒有終身版了。'),'終身版停售倒數'])}<span class="kicker">終身版停售倒數</span><h2>終身全功能 299，11/30 23:59 截止</h2><p>一次付清、永久有效，之後新增的故事和遊戲也都能用。12/1 起改為年票制，終身版不再販售。</p><div class="acts">${buyBtn()}<button class="linkbtn" data-close style="align-self:center">先不用</button></div>`)}
+(function(){try{const st=document.createElement('style');st.textContent='#lifecd{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:26;display:flex;align-items:center;background:var(--wine);color:#fff;border-radius:999px;box-shadow:var(--shadow);padding:2px 4px 2px 2px;white-space:nowrap;max-width:calc(100vw - 24px)}#lifecd[hidden]{display:none}#lifecd .lcd-go{display:flex;gap:8px;align-items:center;color:#fff;font-size:13px;padding:7px 10px;background:none;border:0}#lifecd .lcd-go i{font-style:normal;font-variant-numeric:tabular-nums;font-weight:800}#lifecd .lcd-x{color:#fff;opacity:.8;width:28px;height:28px;font-size:16px;background:none;border:0}';document.head.appendChild(st);
+  const el=document.createElement('div');el.id='lifecd';el.hidden=true;el.innerHTML='<button class="lcd-go" data-lcdbuy><b>終身版 299</b><span>停售倒數 <i id="lcdT"></i></span></button><button class="lcd-x" aria-label="今天不再顯示">×</button>';document.body.appendChild(el);
+  el.querySelector('.lcd-x').onclick=()=>{rawStore.set('lcdHide',dkey());el.hidden=true};el.querySelector('.lcd-go').onclick=lifeCdModal;
+  const tick=()=>{try{const on=lifeCdOn()&&!['read','games','quiz'].includes(state.view)&&modal.hidden;el.hidden=!on;if(on)document.getElementById('lcdT').textContent=lifeCdFmt(LIFE_DEADLINE-Date.now())}catch(e){}};tick();setInterval(tick,1000)}catch(e){}})();
 function lifeAnn(){if(window.BZ_APP||unlocked||gamePass||rawStore.get('paidSeen',0)||!lifeOn()||firstVisit||rawStore.get('lifeAnnDay','')===dkey())return;if(!modal.hidden){setTimeout(lifeAnn,4000);return}
   if(hasSbHint()&&!lifeAnn.w){lifeAnn.w=1;setTimeout(lifeAnn,6000);return}
   rawStore.set('lifeAnnDay',dkey());gcEvent('life-ann','終身版倒數公告');
@@ -3446,7 +3465,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261124a',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261124b',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
