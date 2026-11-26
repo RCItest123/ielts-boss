@@ -1730,6 +1730,15 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-pfr]');if(
 window.addEventListener('pageshow',e=>{if(e.persisted)setTimeout(payTryCheck,800)});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(payTryCheck,800)});
 {const st=document.createElement('style');st.textContent='.pfr-list{display:flex;flex-direction:column;gap:8px;width:100%}.pfr-list .btn{width:100%}';document.head.appendChild(st)}
+/* 付款成功後問一題「從哪裡知道我們」（2026-11-26）：等成功視窗關掉再問，每筆訂單只問一次 */
+const HEARD=[['threads','Threads（廣告或貼文）'],['ig','Instagram'],['fb','Facebook'],['friend','朋友推薦'],['search','Google 搜尋'],['line','LINE 分享'],['other','其他']];
+function heardAsk(no){if(!no||rawStore.get('heardNo','')===no)return;const t0=Date.now();
+  const w=setInterval(()=>{if(Date.now()-t0>600000){clearInterval(w);return}if(!modal.hidden)return;clearInterval(w);rawStore.set('heardNo',no);gcEvent('heard-ask','來源問卷');
+    openModal(`<span class="kicker">最後一個小問題</span><h2>你是從哪裡知道「霸總教你背單字」的？</h2><p>點一下就好，幫助我們把故事帶給更多人。</p>
+     <div class="pfr-list" data-heardno="${esc(no)}">${HEARD.map(([k,l])=>`<button class="btn ghost" data-heard="${k}">${l}</button>`).join('')}</div>
+     <button class="linkbtn" data-close style="align-self:center">略過</button>`)},1500)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-heard]');if(!b)return;const box=b.closest('[data-heardno]'),k=b.dataset.heard,no=box?box.dataset.heardno:'';
+  gcEvent('heard-'+k,'從哪裡知道：'+k);try{sb.rpc('pay_heard_add',{p_trade_no:no,p_answer:k}).then(()=>{},()=>{})}catch(_){}closeModal();toast('謝謝你的回覆！')});
 async function payStart(plan){
   if(INAPP){openInAppHint(null);return}
   try{await sbInit()}catch(e){toast('無法連線，請稍後再試');return}
@@ -1751,7 +1760,7 @@ async function payReturn(no){
       if(k&&k.game&&!gamePass){gamePass=true;rawStore.set('gpass',1)}
       if(k&&k.ok&&k.key&&!unlocked)await applyKeyResp(k);
       else if(k&&k.ok&&unlocked){const m=rawStore.get('unlockMeta',{})||{};rawStore.set('unlockMeta',Object.assign({},m,{exp:k.exp||null}))}
-      rawStore.set('payTry',null);gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();return}
+      rawStore.set('payTry',null);gcEvent('ecpay-paid-'+d.plan,'綠界付款成功');fbBuy(d.plan,no);(d.plan==='game'?gamePassModal:unlockedModal)();heardAsk(no);return}
     await new Promise(r=>setTimeout(r,2000))}
   openModal(`<span class="kicker">訂單 ${esc(no)}</span><h2>還沒收到付款結果</h2><p>付款結果有時會晚幾分鐘送達，請稍後重新整理頁面，或用同一個 Google 帳號重新登入。</p><p>如果已經刷卡成功卻一直沒有開通，請按下面的按鈕回報，我們會盡快處理。</p><div class="acts"><button class="btn" data-payreport>回報付款問題</button><button class="btn ghost" data-close>知道了</button></div>`)}    // ← 小說付費版＋遊戲通行證 188 元商品連結
 const BUNDLE=()=>LIFE;
@@ -3465,7 +3474,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261124b',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261126a',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
