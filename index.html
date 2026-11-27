@@ -1458,7 +1458,7 @@ function devLimitModal(){openModal(`<span class="kicker">帳號</span><h2>這個
 async function devKick(btn){btn.disabled=true;btn.textContent='處理中…';let r=null;try{await sbInit();({data:r}=await sb.rpc('release_others',{p_device:devId()}))}catch(e){}
   if(r&&r.ok){closeModal();gcEvent('dev-kick','登出其他裝置');toast('已登出其他裝置');syncAccount();return}
   btn.disabled=false;btn.textContent='登出其他裝置，在這台使用';const m=document.getElementById('devKickMsg');if(m){m.textContent=r&&r.err==='limit'?'這 7 天已經切換太多次了，請先到其他裝置按「登出」，或寄信給我們。':'目前無法處理，請稍後再試。';m.className='codemsg err'}}
-const RD_ERR={devices:'這個帳號已在其他裝置使用中。請先到其他裝置的「帳號」按「登出」，再回到這台裝置登入。',expired:'這組解鎖碼已過期。請確認購買頁面上的最新解鎖碼，或寄信到 bazonglearn@outlook.com。',full:'這組解鎖碼的使用人數已滿，請寄信到 bazonglearn@outlook.com 協助開通。',invalid:'解鎖碼不正確，請確認後再試一次。',used:'這組解鎖碼已綁定其他帳號。如果是你本人，請用當初綁定的 Google 帳號登入。',login:'請先登入。'};
+const RD_ERR={devices:'這個帳號已在其他裝置使用中。請先到其他裝置的「帳號」按「登出」，再回到這台裝置登入。',expired:'這組解鎖碼已過期。如果之前已經開通過，不用再輸入解鎖碼，請確認登入的是當初付款或兌換時的 Google 帳號（下方顯示目前登入的帳號）。第一次使用的話，請寄信到 bazonglearn@outlook.com，附上購買時的 Email 或訂單編號，我們會幫你開通。',full:'這組解鎖碼的使用人數已滿，請寄信到 bazonglearn@outlook.com 協助開通。',invalid:'解鎖碼不正確，請確認後再試一次。',used:'這組解鎖碼已綁定其他帳號。如果是你本人，請用當初綁定的 Google 帳號登入。',login:'請先登入。'};
 async function redeemCode(code){
   if(INAPP&&!hasSbHint()){rawStore.set('pendingCode',code);openInAppHint(code);return {wait:1}}
   await sbInit();if(!sbUser){rawStore.set('pendingCode',code);await sbLogin();return {wait:1}}
@@ -1539,6 +1539,9 @@ const FAQ=[
  ['按了朗讀沒有聲音？',`<ul><li>iPhone 請確認側邊的<b>靜音開關</b>已關閉、音量有開。</li><li>在 LINE、IG、FB 裡面直接開啟可能不支援語音，請點右上角「在瀏覽器中開啟」，改用 Safari 或 Chrome。</li><li>有接藍牙耳機的話，確認聲音有輸出到耳機。</li></ul>`],
  ['網站打不開、顯示「連線已重設」？',`<p>這通常是你目前的<b>網路擋住了這個網址</b>，不是 App 壞掉。請試試：</p><ul><li>手機關掉 Wi-Fi，改用<b>行動數據（4G／5G）</b>開啟。</li><li>暫時關閉 VPN、廣告阻擋、防毒軟體的網頁防護。</li><li>家裡網路：檢查分享器或電信的「家長監護」「上網安全」服務；公司、學校網路可能有防火牆。</li><li>把手機 DNS 改成 8.8.8.8／1.1.1.1（Android：設定 → 網路 → 私人 DNS → 輸入 dns.google）。</li><li>還是不行就用<b>備用網址</b>：<a href="https://bazonglearn-en.pages.dev" target="_blank" rel="noopener">bazonglearn-en.pages.dev</a>，用同一個 Google 帳號登入就能用。</li></ul>`],
  ['輸入解鎖碼後沒有解鎖？',`<ul><li>請用 <b>Safari 或 Chrome</b> 開啟，不要在 LINE、IG、FB 裡面直接開，那些內建瀏覽器不能用 Google 登入。</li><li>如果之前已經兌換過，直接點「<b>已綁定過？直接用 Google 登入</b>」，用同一個 Google 帳號登入就會自動解鎖，不用再輸入解鎖碼。</li><li>顯示「已綁定其他帳號」：請改用當初兌換時的 Google 帳號登入。</li></ul>`],
+ ['已經付款，換電腦或換手機後又要我輸入解鎖碼？',`<ul><li>付費資格綁定在你<b>付款或兌換時登入的 Google 帳號</b>，不是綁在裝置上，所以<b>不需要再輸入解鎖碼</b>。</li><li>請到「<b>帳號</b>」頁看目前登入的是哪個信箱。如果不是當初那個帳號，按「登出」，再用正確的 Google 帳號登入，幾秒後就會自動解鎖，生字本和閱讀進度也會一起同步回來。</li><li>一台電腦登入多個 Google 帳號時，登入畫面請注意選對帳號。</li></ul>`],
+ ['解鎖碼顯示「已過期」怎麼辦？',`<ul><li>如果之前已經用解鎖碼開通過：<b>不用再輸入</b>，用當初的 Google 帳號登入就會自動解鎖。</li><li>購買後的解鎖碼在 <b>30 天內</b>有效。超過期限才第一次輸入的話，請寄信到 <b>bazonglearn@outlook.com</b>，附上購買時的 Email 或訂單編號，我們會幫你開通。</li></ul>`],
+ ['顯示「這個帳號已在其他裝置使用中」？',`<ul><li>每個帳號最多可以同時在 <b>3 台裝置</b>使用，手機桌面圖示、Safari、Chrome 會<b>各算一台</b>，30 天沒用的裝置會自動不計。</li><li>在跳出的視窗按「<b>登出其他裝置，在這台使用</b>」就可以了；也可以到其他裝置的「帳號」頁按「登出」。</li></ul>`],
  ['換手機或換瀏覽器，付費會不會不見？',`<ul><li>不會。付費綁定在你的 <b>Google 帳號</b>，換手機只要用同一個帳號登入就會自動解鎖。</li><li>閱讀進度、生字本、收藏卡：<b>登入同一個 Google 帳號</b>就會自動同步，換手機、換瀏覽器都能接著讀。</li></ul>`],
  ['免費版可以看多少？',`<ul><li>一般版、BL 版每類可以看前 10 篇，每天最多讀 2 篇不同的故事（讀過的可以重讀）。</li><li>壞壞隱藏版、片語版、語音朗讀全文是付費版功能。</li></ul>`],
  ['怎麼加到手機桌面？',`<ul><li><b>iPhone</b>：用 Safari 開啟 → 下方「分享」鍵 → 加入主畫面。</li><li><b>Android</b>：用 Chrome 開啟 → 右上角 ⋮ → 加到主畫面／安裝應用程式。</li></ul>`]];
@@ -3474,7 +3477,7 @@ document.addEventListener('visibilitychange',()=>{document.title=document.hidden
 });
 </script>
 
-<script>(function(){var V='20261126a',K='bzUpd',last=0,hid=0,pend='';
+<script>(function(){var V='20261127a',K='bzUpd',last=0,hid=0,pend='';
 function go(){try{sessionStorage.setItem(K,pend)}catch(e){}location.reload()}
 function bar(){if(document.getElementById('bzupd'))return;var d=document.createElement('div');d.id='bzupd';d.setAttribute('role','status');d.innerHTML='<span>網站有新版本</span><button type="button">更新</button>';
 d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;white-space:nowrap;padding:8px 8px 8px 16px;border-radius:999px;background:#2a1f22;color:#fff;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)';
